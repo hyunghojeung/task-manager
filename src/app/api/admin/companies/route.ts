@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
         address: companyData.address || null,
         business_type: companyData.business_type || null,
         business_category: companyData.business_category || null,
-        password: companyData.password || "@admin1234",
+        password: companyData.password ,
         status: "active",
       })
       .select("*")
@@ -91,7 +91,7 @@ export async function POST(request: NextRequest) {
         company_id: company.id,
         user_id: adminUserId,
         name: adminName,
-        password: adminPassword || companyData.password || "@admin1234",
+        password: adminPassword || companyData.password ,
         role: "admin",
       });
     }

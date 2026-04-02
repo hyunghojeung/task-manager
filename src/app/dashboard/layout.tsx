@@ -28,6 +28,15 @@ export default async function DashboardLayout({
     .eq("is_completed", false)
     .order("created_at", { ascending: false });
 
+  // 광고 배너 조회
+  const { data: bannerData } = await supabase
+    .from("advertisements")
+    .select("content, link_url, button_text")
+    .eq("type", "banner")
+    .eq("is_active", true)
+    .limit(1)
+    .single();
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Header
@@ -35,6 +44,9 @@ export default async function DashboardLayout({
         userName={session.user.name}
         userId={session.user.user_id}
         userRole={session.user.role}
+        bannerText={bannerData?.content}
+        bannerLink={bannerData?.link_url}
+        bannerButton={bannerData?.button_text}
       />
       <NoticeBar notices={notices || []} />
       <NavBar />

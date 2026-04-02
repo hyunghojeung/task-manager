@@ -32,8 +32,8 @@ export default function SuperAdminDashboard() {
   const [form, setForm] = useState({
     company_code: "", company_id: "", company_name: "", business_number: "",
     representative: "", phone: "", fax: "", email: "", address: "",
-    business_type: "", business_category: "", password: "@admin1234",
-    adminName: "", adminUserId: "", adminPassword: "@admin1234",
+    business_type: "", business_category: "", password: "",
+    adminName: "", adminUserId: "", adminPassword: "",
   });
 
   const [refreshKey, setRefreshKey] = useState(0);
@@ -68,7 +68,7 @@ export default function SuperAdminDashboard() {
       const data = await res.json();
       if (res.ok) {
         setShowModal(false);
-        setForm({ company_code: "", company_id: "", company_name: "", business_number: "", representative: "", phone: "", fax: "", email: "", address: "", business_type: "", business_category: "", password: "@admin1234", adminName: "", adminUserId: "", adminPassword: "@admin1234" });
+        setForm({ company_code: "", company_id: "", company_name: "", business_number: "", representative: "", phone: "", fax: "", email: "", address: "", business_type: "", business_category: "", password: "", adminName: "", adminUserId: "", adminPassword: "" });
         alert("업체가 등록되었습니다.");
         setTimeout(() => refreshList(), 500);
       } else {
@@ -116,7 +116,7 @@ export default function SuperAdminDashboard() {
 
   function openCreate() {
     setEditId(null);
-    setForm({ company_code: "", company_id: "", company_name: "", business_number: "", representative: "", phone: "", fax: "", email: "", address: "", business_type: "", business_category: "", password: "@admin1234", adminName: "", adminUserId: "", adminPassword: "@admin1234" });
+    setForm({ company_code: "", company_id: "", company_name: "", business_number: "", representative: "", phone: "", fax: "", email: "", address: "", business_type: "", business_category: "", password: "", adminName: "", adminUserId: "", adminPassword: "" });
     setShowModal(true);
   }
 

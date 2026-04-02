@@ -81,11 +81,11 @@ function NoticeTab() {
 // ===== 사용자관리 =====
 function UsersTab() {
   const [users, setUsers] = useState<Array<{id:string;user_id:string;name:string;role:string;created_at:string}>>([]);
-  const [form, setForm] = useState({name:"",user_id:"",password:"@pw4332@",role:"user"});
+  const [form, setForm] = useState({name:"",user_id:"",password:"",role:"user"});
   const [showModal, setShowModal] = useState(false);
   const load = useCallback(async () => { const r = await fetch("/api/users"); if(r.ok) setUsers(await r.json()); }, []);
   useEffect(() => { load(); }, [load]);
-  async function create(e:React.FormEvent) { e.preventDefault(); await fetch("/api/users",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(form)}); setShowModal(false); setForm({name:"",user_id:"",password:"@pw4332@",role:"user"}); load(); }
+  async function create(e:React.FormEvent) { e.preventDefault(); await fetch("/api/users",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(form)}); setShowModal(false); setForm({name:"",user_id:"",password:"",role:"user"}); load(); }
   async function remove(id:string) { if(!confirm("정말 삭제할까요?")) return; await fetch(`/api/users/${id}`,{method:"DELETE"}); load(); }
 
   return (
