@@ -227,7 +227,9 @@ function TemplateTab() {
 
   async function addTemplate() {
     if (!newName) return;
-    await fetch("/api/templates", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: newName, columns: [], formulas: [] }) });
+    const defaultCols = [{name:"순번",type:"auto"},{name:"품목명",type:"텍스트"},{name:"규격",type:"텍스트"},{name:"수량",type:"숫자"},{name:"단가",type:"숫자"},{name:"공급가",type:"자동계산"},{name:"부가세",type:"자동계산"},{name:"합계",type:"자동계산"}];
+    const defaultFormulas = [{target:"공급가",expression:"수량 * 단가"},{target:"부가세",expression:"공급가 * 0.1"},{target:"합계",expression:"공급가 + 부가세"}];
+    await fetch("/api/templates", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: newName, columns: defaultCols, formulas: defaultFormulas }) });
     setNewName(""); load();
   }
   async function removeTemplate(id: string) {
