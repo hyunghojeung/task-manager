@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 
 type View = "list" | "write" | "view" | "edit";
-interface MemoData { id: string; title: string; content: string; created_at: string; users?: { name: string } }
+interface MemoData { id: string; title: string; content: string; created_at: string; users?: { name: string; user_id: string } }
 
 export default function MemoPage() {
   const [view, setView] = useState<View>("list");
@@ -11,6 +11,19 @@ export default function MemoPage() {
   const [current, setCurrent] = useState<MemoData | null>(null);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
+  const [currentUser, setCurrentUser] = useState("");
+
+  useEffect(() => {
+    try {
+      const cookies = document.cookie.split(";").map(c => c.trim());
+      const sessionCookie = cookies.find(c => c.startsWith("session="));
+      if (sessionCookie) {
+        const decoded = decodeURIComponent(sessionCookie.split("=").slice(1).join("="));
+        const session = JSON.parse(decoded);
+        setCurrentUser(`${session.user?.name || ""}(${session.user?.user_id || ""})`);
+      }
+    } catch { /* ignore */ }
+  }, []);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [keyword, setKeyword] = useState("");
@@ -46,9 +59,11 @@ export default function MemoPage() {
 
   if (view === "write" || view === "edit") {
     return (
-      <div className="max-w-3xl mx-auto">
+      <div className="max-w-4xl mx-auto">
         <div className="bg-white rounded-lg shadow p-6">
           <h3 className="text-base font-bold text-gray-800 mb-4 pb-2 border-b-2 border-gray-200">{view === "edit" ? "메모 수정" : "메모 작성"}</h3>
+          <label className="block text-xs font-semibold text-gray-600 mb-1">작성자</label>
+          <input type="text" value={currentUser} readOnly className="w-full px-3 py-2 border border-gray-200 rounded text-sm mb-3 bg-gray-50 text-gray-500" />
           <label className="block text-xs font-semibold text-gray-600 mb-1">제목</label>
           <input type="text" placeholder="제목" value={title} onChange={e => setTitle(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded text-sm mb-3" />
           <label className="block text-xs font-semibold text-gray-600 mb-1">내용</label>
@@ -64,10 +79,10 @@ export default function MemoPage() {
 
   if (view === "view" && current) {
     return (
-      <div className="max-w-3xl mx-auto">
+      <div className="max-w-4xl mx-auto">
         <div className="bg-white rounded-lg shadow p-6">
           <h3 className="text-lg font-bold text-gray-800 mb-2">{current.title}</h3>
-          <p className="text-xs text-gray-400 mb-4 pb-3 border-b border-gray-200">작성일: {current.created_at?.slice(0, 10)}</p>
+          <p className="text-xs text-gray-400 mb-4 pb-3 border-b border-gray-200">작성자: {current.users ? `${current.users.name}(${current.users.user_id})` : "-"} | 작성일: {current.created_at?.slice(0, 10)}</p>
           <div className="text-sm text-gray-700 leading-7 whitespace-pre-wrap min-h-[150px] mb-5">{current.content}</div>
           <div className="flex gap-2">
             <button onClick={() => setView("list")} className="px-6 py-2 border border-gray-300 rounded text-sm">목록</button>
@@ -80,7 +95,7 @@ export default function MemoPage() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto">
+    <div className="max-w-4xl mx-auto">
       <div className="flex justify-between items-center mb-4">
         <div className="flex gap-2">
           <input type="text" placeholder="제목 또는 내용 검색" value={keyword} onChange={e => setKeyword(e.target.value)} className="px-3 py-1.5 border border-gray-300 rounded text-sm w-52" />
@@ -91,14 +106,15 @@ export default function MemoPage() {
       <div className="overflow-x-auto">
         <table className="w-full border-collapse border border-gray-300 text-xs">
           <thead><tr className="bg-[#3b4b5b] text-white">
-            <th className="border border-[#2d3a47] px-2 py-2.5 w-12">번호</th><th className="border border-[#2d3a47] px-2 py-2.5">제목</th><th className="border border-[#2d3a47] px-2 py-2.5 w-24">작성일</th>
+            <th className="border border-[#2d3a47] px-2 py-2.5 w-12">번호</th><th className="border border-[#2d3a47] px-2 py-2.5">제목</th><th className="border border-[#2d3a47] px-2 py-2.5 w-24">작성자</th><th className="border border-[#2d3a47] px-2 py-2.5 w-24">작성일</th>
           </tr></thead>
           <tbody>
-            {memos.length === 0 ? <tr><td colSpan={3} className="text-center py-8 text-gray-400">등록된 메모가 없습니다.</td></tr> :
+            {memos.length === 0 ? <tr><td colSpan={4} className="text-center py-8 text-gray-400">등록된 메모가 없습니다.</td></tr> :
             memos.map((m, i) => (
               <tr key={m.id} className={`${i % 2 === 1 ? "bg-gray-50" : ""} hover:bg-blue-50 cursor-pointer`} onClick={() => openView(m)}>
                 <td className="border border-gray-200 px-2 py-2 text-center">{(page - 1) * 15 + i + 1}</td>
                 <td className="border border-gray-200 px-2 py-2 text-left">{m.title}</td>
+                <td className="border border-gray-200 px-2 py-2 text-center">{m.users ? `${m.users.name}(${m.users.user_id})` : "-"}</td>
                 <td className="border border-gray-200 px-2 py-2 text-center">{m.created_at?.slice(0, 10)}</td>
               </tr>
             ))}
