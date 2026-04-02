@@ -1,9 +1,30 @@
 "use client";
 
+import { useState } from "react";
+
 export default function EstimatePage() {
+  const [emailTo, setEmailTo] = useState("");
+  const [sending, setSending] = useState(false);
+
+  async function handleSendEmail() {
+    if (!emailTo) { alert("수신 이메일을 입력해주세요."); return; }
+    setSending(true);
+    try {
+      const pageHtml = document.querySelector(".print-wrap")?.innerHTML || "";
+      const res = await fetch("/api/email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ to: emailTo, subject: "견적서", html: `<div style="font-family:sans-serif;">${pageHtml}</div>` }),
+      });
+      if (res.ok) alert("이메일이 발송되었습니다.");
+      else { const d = await res.json(); alert(d.error || "발송 실패"); }
+    } catch { alert("발송 실패"); }
+    finally { setSending(false); }
+  }
+
   return (
     <div className="min-h-screen bg-gray-100 py-5 print:bg-white print:py-0">
-      <div className="max-w-[800px] mx-auto bg-white p-8 md:p-10 shadow print:shadow-none print:p-5">
+      <div className="print-wrap max-w-[800px] mx-auto bg-white p-8 md:p-10 shadow print:shadow-none print:p-5">
         <p className="text-sm text-gray-700 mb-5">No. 20260325-6</p>
         <h1 className="text-center text-3xl font-black tracking-[24px] text-gray-800 py-3 border-t-[3px] border-b-[3px] border-double border-gray-800 mb-6">
           견 적 서
@@ -66,8 +87,8 @@ export default function EstimatePage() {
       <div className="max-w-[800px] mx-auto mt-3 flex flex-col gap-2 print:hidden">
         <div className="flex gap-2 items-center">
           <label className="text-sm">수신 이메일:</label>
-          <input type="email" placeholder="이메일 주소를 입력하세요" className="px-3 py-1.5 border border-gray-300 rounded text-sm w-64" />
-          <button className="px-4 py-1.5 bg-gray-700 text-white rounded text-sm">발송</button>
+          <input type="email" placeholder="이메일 주소를 입력하세요" value={emailTo} onChange={e => setEmailTo(e.target.value)} className="px-3 py-1.5 border border-gray-300 rounded text-sm w-64" />
+          <button onClick={handleSendEmail} disabled={sending} className="px-4 py-1.5 bg-gray-700 text-white rounded text-sm disabled:opacity-50">{sending ? "발송중..." : "발송"}</button>
           <span className="text-xs text-gray-400">발신: pwindow@naver.com</span>
         </div>
         <div className="flex gap-2">
