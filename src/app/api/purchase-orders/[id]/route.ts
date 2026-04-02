@@ -18,9 +18,9 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
   const { id } = await params;
   const body = await request.json();
   const supabase = getSupabase();
-  const { data, error } = await supabase.from("purchase_orders").update({ ...body, updated_at: new Date().toISOString() }).eq("id", id).eq("company_id", session.company.id).select().single();
+  const { error } = await supabase.from("purchase_orders").update({ ...body, updated_at: new Date().toISOString() }).eq("id", id).eq("company_id", session.company.id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json(data);
+  return NextResponse.json({ success: true });
 }
 
 export async function DELETE(_: NextRequest, { params }: { params: Promise<{ id: string }> }) {
