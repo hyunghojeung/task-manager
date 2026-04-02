@@ -4,27 +4,23 @@ export function middleware(request: NextRequest) {
   const session = request.cookies.get("session");
   const { pathname } = request.nextUrl;
 
-  // 공개 페이지
-  const publicPaths = ["/", "/super-admin", "/api/auth/login"];
+  // 공개 페이지 & API
+  const publicPaths = ["/", "/super-admin", "/api/auth/login", "/api/auth/logout"];
   if (publicPaths.some((p) => pathname === p)) {
     return NextResponse.next();
   }
 
-  // 최고관리자 페이지는 별도 처리 (로그인 페이지 제외)
-  if (pathname.startsWith("/super-admin/")) {
+  // 최고관리자 페이지 & API는 별도 처리
+  if (pathname.startsWith("/super-admin/") || pathname.startsWith("/api/admin/")) {
     return NextResponse.next();
   }
 
   // 인증 필요 페이지
   if (!session) {
-    return NextResponse.redirect(new URL("/", request.url));
-  }
-
-  // API 인증
-  if (pathname.startsWith("/api/") && !pathname.startsWith("/api/auth/")) {
-    if (!session) {
+    if (pathname.startsWith("/api/")) {
       return NextResponse.json({ error: "인증이 필요합니다." }, { status: 401 });
     }
+    return NextResponse.redirect(new URL("/", request.url));
   }
 
   // 관리자 페이지 권한 체크
