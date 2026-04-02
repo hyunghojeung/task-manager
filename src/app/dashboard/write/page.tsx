@@ -25,6 +25,29 @@ export default function WritePage() {
   });
   const [orderNo, setOrderNo] = useState("자동생성");
   const [itemRows, setItemRows] = useState(5);
+  const [templateList, setTemplateList] = useState<Array<{id:string;name:string;columns:Array<{name:string;type:string}>;formulas:Array<{target:string;expression:string}>}>>([]);
+  const [selectedTemplate, setSelectedTemplate] = useState("");
+  const [templateCols, setTemplateCols] = useState<Array<{name:string;type:string}>>([
+    {name:"순번",type:"auto"},{name:"품목명",type:"텍스트"},{name:"규격",type:"텍스트"},
+    {name:"부수",type:"숫자"},{name:"페이지수",type:"숫자"},{name:"단가",type:"숫자"},
+    {name:"공급가",type:"자동계산"},{name:"부가세",type:"자동계산"},{name:"합계",type:"자동계산"}
+  ]);
+
+  useEffect(() => {
+    fetch(`/api/templates?_=${Date.now()}`).then(r => r.json()).then(d => {
+      if (Array.isArray(d) && d.length > 0) {
+        setTemplateList(d);
+        setSelectedTemplate(d[0].name);
+        if (d[0].columns?.length > 0) setTemplateCols(d[0].columns);
+      }
+    });
+  }, []);
+
+  function handleTemplateChange(name: string) {
+    setSelectedTemplate(name);
+    const tmpl = templateList.find(t => t.name === name);
+    if (tmpl?.columns?.length) setTemplateCols(tmpl.columns);
+  }
 
   useEffect(() => {
     if (editId) {
@@ -229,13 +252,14 @@ export default function WritePage() {
         </div>
       </div>
 
-      {/* 표양식 (품목 테이블) */}
+      {/* 표양식 (품목 테이블) - 동적 컬럼 */}
       <div className="bg-white border border-gray-300 rounded p-4 mb-3">
         <div className="flex justify-between items-center mb-2">
           <div className="flex items-center gap-2">
             <span className="text-sm font-bold text-gray-800">표양식</span>
-            <select className="px-2 py-1 border border-gray-300 rounded text-xs">
-              <option>부가세포함</option><option>제본용</option><option>브로셔용</option><option>옵셋용</option>
+            <select value={selectedTemplate} onChange={e => handleTemplateChange(e.target.value)} className="px-2 py-1 border border-gray-300 rounded text-xs">
+              {templateList.length === 0 && <option>기본</option>}
+              {templateList.map(t => <option key={t.id} value={t.name}>{t.name}</option>)}
             </select>
           </div>
           <button onClick={() => setItemRows(r => r + 1)} className="px-3 py-1 border border-gray-300 rounded text-xs text-gray-500 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-500 transition">+ 행 추가</button>
@@ -244,36 +268,30 @@ export default function WritePage() {
           <table className="w-full border-collapse text-xs">
             <thead>
               <tr className="bg-gray-100">
-                <th className="border border-gray-200 px-2 py-2 w-[35px]">순번</th>
-                <th className="border border-gray-200 px-2 py-2">품목명</th>
-                <th className="border border-gray-200 px-2 py-2 w-[70px]">규격</th>
-                <th className="border border-gray-200 px-2 py-2 w-[55px]">부수</th>
-                <th className="border border-gray-200 px-2 py-2 w-[60px]">페이지수</th>
-                <th className="border border-gray-200 px-2 py-2 w-[70px]">단가</th>
-                <th className="border border-gray-200 px-2 py-2 w-[85px]">공급가</th>
-                {formData.trade_type === "vat" && <th className="border border-gray-200 px-2 py-2 w-[70px]">부가세</th>}
-                <th className="border border-gray-200 px-2 py-2 w-[85px]">합계</th>
+                {templateCols.map((c, i) => (
+                  <th key={i} className={`border border-gray-200 px-2 py-2 ${c.type === "자동계산" ? "bg-amber-50" : ""} ${c.name === "순번" ? "w-[35px]" : c.name === "품목명" ? "" : "w-[70px]"}`}>{c.name}</th>
+                ))}
               </tr>
             </thead>
             <tbody>
               {Array.from({ length: itemRows }, (_, i) => i + 1).map((num) => (
                 <tr key={num}>
-                  <td className="border border-gray-200 px-1 py-1 text-center">{num}</td>
-                  <td className="border border-gray-200 px-1 py-1"><input type="text" className="w-full px-1 py-1 border border-gray-200 rounded text-xs" /></td>
-                  <td className="border border-gray-200 px-1 py-1"><input type="text" className="w-full px-1 py-1 border border-gray-200 rounded text-xs text-center" /></td>
-                  <td className="border border-gray-200 px-1 py-1"><input type="text" className="w-full px-1 py-1 border border-gray-200 rounded text-xs text-center" /></td>
-                  <td className="border border-gray-200 px-1 py-1"><input type="text" className="w-full px-1 py-1 border border-gray-200 rounded text-xs text-center" /></td>
-                  <td className="border border-gray-200 px-1 py-1"><input type="text" className="w-full px-1 py-1 border border-gray-200 rounded text-xs text-right" /></td>
-                  <td className="border border-gray-200 px-1 py-1"><input type="text" className="w-full px-1 py-1 border border-gray-200 rounded text-xs text-right" /></td>
-                  {formData.trade_type === "vat" && <td className="border border-gray-200 px-1 py-1"><input type="text" className="w-full px-1 py-1 border border-gray-200 rounded text-xs text-right" /></td>}
-                  <td className="border border-gray-200 px-1 py-1"><input type="text" className="w-full px-1 py-1 border border-gray-200 rounded text-xs text-right" /></td>
+                  {templateCols.map((c, ci) => (
+                    <td key={ci} className={`border border-gray-200 px-1 py-1 ${c.type === "자동계산" ? "bg-amber-50" : ""}`}>
+                      {c.type === "auto" ? <span className="text-center block">{num}</span> :
+                       <input type="text" className={`w-full px-1 py-1 border border-gray-200 rounded text-xs ${c.type === "숫자" || c.type === "자동계산" ? "text-right" : ""}`} />}
+                    </td>
+                  ))}
                 </tr>
               ))}
               <tr className="bg-gray-50 font-bold">
-                <td colSpan={6} className="border border-gray-200 px-2 py-2 text-right">합 계</td>
-                <td className="border border-gray-200 px-2 py-2 text-right">0</td>
-                {formData.trade_type === "vat" && <td className="border border-gray-200 px-2 py-2 text-right">0</td>}
-                <td className="border border-gray-200 px-2 py-2 text-right">0</td>
+                {templateCols.map((c, ci) => {
+                  const calcCols = templateCols.filter(tc => tc.type === "자동계산");
+                  const nonCalcCount = templateCols.length - calcCols.length;
+                  if (ci === 0) return <td key={ci} colSpan={nonCalcCount} className="border border-gray-200 px-2 py-2 text-right">합 계</td>;
+                  if (ci < nonCalcCount) return null;
+                  return <td key={ci} className="border border-gray-200 px-2 py-2 text-right bg-amber-50">0</td>;
+                })}
               </tr>
             </tbody>
           </table>
