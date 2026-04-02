@@ -16,7 +16,20 @@ export default function OrdersPage() {
   const [saving, setSaving] = useState(false);
   const [showSupplierModal, setShowSupplierModal] = useState(false);
   const [newSupplier, setNewSupplier] = useState({ name: "", contact_person: "", phone: "", fax: "", email: "" });
+  const [currentUserName, setCurrentUserName] = useState("");
   const [form, setForm] = useState({ supplier_name: "", orderer: "", contact: "", request_note: "", po_date: new Date().toISOString().slice(0, 10) });
+
+  useEffect(() => {
+    try {
+      const cookies = document.cookie.split(";").map(c => c.trim());
+      const sessionCookie = cookies.find(c => c.startsWith("session="));
+      if (sessionCookie) {
+        const decoded = decodeURIComponent(sessionCookie.split("=").slice(1).join("="));
+        const session = JSON.parse(decoded);
+        setCurrentUserName(session.user?.name || "");
+      }
+    } catch { /* ignore */ }
+  }, []);
   const [items, setItems] = useState(Array.from({ length: 5 }, () => ({ product_name: "", spec: "", paper_grain: "", cut_size: "", quantity: "", received: "" })));
 
   const [page, setPage] = useState(1);
@@ -45,7 +58,7 @@ export default function OrdersPage() {
       setItems([...poItems, ...Array.from({ length: emptyRows }, () => ({ product_name: "", spec: "", paper_grain: "", cut_size: "", quantity: "", received: "" }))]);
     } else {
       setEditId(null);
-      setForm({ supplier_name: "", orderer: "", contact: "", request_note: "", po_date: new Date().toISOString().slice(0, 10) });
+      setForm({ supplier_name: "", orderer: currentUserName, contact: "", request_note: "", po_date: new Date().toISOString().slice(0, 10) });
       setItems(Array.from({ length: 5 }, () => ({ product_name: "", spec: "", paper_grain: "", cut_size: "", quantity: "", received: "" })));
     }
     setView("write");
