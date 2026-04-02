@@ -3,7 +3,8 @@
 import { useState, useEffect } from "react";
 
 type View = "list" | "write";
-interface POData { id: string; po_no: string; po_date: string; supplier_name: string; orderer: string; contact: string; request_note: string; created_at: string }
+interface POItem { product_name: string; spec: string; paper_grain: string; cut_size: string; quantity: string; received: string }
+interface POData { id: string; po_no: string; po_date: string; supplier_name: string; orderer: string; contact: string; request_note: string; created_at: string; purchase_order_items?: POItem[] }
 interface SupplierData { id: string; name: string; contact_person: string; phone: string; fax: string; email: string }
 
 export default function OrdersPage() {
@@ -231,7 +232,7 @@ export default function OrdersPage() {
                 <td className="border border-gray-200 px-3 py-2 text-center">{o.po_date}</td>
                 <td className="border border-gray-200 px-3 py-2 text-left">{o.supplier_name}</td>
                 <td className="border border-gray-200 px-3 py-2 text-center">{o.orderer}</td>
-                <td className="border border-gray-200 px-3 py-2 text-left">{o.request_note?.slice(0, 50)}</td>
+                <td className="border border-gray-200 px-3 py-2 text-left">{(o.purchase_order_items || []).filter(it => it.product_name).map(it => `${it.product_name}${it.spec ? `(${it.spec})` : ""}`).join(", ") || "-"}</td>
                 <td className="border border-gray-200 px-2 py-2 text-center">
                   <button onClick={() => window.open(`/dashboard/orders/print?id=${o.id}`, '_blank')} className="px-3 py-0.5 bg-red-600 text-white rounded text-xs whitespace-nowrap">인쇄</button>
                 </td>
