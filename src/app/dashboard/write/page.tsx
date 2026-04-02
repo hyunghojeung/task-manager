@@ -335,7 +335,7 @@ export default function WritePage() {
             <thead>
               <tr className="bg-gray-100">
                 {templateCols.map((c, i) => (
-                  <th key={i} className={`border border-gray-200 px-2 py-2 ${c.type === "자동계산" ? "bg-amber-50" : ""} ${c.name === "순번" ? "w-[35px]" : c.name === "품목명" ? "" : "w-[70px]"}`}>{c.name}</th>
+                  <th key={i} className={`border border-gray-200 px-2 py-2 ${c.type === "자동계산" ? "bg-amber-50" : ""}`} style={{width: (c as Record<string,string>).width ? `${(c as Record<string,string>).width}px` : c.name === "순번" ? "35px" : "auto", minWidth: 40}}>{c.name}</th>
                 ))}
               </tr>
             </thead>
