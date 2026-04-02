@@ -119,10 +119,11 @@ export default function SuperAdminDashboard() {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          company_name: form.company_name, business_number: form.business_number,
-          representative: form.representative, phone: form.phone, fax: form.fax,
-          email: form.email, address: form.address, business_type: form.business_type,
-          business_category: form.business_category, password: form.password,
+          company_id: form.company_id, company_name: form.company_name,
+          business_number: form.business_number, representative: form.representative,
+          phone: form.phone, fax: form.fax, email: form.email, address: form.address,
+          business_type: form.business_type, business_category: form.business_category,
+          password: form.password,
         }),
       });
       if (res.ok) { setShowModal(false); alert("수정되었습니다."); setTimeout(() => refreshList(), 500); }
