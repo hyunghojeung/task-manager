@@ -212,16 +212,135 @@ function CrudTab({endpoint, title, fields, subtitle}:{endpoint:string; title:str
 
 // ===== 양식폼관리 =====
 function TemplateTab() {
+  interface Tmpl { id: string; name: string; columns: Array<{name:string;type:string}>; formulas: Array<{target:string;expression:string}> }
+  const [templates, setTemplates] = useState<Tmpl[]>([]);
+  const [newName, setNewName] = useState("");
+  const [editTmpl, setEditTmpl] = useState<Tmpl | null>(null);
+  const [cols, setCols] = useState<Array<{name:string;type:string}>>([{name:"순번",type:"auto"}]);
+  const [formulas, setFormulas] = useState<Array<{target:string;expression:string}>>([]);
+
+  const load = useCallback(async () => {
+    const r = await fetch(`/api/templates?_=${Date.now()}`);
+    if (r.ok) setTemplates(await r.json());
+  }, []);
+  useEffect(() => { load(); }, [load]);
+
+  async function addTemplate() {
+    if (!newName) return;
+    await fetch("/api/templates", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: newName, columns: [], formulas: [] }) });
+    setNewName(""); load();
+  }
+  async function removeTemplate(id: string) {
+    if (!confirm("정말 삭제할까요?")) return;
+    await fetch(`/api/templates/${id}`, { method: "DELETE" }); load();
+  }
+  function startEdit(t: Tmpl) {
+    setEditTmpl(t);
+    setCols(t.columns?.length ? t.columns : [{name:"순번",type:"auto"}]);
+    setFormulas(t.formulas?.length ? t.formulas : []);
+  }
+  async function saveTemplate() {
+    if (!editTmpl) return;
+    await fetch(`/api/templates/${editTmpl.id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ columns: cols, formulas }) });
+    setEditTmpl(null); load(); alert("양식이 저장되었습니다.");
+  }
+  function addCol() { setCols(p => [...p, {name:"",type:"텍스트"}]); }
+  function removeCol(i: number) { setCols(p => p.filter((_,idx) => idx !== i)); }
+  function updateCol(i: number, field: string, val: string) { setCols(p => p.map((c,idx) => idx === i ? {...c,[field]:val} : c)); }
+  function addFormula() { setFormulas(p => [...p, {target:"",expression:""}]); }
+  function removeFormula(i: number) { setFormulas(p => p.filter((_,idx) => idx !== i)); }
+  function updateFormula(i: number, field: string, val: string) { setFormulas(p => p.map((f,idx) => idx === i ? {...f,[field]:val} : f)); }
+
   return (
     <div className="bg-white rounded-lg shadow p-6">
       <h3 className="text-base font-bold text-gray-800 mb-2 pb-2 border-b-2 border-gray-200">표양식관리</h3>
-      <p className="text-xs text-gray-500 mb-4">양식을 만들면 사용자가 주문서 입력 시 선택할 수 있습니다.</p>
-      {["부가세포함", "제본용", "브로셔용", "옵셋용"].map(name => (
-        <div key={name} className="flex justify-between items-center p-3 border border-gray-200 rounded mb-2 hover:bg-gray-50">
-          <span className="font-semibold text-sm text-gray-800">{name}</span>
-          <div className="flex gap-1"><button className="text-blue-600 border border-blue-600 px-2 py-0.5 rounded text-xs">편집</button><button className="text-red-600 border border-red-600 px-2 py-0.5 rounded text-xs">삭제</button></div>
+      <p className="text-xs text-gray-500 mb-4">양식을 만들면 사용자가 주문서 입력 시 선택할 수 있습니다. 컬럼과 계산공식을 자유롭게 지정하세요.</p>
+
+      {/* 양식 목록 */}
+      <div className="mb-4">
+        {templates.map(t => (
+          <div key={t.id} className={`flex justify-between items-center p-3 border rounded mb-2 cursor-pointer ${editTmpl?.id === t.id ? "border-blue-500 bg-blue-50" : "border-gray-200 hover:bg-gray-50"}`}>
+            <div>
+              <span className="font-semibold text-sm text-gray-800">{t.name}</span>
+              <span className="text-xs text-gray-400 ml-2">{t.columns?.length ? t.columns.map(c=>c.name).join(", ") : "(미설정)"}</span>
+            </div>
+            <div className="flex gap-1">
+              <button onClick={() => startEdit(t)} className="text-blue-600 border border-blue-600 px-2 py-0.5 rounded text-xs">편집</button>
+              <button onClick={() => removeTemplate(t.id)} className="text-red-600 border border-red-600 px-2 py-0.5 rounded text-xs">삭제</button>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="flex gap-2 mb-4">
+        <input type="text" placeholder="새 양식 이름" value={newName} onChange={e => setNewName(e.target.value)} className="px-3 py-1.5 border border-gray-300 rounded text-sm" />
+        <button onClick={addTemplate} className="px-4 py-1.5 bg-blue-600 text-white rounded text-sm">+ 양식 추가</button>
+      </div>
+
+      {/* 편집 영역 */}
+      {editTmpl && (
+        <div className="bg-gray-50 border border-gray-200 rounded-md p-5 mt-4">
+          <h4 className="text-sm font-bold text-gray-800 mb-3">양식 편집: <span className="text-blue-600">{editTmpl.name}</span></h4>
+
+          {/* 1. 컬럼 설정 */}
+          <div className="mb-4">
+            <p className="text-xs font-semibold text-gray-500 mb-2">1. 컬럼 설정</p>
+            <div className="flex flex-col gap-1">
+              {cols.map((c, i) => (
+                <div key={i} className={`flex items-center gap-2 px-3 py-1.5 rounded border text-xs ${c.type === "자동계산" ? "bg-amber-50 border-amber-300" : c.type === "auto" ? "bg-gray-100 border-gray-300" : "bg-white border-gray-200"}`}>
+                  <span className="text-gray-400 cursor-grab">☰</span>
+                  <input type="text" value={c.name} onChange={e => updateCol(i, "name", e.target.value)} readOnly={c.type === "auto"} className="w-24 px-1 py-0.5 border border-gray-300 rounded text-xs" style={c.type === "auto" ? {background:"#eee"} : {}} />
+                  <select value={c.type} onChange={e => updateCol(i, "type", e.target.value)} className="text-xs px-1 py-0.5 border border-gray-300 rounded">
+                    {c.type === "auto" ? <option>자동순번</option> : <><option>텍스트</option><option>숫자</option><option>자동계산</option></>}
+                  </select>
+                  {c.type === "자동계산" && <span className="text-xs text-amber-700">계산식 적용</span>}
+                  {c.type !== "auto" && <button onClick={() => removeCol(i)} className="text-red-500 text-sm">x</button>}
+                </div>
+              ))}
+            </div>
+            <button onClick={addCol} className="mt-2 px-3 py-1 border border-gray-300 rounded text-xs text-gray-500 hover:bg-blue-50">+ 컬럼 추가</button>
+          </div>
+
+          {/* 2. 계산공식 설정 */}
+          <div className="mb-4">
+            <p className="text-xs font-semibold text-gray-500 mb-1">2. 계산공식 설정</p>
+            <p className="text-xs text-gray-400 mb-2">컬럼명을 사용하여 수식을 입력하세요. 사용 가능: +, -, *, /, (, )</p>
+            <div className="flex flex-col gap-1">
+              {formulas.map((f, i) => (
+                <div key={i} className="flex items-center gap-2 px-3 py-1.5 bg-white border border-gray-200 rounded text-xs">
+                  <span className="font-bold text-blue-600 w-16">{f.target}</span>
+                  <span className="text-gray-400">=</span>
+                  <input type="text" value={f.expression} onChange={e => updateFormula(i, "expression", e.target.value)} className="flex-1 px-2 py-1 border border-gray-300 rounded text-xs font-mono bg-gray-50" />
+                  <input type="text" value={f.target} onChange={e => updateFormula(i, "target", e.target.value)} placeholder="대상 컬럼" className="w-16 px-1 py-1 border border-gray-300 rounded text-xs" />
+                  <button onClick={() => removeFormula(i)} className="text-red-500 text-sm">x</button>
+                </div>
+              ))}
+            </div>
+            <button onClick={addFormula} className="mt-2 px-3 py-1 border border-gray-300 rounded text-xs text-gray-500 hover:bg-blue-50">+ 계산식 추가</button>
+          </div>
+
+          {/* 3. 미리보기 */}
+          <div className="mb-4">
+            <p className="text-xs font-semibold text-gray-500 mb-2">3. 미리보기</p>
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse text-xs">
+                <thead><tr>{cols.map((c,i) => <th key={i} className={`border border-gray-300 px-2 py-1.5 text-center font-semibold ${c.type === "자동계산" ? "bg-amber-50" : "bg-gray-100"}`} style={{minWidth: c.name === "품목명" ? 120 : 50}}>{c.name}</th>)}</tr></thead>
+                <tbody>
+                  {[1,2,3].map(n => (
+                    <tr key={n}>{cols.map((c,i) => <td key={i} className={`border border-gray-200 px-2 py-1 text-center ${c.type === "자동계산" ? "bg-amber-50" : ""}`}>{n === 1 ? (c.type === "auto" ? "1" : c.type === "자동계산" ? <span className="text-amber-700 text-[10px]">자동계산</span> : <span className="text-gray-300 text-[10px]">{c.type}</span>) : c.type === "auto" ? n : ""}</td>)}</tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <p className="text-xs text-gray-400 mt-1">노란색 배경 컬럼 = 자동 계산되는 컬럼</p>
+          </div>
+
+          <div className="flex gap-2">
+            <button onClick={saveTemplate} className="px-5 py-1.5 bg-blue-600 text-white rounded text-xs">양식 저장</button>
+            <button onClick={() => setEditTmpl(null)} className="px-5 py-1.5 border border-gray-300 rounded text-xs">취소</button>
+          </div>
         </div>
-      ))}
+      )}
     </div>
   );
 }
