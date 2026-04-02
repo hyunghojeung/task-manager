@@ -25,6 +25,8 @@ export default function NoticeBar({ notices, onComplete }: NoticeBarProps) {
   function handleComplete(id: string) {
     setHiddenIds((prev) => [...prev, id]);
     setViewId(null);
+    // DB에서 완료 처리
+    fetch(`/api/notices/${id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ is_completed: true, completed_at: new Date().toISOString() }) });
     onComplete?.(id);
   }
 
