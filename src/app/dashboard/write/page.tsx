@@ -8,6 +8,9 @@ export default function WritePage() {
   const searchParams = useSearchParams();
   const editId = searchParams.get("id");
   const [saving, setSaving] = useState(false);
+  const [showClientModal, setShowClientModal] = useState(false);
+  const [clients, setClients] = useState<Array<{id:string;name:string;contact_person:string;phone:string;mobile:string;email:string}>>([]);
+  const [clientSearch, setClientSearch] = useState("");
   const [formData, setFormData] = useState({
     orderer: "", contact: "", email: "", client_name: "",
     product_type: "", title: "", category_id: "",
@@ -40,6 +43,16 @@ export default function WritePage() {
       });
     }
   }, [editId]);
+
+  function openClientModal() {
+    fetch(`/api/clients?_=${Date.now()}`).then(r => r.json()).then(d => setClients(d || []));
+    setShowClientModal(true);
+  }
+
+  function selectClient(c: {name:string;contact_person:string;phone:string;mobile:string;email:string}) {
+    setFormData(prev => ({ ...prev, client_name: c.name, orderer: c.contact_person || prev.orderer, contact: c.mobile || c.phone || prev.contact, email: c.email || prev.email }));
+    setShowClientModal(false);
+  }
 
   function handleChange(field: string, value: string) {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -88,7 +101,12 @@ export default function WritePage() {
           </tr>
           <tr>
             <td className="font-semibold text-gray-600 text-xs py-1">거래처</td>
-            <td className="py-1"><input type="text" placeholder="거래처" value={formData.client_name} onChange={e => handleChange("client_name", e.target.value)} className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm" /></td>
+            <td className="py-1">
+              <div style={{display:"flex",gap:"4px",alignItems:"center"}}>
+                <input type="text" placeholder="거래처" value={formData.client_name} onChange={e => handleChange("client_name", e.target.value)} className="flex-1 px-2 py-1.5 border border-gray-300 rounded text-sm" />
+                <button type="button" onClick={openClientModal} className="px-2 py-1 bg-blue-600 text-white rounded text-xs whitespace-nowrap">검색</button>
+              </div>
+            </td>
             <td className="font-semibold text-gray-600 text-xs py-1 text-right pr-2">이메일</td>
             <td className="py-1"><input type="text" placeholder="이메일" value={formData.email} onChange={e => handleChange("email", e.target.value)} className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm" /></td>
           </tr>
@@ -225,6 +243,43 @@ export default function WritePage() {
         <button onClick={() => router.push("/dashboard")} className="px-6 py-2 bg-white text-gray-600 border border-gray-300 rounded text-sm">리스트</button>
         {editId && <button onClick={handleDelete} className="px-6 py-2 bg-red-600 text-white rounded text-sm">삭제</button>}
       </div>
+      {/* 거래처 검색 모달 */}
+      {showClientModal && (
+        <div className="fixed inset-0 bg-black/50 z-[1000] flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg p-6 w-full max-w-[650px] max-h-[80vh] overflow-y-auto shadow-xl">
+            <h4 className="text-base font-bold text-gray-800 mb-3 pb-2 border-b-2 border-gray-200">거래처 검색</h4>
+            <div className="flex gap-2 mb-3">
+              <input type="text" placeholder="거래처명을 입력하세요" value={clientSearch} onChange={e => setClientSearch(e.target.value)} className="flex-1 px-3 py-2 border border-gray-300 rounded text-sm" />
+            </div>
+            <table className="w-full border-collapse text-xs">
+              <thead>
+                <tr>
+                  <th className="bg-gray-50 px-2 py-2 border-b-2 border-gray-200 text-center font-semibold text-gray-600">회사명</th>
+                  <th className="bg-gray-50 px-2 py-2 border-b-2 border-gray-200 text-center font-semibold text-gray-600">담당자</th>
+                  <th className="bg-gray-50 px-2 py-2 border-b-2 border-gray-200 text-center font-semibold text-gray-600">전화</th>
+                  <th className="bg-gray-50 px-2 py-2 border-b-2 border-gray-200 text-center font-semibold text-gray-600">핸드폰</th>
+                  <th className="bg-gray-50 px-2 py-2 border-b-2 border-gray-200 text-center font-semibold text-gray-600">이메일</th>
+                </tr>
+              </thead>
+              <tbody>
+                {clients.filter(c => !clientSearch || c.name?.toLowerCase().includes(clientSearch.toLowerCase())).map(c => (
+                  <tr key={c.id} className="hover:bg-blue-50 cursor-pointer" onClick={() => selectClient(c)}>
+                    <td className="px-2 py-2 border-b border-gray-100 text-left">{c.name}</td>
+                    <td className="px-2 py-2 border-b border-gray-100 text-center">{c.contact_person}</td>
+                    <td className="px-2 py-2 border-b border-gray-100 text-center">{c.phone}</td>
+                    <td className="px-2 py-2 border-b border-gray-100 text-center">{c.mobile}</td>
+                    <td className="px-2 py-2 border-b border-gray-100 text-left">{c.email}</td>
+                  </tr>
+                ))}
+                {clients.length === 0 && <tr><td colSpan={5} className="text-center py-4 text-gray-400">등록된 거래처가 없습니다.</td></tr>}
+              </tbody>
+            </table>
+            <div className="flex justify-end mt-3">
+              <button onClick={() => setShowClientModal(false)} className="px-5 py-2 bg-gray-700 text-white rounded text-xs">닫기</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
