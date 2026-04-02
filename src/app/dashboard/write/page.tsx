@@ -11,6 +11,8 @@ export default function WritePage() {
   const [showClientModal, setShowClientModal] = useState(false);
   const [clients, setClients] = useState<Array<{id:string;name:string;contact_person:string;phone:string;mobile:string;email:string}>>([]);
   const [clientSearch, setClientSearch] = useState("");
+  const [showAutoComplete, setShowAutoComplete] = useState(false);
+  const [autoClients, setAutoClients] = useState<Array<{id:string;name:string;contact_person:string;phone:string;mobile:string;email:string}>>([]);
   const [formData, setFormData] = useState({
     orderer: "", contact: "", email: "", client_name: "",
     product_type: "", title: "", category_id: "",
@@ -52,6 +54,19 @@ export default function WritePage() {
   function selectClient(c: {name:string;contact_person:string;phone:string;mobile:string;email:string}) {
     setFormData(prev => ({ ...prev, client_name: c.name, orderer: c.contact_person || prev.orderer, contact: c.mobile || c.phone || prev.contact, email: c.email || prev.email }));
     setShowClientModal(false);
+  }
+
+  function handleClientInput(value: string) {
+    handleChange("client_name", value);
+    if (value.length >= 1) {
+      fetch(`/api/clients?_=${Date.now()}`).then(r => r.json()).then(d => {
+        const filtered = (d || []).filter((c: {name:string}) => c.name?.toLowerCase().includes(value.toLowerCase()));
+        setAutoClients(filtered);
+        setShowAutoComplete(filtered.length > 0);
+      });
+    } else {
+      setShowAutoComplete(false);
+    }
   }
 
   function handleChange(field: string, value: string) {
@@ -102,9 +117,19 @@ export default function WritePage() {
           <tr>
             <td className="font-semibold text-gray-600 text-xs py-1">거래처</td>
             <td className="py-1">
-              <div style={{display:"flex",gap:"4px",alignItems:"center"}}>
-                <input type="text" placeholder="거래처" value={formData.client_name} onChange={e => handleChange("client_name", e.target.value)} className="flex-1 px-2 py-1.5 border border-gray-300 rounded text-sm" />
+              <div style={{display:"flex",gap:"4px",alignItems:"center",position:"relative"}}>
+                <input type="text" placeholder="거래처" value={formData.client_name} onChange={e => handleClientInput(e.target.value)} onBlur={() => setTimeout(() => setShowAutoComplete(false), 200)} className="flex-1 px-2 py-1.5 border border-gray-300 rounded text-sm" />
                 <button type="button" onClick={openClientModal} className="px-2 py-1 bg-blue-600 text-white rounded text-xs whitespace-nowrap">검색</button>
+                {showAutoComplete && (
+                  <div className="absolute top-full left-0 right-12 bg-white border border-gray-300 rounded shadow-lg z-50 max-h-48 overflow-y-auto">
+                    {autoClients.map(c => (
+                      <div key={c.id} className="px-3 py-2 hover:bg-blue-50 cursor-pointer text-sm border-b border-gray-100 flex justify-between" onClick={() => { selectClient(c); setShowAutoComplete(false); }}>
+                        <span className="font-medium">{c.name}</span>
+                        <span className="text-gray-400 text-xs">{c.contact_person}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </td>
             <td className="font-semibold text-gray-600 text-xs py-1 text-right pr-2">이메일</td>
