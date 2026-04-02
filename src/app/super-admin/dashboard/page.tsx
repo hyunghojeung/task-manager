@@ -158,6 +158,66 @@ export default function SuperAdminDashboard() {
     refreshList();
   }
 
+  function AdsTab() {
+    const [ad, setAd] = useState({ content: "", link_url: "", button_text: "FREE" });
+    const [adLoading, setAdLoading] = useState(true);
+    const [adSaving, setAdSaving] = useState(false);
+
+    useEffect(() => {
+      fetch(`/api/admin/ads?_=${Date.now()}`).then(r => r.json()).then(d => {
+        setAd({ content: d.content || "", link_url: d.link_url || "", button_text: d.button_text || "FREE" });
+        setAdLoading(false);
+      }).catch(() => setAdLoading(false));
+    }, []);
+
+    async function saveAd() {
+      setAdSaving(true);
+      const res = await fetch("/api/admin/ads", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(ad) });
+      if (res.ok) alert("저장되었습니다.");
+      else alert("저장 실패");
+      setAdSaving(false);
+    }
+
+    if (adLoading) return <div className="bg-white rounded-lg shadow p-6"><p className="text-sm text-gray-400">로딩중...</p></div>;
+
+    return (
+      <div className="bg-white rounded-lg shadow p-6">
+        <h3 className="text-base font-bold text-gray-800 mb-4 pb-2 border-b-2 border-gray-200">배너 광고 관리</h3>
+        <p className="text-xs text-gray-500 mb-4">배너에 표시될 텍스트, 클릭 시 이동할 URL, 버튼 텍스트를 설정합니다.</p>
+
+        <div className="mb-5">
+          <label className="block text-xs font-semibold text-gray-600 mb-1">미리보기</label>
+          <div className="bg-gradient-to-r from-slate-800 via-blue-600 to-sky-500 px-6 py-2.5 rounded-md flex justify-between items-center">
+            <span className="text-white text-sm font-bold">{ad.content || "(배너 텍스트)"}</span>
+            <span className="bg-amber-400 text-slate-900 px-3 py-0.5 rounded-full text-xs font-bold">{ad.button_text || "FREE"}</span>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 gap-3 max-w-2xl">
+          <div>
+            <label className="block text-xs font-semibold text-gray-600 mb-1">배너 텍스트</label>
+            <input type="text" value={ad.content} onChange={e => setAd(p => ({ ...p, content: e.target.value }))}
+              placeholder="배너에 표시될 문구" className="w-full px-3 py-2 border border-gray-300 rounded text-sm" />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-gray-600 mb-1">클릭 시 이동 URL</label>
+            <input type="text" value={ad.link_url} onChange={e => setAd(p => ({ ...p, link_url: e.target.value }))}
+              placeholder="https://example.com" className="w-full px-3 py-2 border border-gray-300 rounded text-sm" />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-gray-600 mb-1">버튼 텍스트</label>
+            <input type="text" value={ad.button_text} onChange={e => setAd(p => ({ ...p, button_text: e.target.value }))}
+              placeholder="FREE" className="w-full px-3 py-2 border border-gray-300 rounded text-sm max-w-[200px]" />
+          </div>
+        </div>
+
+        <button onClick={saveAd} disabled={adSaving} className="mt-4 px-6 py-2 bg-blue-600 text-white rounded text-sm disabled:opacity-50">
+          {adSaving ? "저장중..." : "저장"}
+        </button>
+      </div>
+    );
+  }
+
   const activeCount = companies.filter(c => c.status === "active").length;
   const inactiveCount = companies.filter(c => c.status !== "active").length;
   const totalUsers = companies.reduce((sum, c) => sum + (c.user_count || 0), 0);
@@ -275,16 +335,7 @@ export default function SuperAdminDashboard() {
           </div>
         )}
 
-        {tab === "ads" && (
-          <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-base font-bold text-gray-800 mb-4 pb-2 border-b-2 border-gray-200">배너 광고 관리</h3>
-            <div className="bg-gradient-to-r from-slate-800 via-blue-600 to-sky-500 px-6 py-2.5 rounded-md flex justify-between items-center mb-6">
-              <span className="text-white text-sm font-bold">인쇄/출력 작업기록, 견적서, 거래명세서, 발주서까지 올인원 업무관리</span>
-              <span className="bg-amber-400 text-slate-900 px-3 py-0.5 rounded-full text-xs font-bold">FREE</span>
-            </div>
-            <p className="text-xs text-gray-500">광고 관리 기능은 추후 업데이트 예정입니다.</p>
-          </div>
-        )}
+        {tab === "ads" && <AdsTab />}
 
         {tab === "settings" && (
           <div className="bg-white rounded-lg shadow p-6">
