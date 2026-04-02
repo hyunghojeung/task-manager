@@ -12,7 +12,12 @@ interface CompanyData {
   business_number: string;
   representative: string;
   phone: string;
+  fax: string;
   email: string;
+  address: string;
+  business_type: string;
+  business_category: string;
+  password: string;
   status: string;
   user_count: number;
   created_at: string;
@@ -91,8 +96,9 @@ export default function SuperAdminDashboard() {
       company_code: c.company_code || "", company_id: c.company_id || "",
       company_name: c.company_name || "", business_number: c.business_number || "",
       representative: c.representative || "", phone: c.phone || "",
-      fax: "", email: c.email || "", address: "", business_type: "", business_category: "",
-      password: "", adminName: "", adminUserId: "", adminPassword: "",
+      fax: c.fax || "", email: c.email || "", address: c.address || "",
+      business_type: c.business_type || "", business_category: c.business_category || "",
+      password: c.password || "", adminName: "", adminUserId: "", adminPassword: "",
     });
     setShowModal(true);
   }
@@ -114,7 +120,9 @@ export default function SuperAdminDashboard() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           company_name: form.company_name, business_number: form.business_number,
-          representative: form.representative, phone: form.phone, email: form.email,
+          representative: form.representative, phone: form.phone, fax: form.fax,
+          email: form.email, address: form.address, business_type: form.business_type,
+          business_category: form.business_category, password: form.password,
         }),
       });
       if (res.ok) { setShowModal(false); alert("수정되었습니다."); setTimeout(() => refreshList(), 500); }
