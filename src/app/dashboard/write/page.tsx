@@ -167,6 +167,57 @@ export default function WritePage() {
         </div>
       </div>
 
+      {/* 표양식 (품목 테이블) */}
+      <div className="bg-white border border-gray-300 rounded p-4 mb-3">
+        <div className="flex justify-between items-center mb-2">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-bold text-gray-800">표양식</span>
+            <select className="px-2 py-1 border border-gray-300 rounded text-xs">
+              <option>부가세포함</option><option>제본용</option><option>브로셔용</option><option>옵셋용</option>
+            </select>
+          </div>
+          <button className="px-3 py-1 border border-gray-300 rounded text-xs text-gray-500 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-500 transition">+ 행 추가</button>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse text-xs">
+            <thead>
+              <tr className="bg-gray-100">
+                <th className="border border-gray-200 px-2 py-2 w-[35px]">순번</th>
+                <th className="border border-gray-200 px-2 py-2">품목명</th>
+                <th className="border border-gray-200 px-2 py-2 w-[70px]">규격</th>
+                <th className="border border-gray-200 px-2 py-2 w-[55px]">부수</th>
+                <th className="border border-gray-200 px-2 py-2 w-[60px]">페이지수</th>
+                <th className="border border-gray-200 px-2 py-2 w-[70px]">단가</th>
+                <th className="border border-gray-200 px-2 py-2 w-[85px]">공급가</th>
+                {formData.trade_type === "vat" && <th className="border border-gray-200 px-2 py-2 w-[70px]">부가세</th>}
+                <th className="border border-gray-200 px-2 py-2 w-[85px]">합계</th>
+              </tr>
+            </thead>
+            <tbody>
+              {[1, 2, 3, 4, 5].map((num) => (
+                <tr key={num}>
+                  <td className="border border-gray-200 px-1 py-1 text-center">{num}</td>
+                  <td className="border border-gray-200 px-1 py-1"><input type="text" className="w-full px-1 py-1 border border-gray-200 rounded text-xs" /></td>
+                  <td className="border border-gray-200 px-1 py-1"><input type="text" className="w-full px-1 py-1 border border-gray-200 rounded text-xs text-center" /></td>
+                  <td className="border border-gray-200 px-1 py-1"><input type="text" className="w-full px-1 py-1 border border-gray-200 rounded text-xs text-center" /></td>
+                  <td className="border border-gray-200 px-1 py-1"><input type="text" className="w-full px-1 py-1 border border-gray-200 rounded text-xs text-center" /></td>
+                  <td className="border border-gray-200 px-1 py-1"><input type="text" className="w-full px-1 py-1 border border-gray-200 rounded text-xs text-right" /></td>
+                  <td className="border border-gray-200 px-1 py-1"><input type="text" className="w-full px-1 py-1 border border-gray-200 rounded text-xs text-right" /></td>
+                  {formData.trade_type === "vat" && <td className="border border-gray-200 px-1 py-1"><input type="text" className="w-full px-1 py-1 border border-gray-200 rounded text-xs text-right" /></td>}
+                  <td className="border border-gray-200 px-1 py-1"><input type="text" className="w-full px-1 py-1 border border-gray-200 rounded text-xs text-right" /></td>
+                </tr>
+              ))}
+              <tr className="bg-gray-50 font-bold">
+                <td colSpan={6} className="border border-gray-200 px-2 py-2 text-right">합 계</td>
+                <td className="border border-gray-200 px-2 py-2 text-right">0</td>
+                {formData.trade_type === "vat" && <td className="border border-gray-200 px-2 py-2 text-right">0</td>}
+                <td className="border border-gray-200 px-2 py-2 text-right">0</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
       {/* 하단 버튼 */}
       <div className="flex gap-2 py-3">
         <button onClick={handleSave} disabled={saving} className="px-6 py-2 bg-blue-600 text-white rounded text-sm font-medium disabled:opacity-50">{saving ? "저장중..." : "저장"}</button>
