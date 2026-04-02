@@ -5,6 +5,9 @@ import Header from "@/components/Header";
 import NavBar from "@/components/NavBar";
 import NoticeBar from "@/components/NoticeBar";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default async function DashboardLayout({
   children,
 }: {
