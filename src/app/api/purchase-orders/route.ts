@@ -25,7 +25,12 @@ export async function POST(request: NextRequest) {
   const dateStr = `${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, "0")}${String(today.getDate()).padStart(2, "0")}`;
   const { count } = await supabase.from("purchase_orders").select("*", { count: "exact", head: true }).eq("company_id", session.company.id).like("po_no", `O${dateStr}%`);
   const poNo = `O${dateStr}-${(count || 0) + 1}`;
-  const { data, error } = await supabase.from("purchase_orders").insert({ ...body, company_id: session.company.id, created_by: session.user.id, po_no: poNo }).select().single();
+  const { items, ...orderData } = body;
+  const { data, error } = await supabase.from("purchase_orders").insert({ ...orderData, company_id: session.company.id, created_by: session.user.id, po_no: poNo }).select().single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (items && items.length > 0) {
+    const itemRows = items.map((it: Record<string, string>, i: number) => ({ ...it, purchase_order_id: data.id, sort_order: i + 1 }));
+    await supabase.from("purchase_order_items").insert(itemRows);
+  }
   return NextResponse.json(data, { status: 201 });
 }

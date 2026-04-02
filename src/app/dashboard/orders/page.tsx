@@ -37,6 +37,12 @@ export default function OrdersPage() {
     if (po) {
       setEditId(po.id);
       setForm({ supplier_name: po.supplier_name || "", orderer: po.orderer || "", contact: po.contact || "", request_note: po.request_note || "", po_date: po.po_date || "" });
+      const poItems = (po.purchase_order_items || []).map(it => ({
+        product_name: it.product_name || "", spec: it.spec || "", paper_grain: it.paper_grain || "",
+        cut_size: it.cut_size || "", quantity: it.quantity || "", received: it.received || ""
+      }));
+      const emptyRows = Math.max(5 - poItems.length, 0);
+      setItems([...poItems, ...Array.from({ length: emptyRows }, () => ({ product_name: "", spec: "", paper_grain: "", cut_size: "", quantity: "", received: "" }))]);
     } else {
       setEditId(null);
       setForm({ supplier_name: "", orderer: "", contact: "", request_note: "", po_date: new Date().toISOString().slice(0, 10) });
@@ -77,7 +83,8 @@ export default function OrdersPage() {
     setSaving(true);
     const url = editId ? `/api/purchase-orders/${editId}` : "/api/purchase-orders";
     const method = editId ? "PUT" : "POST";
-    const res = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(form) });
+    const validItems = items.filter(it => it.product_name);
+    const res = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...form, items: validItems }) });
     if (res.ok) { alert(editId ? "수정되었습니다." : "저장되었습니다."); setView("list"); setTimeout(() => setRefreshKey(k => k + 1), 500); }
     else alert("저장 실패");
     setSaving(false);
