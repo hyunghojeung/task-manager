@@ -71,6 +71,21 @@ export default function SuperAdminDashboard() {
     }
   }
 
+  async function handleStatusChange(id: string, newStatus: string) {
+    await fetch(`/api/admin/companies/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: newStatus }),
+    });
+    fetchCompanies();
+  }
+
+  async function handleDelete(id: string) {
+    if (!confirm("정말 삭제할까요? 업체의 모든 데이터가 삭제됩니다.")) return;
+    await fetch(`/api/admin/companies/${id}`, { method: "DELETE" });
+    fetchCompanies();
+  }
+
   const activeCount = companies.filter(c => c.status === "active").length;
   const inactiveCount = companies.filter(c => c.status !== "active").length;
   const totalUsers = companies.reduce((sum, c) => sum + (c.user_count || 0), 0);
@@ -122,7 +137,7 @@ export default function SuperAdminDashboard() {
                 <div className="overflow-x-auto">
                   <table className="w-full border-collapse text-xs border border-gray-300">
                     <thead><tr className="bg-slate-900 text-white">
-                      <th className="border border-slate-700 px-2 py-2.5">순번</th><th className="border border-slate-700 px-2 py-2.5">업체ID</th><th className="border border-slate-700 px-2 py-2.5">업체명</th><th className="border border-slate-700 px-2 py-2.5">대표자</th><th className="border border-slate-700 px-2 py-2.5">연락처</th><th className="border border-slate-700 px-2 py-2.5">등록일</th><th className="border border-slate-700 px-2 py-2.5">상태</th><th className="border border-slate-700 px-2 py-2.5">사용자</th>
+                      <th className="border border-slate-700 px-2 py-2.5">순번</th><th className="border border-slate-700 px-2 py-2.5">업체ID</th><th className="border border-slate-700 px-2 py-2.5">업체명</th><th className="border border-slate-700 px-2 py-2.5">대표자</th><th className="border border-slate-700 px-2 py-2.5">연락처</th><th className="border border-slate-700 px-2 py-2.5">등록일</th><th className="border border-slate-700 px-2 py-2.5">상태</th><th className="border border-slate-700 px-2 py-2.5">사용자</th><th className="border border-slate-700 px-2 py-2.5">관리</th>
                     </tr></thead>
                     <tbody>
                       {companies.map((c, i) => (
@@ -135,6 +150,10 @@ export default function SuperAdminDashboard() {
                           <td className="border border-gray-200 px-2 py-2 text-center">{c.created_at?.slice(0, 10)}</td>
                           <td className="border border-gray-200 px-2 py-2 text-center">{statusBadge(c.status)}</td>
                           <td className="border border-gray-200 px-2 py-2 text-center">{c.user_count}명</td>
+                          <td className="border border-gray-200 px-2 py-2 text-center whitespace-nowrap">
+                            <button onClick={()=>handleStatusChange(c.id, c.status==="active"?"inactive":"active")} className={`px-2 py-0.5 rounded text-xs mr-1 border ${c.status==="active"?"text-red-600 border-red-600":"text-emerald-600 border-emerald-600"}`}>{c.status==="active"?"정지":"활성"}</button>
+                            <button onClick={()=>handleDelete(c.id)} className="text-red-600 border border-red-600 px-2 py-0.5 rounded text-xs">삭제</button>
+                          </td>
                         </tr>
                       ))}
                     </tbody>
@@ -155,7 +174,7 @@ export default function SuperAdminDashboard() {
               <div className="overflow-x-auto">
                 <table className="w-full border-collapse text-xs border border-gray-300">
                   <thead><tr className="bg-slate-900 text-white">
-                    <th className="border border-slate-700 px-2 py-2.5">순번</th><th className="border border-slate-700 px-2 py-2.5">업체ID</th><th className="border border-slate-700 px-2 py-2.5">업체코드</th><th className="border border-slate-700 px-2 py-2.5">업체명</th><th className="border border-slate-700 px-2 py-2.5">사업자번호</th><th className="border border-slate-700 px-2 py-2.5">대표자</th><th className="border border-slate-700 px-2 py-2.5">등록일</th><th className="border border-slate-700 px-2 py-2.5">상태</th><th className="border border-slate-700 px-2 py-2.5">사용자</th>
+                    <th className="border border-slate-700 px-2 py-2.5">순번</th><th className="border border-slate-700 px-2 py-2.5">업체ID</th><th className="border border-slate-700 px-2 py-2.5">업체코드</th><th className="border border-slate-700 px-2 py-2.5">업체명</th><th className="border border-slate-700 px-2 py-2.5">사업자번호</th><th className="border border-slate-700 px-2 py-2.5">대표자</th><th className="border border-slate-700 px-2 py-2.5">등록일</th><th className="border border-slate-700 px-2 py-2.5">상태</th><th className="border border-slate-700 px-2 py-2.5">사용자</th><th className="border border-slate-700 px-2 py-2.5">관리</th>
                   </tr></thead>
                   <tbody>
                     {companies.map((c, i) => (
@@ -169,6 +188,10 @@ export default function SuperAdminDashboard() {
                         <td className="border border-gray-200 px-2 py-2 text-center">{c.created_at?.slice(0, 10)}</td>
                         <td className="border border-gray-200 px-2 py-2 text-center">{statusBadge(c.status)}</td>
                         <td className="border border-gray-200 px-2 py-2 text-center">{c.user_count}명</td>
+                        <td className="border border-gray-200 px-2 py-2 text-center whitespace-nowrap">
+                          <button onClick={()=>handleStatusChange(c.id, c.status==="active"?"inactive":"active")} className={`px-2 py-0.5 rounded text-xs mr-1 border ${c.status==="active"?"text-red-600 border-red-600":"text-emerald-600 border-emerald-600"}`}>{c.status==="active"?"정지":"활성"}</button>
+                          <button onClick={()=>handleDelete(c.id)} className="text-red-600 border border-red-600 px-2 py-0.5 rounded text-xs">삭제</button>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -209,8 +232,7 @@ export default function SuperAdminDashboard() {
             <form onSubmit={handleCreateCompany}>
               <div className="grid grid-cols-2 gap-3 text-sm">
                 {[
-                  ["업체ID", "company_id", "영문 소문자"],
-                  ["업체코드", "company_code", "COM006"],
+                  ["업체ID", "company_id", "영문 소문자 (로그인용)"],
                   ["업체명", "company_name", "업체명"],
                   ["사업자번호", "business_number", "000-00-00000"],
                   ["대표자", "representative", "대표자명"],

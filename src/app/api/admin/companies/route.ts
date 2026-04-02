@@ -37,11 +37,27 @@ export async function POST(request: NextRequest) {
 
     const { adminName, adminUserId, adminPassword, ...companyData } = body;
 
+    // 업체코드 자동생성 (COM00001, COM00002, ...)
+    const { data: lastCompany } = await supabase
+      .from("companies")
+      .select("company_code")
+      .like("company_code", "COM%")
+      .order("company_code", { ascending: false })
+      .limit(1)
+      .single();
+
+    let nextNum = 1;
+    if (lastCompany?.company_code) {
+      const num = parseInt(lastCompany.company_code.replace("COM", ""));
+      if (!isNaN(num)) nextNum = num + 1;
+    }
+    const autoCode = `COM${String(nextNum).padStart(5, "0")}`;
+
     // 업체 등록
     const { data: company, error: companyError } = await supabase
       .from("companies")
       .insert({
-        company_code: companyData.company_code,
+        company_code: autoCode,
         company_id: companyData.company_id,
         company_name: companyData.company_name,
         business_number: companyData.business_number || null,
