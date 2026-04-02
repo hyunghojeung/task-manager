@@ -30,8 +30,18 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
   if (body.items) {
     await supabase.from("purchase_order_items").delete().eq("purchase_order_id", id);
     if (body.items.length > 0) {
-      const itemRows = body.items.map((it: Record<string, string>, i: number) => ({ ...it, purchase_order_id: id, sort_order: i + 1 }));
-      await supabase.from("purchase_order_items").insert(itemRows);
+      const itemRows = body.items.map((it: Record<string, string>, i: number) => ({
+        purchase_order_id: id,
+        product_name: it.product_name || "",
+        spec: it.spec || "",
+        paper_grain: it.paper_grain || "",
+        cut_size: it.cut_size || "",
+        quantity: it.quantity || "",
+        received: it.received || "",
+        sort_order: i + 1
+      }));
+      const { error: itemError } = await supabase.from("purchase_order_items").insert(itemRows);
+      if (itemError) return NextResponse.json({ error: "품목 저장 실패: " + itemError.message }, { status: 500 });
     }
   }
   return NextResponse.json({ success: true });

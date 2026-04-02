@@ -47,7 +47,16 @@ export async function POST(request: NextRequest) {
   const { data, error } = await supabase.from("purchase_orders").insert({ ...orderData, company_id: session.company.id, created_by: session.user.id, po_no: poNo }).select().single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   if (items && items.length > 0) {
-    const itemRows = items.map((it: Record<string, string>, i: number) => ({ ...it, purchase_order_id: data.id, sort_order: i + 1 }));
+    const itemRows = items.map((it: Record<string, string>, i: number) => ({
+      purchase_order_id: data.id,
+      product_name: it.product_name || "",
+      spec: it.spec || "",
+      paper_grain: it.paper_grain || "",
+      cut_size: it.cut_size || "",
+      quantity: it.quantity || "",
+      received: it.received || "",
+      sort_order: i + 1
+    }));
     await supabase.from("purchase_order_items").insert(itemRows);
   }
   return NextResponse.json(data, { status: 201 });
