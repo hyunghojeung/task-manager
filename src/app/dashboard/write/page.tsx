@@ -17,6 +17,7 @@ export default function WritePage() {
     detail_spec: "", order_date: new Date().toISOString().slice(0, 10),
   });
   const [orderNo, setOrderNo] = useState("자동생성");
+  const [itemRows, setItemRows] = useState(5);
 
   useEffect(() => {
     if (editId) {
@@ -176,7 +177,7 @@ export default function WritePage() {
               <option>부가세포함</option><option>제본용</option><option>브로셔용</option><option>옵셋용</option>
             </select>
           </div>
-          <button className="px-3 py-1 border border-gray-300 rounded text-xs text-gray-500 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-500 transition">+ 행 추가</button>
+          <button onClick={() => setItemRows(r => r + 1)} className="px-3 py-1 border border-gray-300 rounded text-xs text-gray-500 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-500 transition">+ 행 추가</button>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full border-collapse text-xs">
@@ -194,7 +195,7 @@ export default function WritePage() {
               </tr>
             </thead>
             <tbody>
-              {[1, 2, 3, 4, 5].map((num) => (
+              {Array.from({ length: itemRows }, (_, i) => i + 1).map((num) => (
                 <tr key={num}>
                   <td className="border border-gray-200 px-1 py-1 text-center">{num}</td>
                   <td className="border border-gray-200 px-1 py-1"><input type="text" className="w-full px-1 py-1 border border-gray-200 rounded text-xs" /></td>
