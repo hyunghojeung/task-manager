@@ -28,10 +28,10 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
   const { error } = await supabase.from("purchase_orders").update(updateData).eq("id", id).eq("company_id", session.company.id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   if (body.items) {
-    await supabase.from("purchase_order_items").delete().eq("purchase_order_id", id);
+    await supabase.from("purchase_order_items").delete().eq("po_id", id);
     if (body.items.length > 0) {
       const itemRows = body.items.map((it: Record<string, string>, i: number) => ({
-        purchase_order_id: id,
+        po_id: id,
         product_name: it.product_name || "",
         spec: it.spec || "",
         paper_grain: it.paper_grain || "",

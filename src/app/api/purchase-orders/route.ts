@@ -17,11 +17,11 @@ export async function GET(request: NextRequest) {
   const poIds = (data || []).map((o: Record<string, unknown>) => o.id).filter(Boolean);
   let itemsMap: Record<string, Record<string, string>[]> = {};
   if (poIds.length > 0) {
-    const { data: itemsData } = await supabase.from("purchase_order_items").select("*").in("purchase_order_id", poIds).order("sort_order");
+    const { data: itemsData } = await supabase.from("purchase_order_items").select("*").in("po_id", poIds).order("sort_order");
     if (itemsData) {
       for (const it of itemsData) {
-        if (!itemsMap[it.purchase_order_id]) itemsMap[it.purchase_order_id] = [];
-        itemsMap[it.purchase_order_id].push(it);
+        if (!itemsMap[it.po_id]) itemsMap[it.po_id] = [];
+        itemsMap[it.po_id].push(it);
       }
     }
   }
@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   if (items && items.length > 0) {
     const itemRows = items.map((it: Record<string, string>, i: number) => ({
-      purchase_order_id: data.id,
+      po_id: data.id,
       product_name: it.product_name || "",
       spec: it.spec || "",
       paper_grain: it.paper_grain || "",
