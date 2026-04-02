@@ -18,9 +18,15 @@ export default function OrdersPage() {
   const [form, setForm] = useState({ supplier_name: "", orderer: "", contact: "", request_note: "", po_date: new Date().toISOString().slice(0, 10) });
   const [items, setItems] = useState(Array.from({ length: 5 }, () => ({ product_name: "", spec: "", paper_grain: "", cut_size: "", quantity: "", received: "" })));
 
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [startDate, setStartDate] = useState("2025-01-01");
+  const [endDate, setEndDate] = useState(new Date().toISOString().slice(0, 10));
+  const [keyword, setKeyword] = useState("");
+
   useEffect(() => {
-    fetch(`/api/purchase-orders?_=${Date.now()}`).then(r => r.json()).then(d => setOrders(d.data || []));
-  }, [refreshKey]);
+    fetch(`/api/purchase-orders?page=${page}&limit=20&startDate=${startDate}&endDate=${endDate}&keyword=${keyword}&_=${Date.now()}`).then(r => r.json()).then(d => { setOrders(d.data || []); setTotal(d.total || 0); });
+  }, [refreshKey, page, startDate, endDate]);
 
   useEffect(() => {
     fetch(`/api/suppliers?_=${Date.now()}`).then(r => r.json()).then(d => setSuppliers(d || []));
@@ -194,26 +200,38 @@ export default function OrdersPage() {
   }
 
   return (
-    <div>
-      <div className="flex justify-between items-center mb-4">
-        <div />
+    <div className="max-w-[1100px] mx-auto">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 mb-4">
+        <div className="flex gap-2 items-center">
+          <input type="date" value={startDate} onChange={e => { setStartDate(e.target.value); setPage(1); }} className="px-2 py-1.5 border border-gray-300 rounded text-xs" />
+          <span className="text-gray-400 text-xs">~</span>
+          <input type="date" value={endDate} onChange={e => { setEndDate(e.target.value); setPage(1); }} className="px-2 py-1.5 border border-gray-300 rounded text-xs" />
+          <input type="text" placeholder="발주처/발주자 검색" value={keyword} onChange={e => setKeyword(e.target.value)} onKeyDown={e => { if (e.key === "Enter") setRefreshKey(k => k + 1); }} className="px-2 py-1.5 border border-gray-300 rounded text-xs w-40" />
+          <button onClick={() => setRefreshKey(k => k + 1)} className="px-4 py-1.5 bg-gray-700 text-white rounded text-xs">검색</button>
+        </div>
         <button onClick={() => openWrite()} className="px-5 py-2 bg-gray-700 text-white rounded text-sm font-medium">+ 발주서 작성</button>
       </div>
       <div className="overflow-x-auto">
         <table className="w-full border-collapse border border-gray-300 text-xs">
           <thead><tr className="bg-[#3b4b5b] text-white">
-            <th className="border border-[#2d3a47] px-2 py-2.5 w-8"></th><th className="border border-[#2d3a47] px-2 py-2.5">발주No.</th><th className="border border-[#2d3a47] px-2 py-2.5">일자</th><th className="border border-[#2d3a47] px-2 py-2.5">발주처명</th><th className="border border-[#2d3a47] px-2 py-2.5">발주자</th><th className="border border-[#2d3a47] px-2 py-2.5">요청사항</th><th className="border border-[#2d3a47] px-2 py-2.5 w-12">인쇄</th>
+            <th className="border border-[#2d3a47] px-2 py-2.5 w-10"></th>
+            <th className="border border-[#2d3a47] px-3 py-2.5 w-[140px]">발주No.</th>
+            <th className="border border-[#2d3a47] px-3 py-2.5 w-[130px]">일자-No.</th>
+            <th className="border border-[#2d3a47] px-3 py-2.5 w-[150px]">거래처명</th>
+            <th className="border border-[#2d3a47] px-3 py-2.5 w-[90px]">담당자명</th>
+            <th className="border border-[#2d3a47] px-3 py-2.5">용지종류 및 평량</th>
+            <th className="border border-[#2d3a47] px-2 py-2.5 w-[50px]">인쇄</th>
           </tr></thead>
           <tbody>
             {orders.length === 0 ? <tr><td colSpan={7} className="text-center py-8 text-gray-400">등록된 발주서가 없습니다.</td></tr> :
             orders.map((o, i) => (
               <tr key={o.id} className={`${i % 2 === 1 ? "bg-gray-50" : ""} hover:bg-blue-50`}>
-                <td className="border border-gray-200 px-2 py-2 text-center">{i + 1}</td>
-                <td className="border border-gray-200 px-2 py-2 text-center"><button onClick={() => openWrite(o)} className="hover:text-blue-600 hover:underline">{o.po_no}</button></td>
-                <td className="border border-gray-200 px-2 py-2 text-center">{o.po_date}</td>
-                <td className="border border-gray-200 px-2 py-2 text-left">{o.supplier_name}</td>
-                <td className="border border-gray-200 px-2 py-2 text-center">{o.orderer}</td>
-                <td className="border border-gray-200 px-2 py-2 text-left">{o.request_note?.slice(0, 30)}</td>
+                <td className="border border-gray-200 px-2 py-2 text-center">{(page - 1) * 20 + i + 1}</td>
+                <td className="border border-gray-200 px-3 py-2 text-center"><button onClick={() => openWrite(o)} className="hover:text-blue-600 hover:underline">{o.po_no}</button></td>
+                <td className="border border-gray-200 px-3 py-2 text-center">{o.po_date}</td>
+                <td className="border border-gray-200 px-3 py-2 text-left">{o.supplier_name}</td>
+                <td className="border border-gray-200 px-3 py-2 text-center">{o.orderer}</td>
+                <td className="border border-gray-200 px-3 py-2 text-left">{o.request_note?.slice(0, 50)}</td>
                 <td className="border border-gray-200 px-2 py-2 text-center">
                   <button onClick={() => window.open(`/dashboard/orders/print?id=${o.id}`, '_blank')} className="px-2 py-0.5 bg-red-600 text-white rounded text-xs">인쇄</button>
                 </td>
@@ -222,6 +240,14 @@ export default function OrdersPage() {
           </tbody>
         </table>
       </div>
+      {total > 20 && (
+        <div className="flex items-center justify-center gap-1 mt-4">
+          {Array.from({ length: Math.min(Math.ceil(total / 20), 10) }, (_, i) => i + 1).map(p => (
+            <button key={p} onClick={() => setPage(p)} className={`px-2.5 py-1 rounded border text-xs ${p === page ? "bg-gray-700 text-white border-gray-700" : "border-gray-300 text-gray-500"}`}>{p}</button>
+          ))}
+          <span className="ml-2 text-xs text-gray-400">/ {Math.ceil(total / 20)} 페이지</span>
+        </div>
+      )}
     </div>
   );
 }
