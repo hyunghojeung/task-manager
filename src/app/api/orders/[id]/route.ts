@@ -27,6 +27,10 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
   const { id } = await params;
   const body = await request.json();
 
+  // 빈 문자열 UUID 필드를 null로 변환
+  if (body.category_id === "") body.category_id = null;
+  if (body.client_id === "") body.client_id = null;
+
   const supabase = getSupabase();
   const { data, error } = await supabase
     .from("orders")

@@ -57,6 +57,10 @@ export async function POST(request: NextRequest) {
   const body = await request.json();
   const supabase = getSupabase();
 
+  // 빈 문자열 UUID 필드를 null로 변환
+  if (body.category_id === "") body.category_id = null;
+  if (body.client_id === "") body.client_id = null;
+
   // 주문번호 생성
   const today = new Date();
   const dateStr = `${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, "0")}${String(today.getDate()).padStart(2, "0")}`;
