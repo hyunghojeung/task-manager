@@ -44,8 +44,8 @@ export default function Header({ companyName, userName, userId, userRole, banner
 
       {/* 홍보 배너 */}
       <div
-        className="bg-gradient-to-r from-slate-800 via-blue-600 to-sky-500 px-4 md:px-6 py-2.5 flex justify-between items-center cursor-pointer"
-        onClick={() => window.open(bannerLink || "https://blackcopy.kr", "_blank")}
+        className={`bg-gradient-to-r from-slate-800 via-blue-600 to-sky-500 px-4 md:px-6 py-2.5 flex justify-between items-center${bannerLink ? " cursor-pointer" : ""}`}
+        onClick={() => { if (bannerLink) window.open(bannerLink, "_blank"); }}
       >
         <span className="text-white text-xs md:text-sm font-bold">
           {bannerText || "인쇄/출력 작업기록, 견적서, 거래명세서, 발주서까지 올인원 업무관리"}
