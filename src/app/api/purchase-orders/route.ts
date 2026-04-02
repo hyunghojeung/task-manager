@@ -60,7 +60,8 @@ export async function POST(request: NextRequest) {
       received: it.received || "",
       sort_order: i + 1
     }));
-    await supabase.from("purchase_order_items").insert(itemRows);
+    const { error: itemError } = await supabase.from("purchase_order_items").insert(itemRows);
+    if (itemError) return NextResponse.json({ error: "발주서는 저장됨, 품목 저장 실패: " + itemError.message, data }, { status: 500 });
   }
   return NextResponse.json(data, { status: 201 });
 }
