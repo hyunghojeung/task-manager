@@ -91,10 +91,10 @@ export default function OrdersPage() {
       <div className="overflow-x-auto">
         <table className="w-full border-collapse border border-gray-300 text-xs">
           <thead><tr className="bg-[#3b4b5b] text-white">
-            <th className="border border-[#2d3a47] px-2 py-2.5 w-8"></th><th className="border border-[#2d3a47] px-2 py-2.5">발주No.</th><th className="border border-[#2d3a47] px-2 py-2.5">일자</th><th className="border border-[#2d3a47] px-2 py-2.5">발주처명</th><th className="border border-[#2d3a47] px-2 py-2.5">발주자</th><th className="border border-[#2d3a47] px-2 py-2.5">요청사항</th>
+            <th className="border border-[#2d3a47] px-2 py-2.5 w-8"></th><th className="border border-[#2d3a47] px-2 py-2.5">발주No.</th><th className="border border-[#2d3a47] px-2 py-2.5">일자</th><th className="border border-[#2d3a47] px-2 py-2.5">발주처명</th><th className="border border-[#2d3a47] px-2 py-2.5">발주자</th><th className="border border-[#2d3a47] px-2 py-2.5">요청사항</th><th className="border border-[#2d3a47] px-2 py-2.5 w-12">인쇄</th>
           </tr></thead>
           <tbody>
-            {orders.length === 0 ? <tr><td colSpan={6} className="text-center py-8 text-gray-400">등록된 발주서가 없습니다.</td></tr> :
+            {orders.length === 0 ? <tr><td colSpan={7} className="text-center py-8 text-gray-400">등록된 발주서가 없습니다.</td></tr> :
             orders.map((o, i) => (
               <tr key={o.id} className={`${i % 2 === 1 ? "bg-gray-50" : ""} hover:bg-blue-50`}>
                 <td className="border border-gray-200 px-2 py-2 text-center">{i + 1}</td>
@@ -103,6 +103,9 @@ export default function OrdersPage() {
                 <td className="border border-gray-200 px-2 py-2 text-left">{o.supplier_name}</td>
                 <td className="border border-gray-200 px-2 py-2 text-center">{o.orderer}</td>
                 <td className="border border-gray-200 px-2 py-2 text-left">{o.request_note?.slice(0, 30)}</td>
+                <td className="border border-gray-200 px-2 py-2 text-center">
+                  <button onClick={() => window.open(`/dashboard/orders/print?id=${o.id}`, '_blank')} className="px-2 py-0.5 bg-red-600 text-white rounded text-xs">인쇄</button>
+                </td>
               </tr>
             ))}
           </tbody>
