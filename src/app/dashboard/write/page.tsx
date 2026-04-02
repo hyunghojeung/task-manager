@@ -160,20 +160,21 @@ export default function WritePage() {
     try {
       const url = editId ? `/api/orders/${editId}` : "/api/orders";
       const method = editId ? "PUT" : "POST";
-      // 합계 계산
+      // 합계 계산 - 자동계산 컬럼에서 공급가/부가세/합계를 찾아 합산
       const calcCols = templateCols.filter(c => c.type === "자동계산");
-      let totalAmount = 0;
       let totalSupply = 0;
       let totalVat = 0;
+      let totalAmount = 0;
+
       if (calcCols.length > 0) {
         const supplyCol = calcCols.find(c => c.name.includes("공급"));
         const vatCol = calcCols.find(c => c.name.includes("부가"));
-        const totalCol = calcCols.find(c => c.name.includes("합계"));
+
         itemData.forEach(row => {
           if (supplyCol) totalSupply += parseInt(row[supplyCol.name]) || 0;
           if (vatCol) totalVat += parseInt(row[vatCol.name]) || 0;
-          if (totalCol) totalAmount += parseInt(row[totalCol.name]) || 0;
         });
+        totalAmount = totalSupply + totalVat;
       }
 
       const res = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...formData, total_supply: totalSupply, total_vat: totalVat, total_amount: totalAmount }) });
