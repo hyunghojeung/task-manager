@@ -1,14 +1,19 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { useSearchParams } from "next/navigation";
 
 type Tab = "notice" | "users" | "category" | "client" | "supplier" | "template" | "company";
 
 export default function AdminPage() {
-  const searchParams = useSearchParams();
-  const initialTab = (searchParams.get("tab") as Tab) || "notice";
-  const [tab, setTab] = useState<Tab>(initialTab);
+  const [tab, setTab] = useState<Tab>("notice");
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const t = params.get("tab") as Tab;
+    if (t && ["notice","users","category","client","supplier","template","company"].includes(t)) {
+      setTab(t);
+    }
+  }, []);
   const tabs: { key: Tab; label: string }[] = [
     { key: "notice", label: "작업전달" }, { key: "users", label: "사용자관리" },
     { key: "category", label: "카테고리관리" }, { key: "client", label: "거래처관리" },
