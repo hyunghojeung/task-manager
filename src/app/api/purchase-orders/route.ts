@@ -36,10 +36,10 @@ export async function POST(request: NextRequest) {
   const supabase = getSupabase();
   const today = new Date();
   const dateStr = `${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, "0")}${String(today.getDate()).padStart(2, "0")}`;
-  const { data: lastPo } = await supabase.from("purchase_orders").select("po_no").eq("company_id", session.company.id).like("po_no", `O${dateStr}%`).order("po_no", { ascending: false }).limit(1).single();
+  const { data: existingPos } = await supabase.from("purchase_orders").select("po_no").eq("company_id", session.company.id).like("po_no", `O${dateStr}%`).order("po_no", { ascending: false }).limit(1);
   let nextNum = 1;
-  if (lastPo?.po_no) {
-    const parts = lastPo.po_no.split("-");
+  if (existingPos && existingPos.length > 0 && existingPos[0].po_no) {
+    const parts = existingPos[0].po_no.split("-");
     nextNum = (parseInt(parts[parts.length - 1]) || 0) + 1;
   }
   const poNo = `O${dateStr}-${nextNum}`;
