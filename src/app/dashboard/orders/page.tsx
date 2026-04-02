@@ -83,7 +83,7 @@ export default function OrdersPage() {
     setSaving(true);
     const url = editId ? `/api/purchase-orders/${editId}` : "/api/purchase-orders";
     const method = editId ? "PUT" : "POST";
-    const validItems = items.filter(it => it.product_name);
+    const validItems = items.filter(it => it.product_name || it.spec || it.paper_grain || it.cut_size || it.quantity);
     const res = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...form, items: validItems }) });
     if (res.ok) { alert(editId ? "수정되었습니다." : "저장되었습니다."); setView("list"); setRefreshKey(k => k + 1); }
     else { const err = await res.json().catch(() => ({})); alert("저장 실패: " + (err.error || res.status)); }
