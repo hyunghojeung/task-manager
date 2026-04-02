@@ -295,6 +295,7 @@ function TemplateTab() {
                   <select value={c.type} onChange={e => updateCol(i, "type", e.target.value)} className="text-xs px-1 py-0.5 border border-gray-300 rounded">
                     {c.type === "auto" ? <option>자동순번</option> : <><option>텍스트</option><option>숫자</option><option>자동계산</option></>}
                   </select>
+                  <input type="text" value={(c as Record<string,string>).width || ""} onChange={e => updateCol(i, "width", e.target.value)} placeholder="폭" className="w-12 px-1 py-0.5 border border-gray-300 rounded text-xs text-center" title="컬럼 폭 (예: 80, 120)" />
                   {c.type === "자동계산" && (
                     <>
                       <span className="text-xs text-amber-700 shrink-0">계산식 적용</span>
@@ -335,7 +336,7 @@ function TemplateTab() {
             <p className="text-xs font-semibold text-gray-500 mb-2">3. 미리보기</p>
             <div className="overflow-x-auto">
               <table className="w-full border-collapse text-xs">
-                <thead><tr>{cols.map((c,i) => <th key={i} className={`border border-gray-300 px-2 py-1.5 text-center font-semibold ${c.type === "자동계산" ? "bg-amber-50" : "bg-gray-100"}`} style={{minWidth: c.name === "품목명" ? 120 : 50}}>{c.name}</th>)}</tr></thead>
+                <thead><tr>{cols.map((c,i) => <th key={i} className={`border border-gray-300 px-2 py-1.5 text-center font-semibold ${c.type === "자동계산" ? "bg-amber-50" : "bg-gray-100"}`} style={{width: (c as Record<string,string>).width ? `${(c as Record<string,string>).width}px` : "auto", minWidth: 40}}>{c.name}</th>)}</tr></thead>
                 <tbody>
                   {[1,2,3].map(n => (
                     <tr key={n}>{cols.map((c,i) => <td key={i} className={`border border-gray-200 px-2 py-1 text-center ${c.type === "자동계산" ? "bg-amber-50" : ""}`}>{n === 1 ? (c.type === "auto" ? "1" : c.type === "자동계산" ? <span className="text-amber-700 text-[10px]">자동계산</span> : <span className="text-gray-300 text-[10px]">{c.type}</span>) : c.type === "auto" ? n : ""}</td>)}</tr>
