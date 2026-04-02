@@ -64,17 +64,26 @@ export async function POST(request: NextRequest) {
   if (!body.category_id) body.category_id = null;
   if (!body.client_id) body.client_id = null;
 
-  // 주문번호 생성
+  // 주문번호 생성 (마지막 번호 조회 후 +1)
   const today = new Date();
   const dateStr = `${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, "0")}${String(today.getDate()).padStart(2, "0")}`;
 
-  const { count } = await supabase
+  const { data: lastOrder } = await supabase
     .from("orders")
-    .select("*", { count: "exact", head: true })
+    .select("order_no")
     .eq("company_id", session.company.id)
-    .like("order_no", `${dateStr}%`);
+    .like("order_no", `${dateStr}%`)
+    .order("order_no", { ascending: false })
+    .limit(1)
+    .single();
 
-  const orderNo = `${dateStr}-${(count || 0) + 1}`;
+  let nextNum = 1;
+  if (lastOrder?.order_no) {
+    const parts = lastOrder.order_no.split("-");
+    const num = parseInt(parts[parts.length - 1]);
+    if (!isNaN(num)) nextNum = num + 1;
+  }
+  const orderNo = `${dateStr}-${nextNum}`;
 
   const { data, error } = await supabase
     .from("orders")
