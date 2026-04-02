@@ -234,7 +234,7 @@ export default function OrdersPage() {
             {orders.length === 0 ? <tr><td colSpan={7} className="text-center py-8 text-gray-400">등록된 발주서가 없습니다.</td></tr> :
             orders.map((o, i) => (
               <tr key={o.id} className={`${i % 2 === 1 ? "bg-gray-50" : ""} hover:bg-blue-50`}>
-                <td className="border border-gray-200 px-2 py-2 text-center">{(page - 1) * 20 + i + 1}</td>
+                <td className="border border-gray-200 px-2 py-2 text-center">{total - ((page - 1) * 20 + i)}</td>
                 <td className="border border-gray-200 px-3 py-2 text-center"><button onClick={() => openWrite(o)} className="hover:text-blue-600 hover:underline">{o.po_no}</button></td>
                 <td className="border border-gray-200 px-3 py-2 text-center">{o.po_date}</td>
                 <td className="border border-gray-200 px-3 py-2 text-left">{o.supplier_name}</td>
