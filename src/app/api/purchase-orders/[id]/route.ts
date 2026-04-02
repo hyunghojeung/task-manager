@@ -18,7 +18,14 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
   const { id } = await params;
   const body = await request.json();
   const supabase = getSupabase();
-  const { error } = await supabase.from("purchase_orders").update({ ...body, updated_at: new Date().toISOString() }).eq("id", id).eq("company_id", session.company.id);
+  const updateData: Record<string, string> = { updated_at: new Date().toISOString() };
+  if (body.supplier_name !== undefined) updateData.supplier_name = body.supplier_name;
+  if (body.orderer !== undefined) updateData.orderer = body.orderer;
+  if (body.contact !== undefined) updateData.contact = body.contact;
+  if (body.request_note !== undefined) updateData.request_note = body.request_note;
+  if (body.po_date !== undefined) updateData.po_date = body.po_date;
+
+  const { error } = await supabase.from("purchase_orders").update(updateData).eq("id", id).eq("company_id", session.company.id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ success: true });
 }

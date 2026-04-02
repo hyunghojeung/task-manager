@@ -77,7 +77,7 @@ export default function OrdersPage() {
     const url = editId ? `/api/purchase-orders/${editId}` : "/api/purchase-orders";
     const method = editId ? "PUT" : "POST";
     const res = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(form) });
-    if (res.ok) { setView("list"); setRefreshKey(k => k + 1); alert(editId ? "수정되었습니다." : "저장되었습니다."); }
+    if (res.ok) { alert(editId ? "수정되었습니다." : "저장되었습니다."); setView("list"); setTimeout(() => setRefreshKey(k => k + 1), 500); }
     else alert("저장 실패");
     setSaving(false);
   }
