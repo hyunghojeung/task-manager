@@ -327,6 +327,7 @@ export default function WritePage() {
               {templateList.length === 0 && <option>기본</option>}
               {templateList.map(t => <option key={t.id} value={t.name}>{t.name}</option>)}
             </select>
+            <a href="/admin" className="px-2 py-1 bg-gray-600 text-white rounded text-xs no-underline hover:bg-gray-700">양식등록</a>
           </div>
           <button onClick={() => { setItemRows(r => r + 1); setItemData(p => [...p, {}]); }} className="px-3 py-1 border border-gray-300 rounded text-xs text-gray-500 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-500 transition">+ 행 추가</button>
         </div>
