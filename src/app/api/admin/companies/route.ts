@@ -91,7 +91,7 @@ export async function POST(request: NextRequest) {
         company_id: company.id,
         user_id: adminUserId,
         name: adminName,
-        password: adminPassword || "@admin1234",
+        password: adminPassword || companyData.password || "@admin1234",
         role: "admin",
       });
     }
