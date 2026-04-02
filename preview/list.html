@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>업무관리 - 리스트</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Malgun Gothic', sans-serif; background: #f5f6fa; }
+.top-fixed { position: sticky; top: 0; z-index: 100; }
+.header { background: #1e293b; color: #fff; padding: 12px 24px; display: flex; justify-content: space-between; align-items: center; }
+.header h1 { font-size: 18px; }
+.header-right { display: flex; align-items: center; gap: 12px; font-size: 13px; }
+.header-right a { color: #94a3b8; text-decoration: none; }
+.header-right a:hover { color: #fff; }
+.toolbar { background: #fff; padding: 14px 24px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+.filters { display: flex; gap: 6px; align-items: center; }
+.filter-btn { padding: 6px 14px; border: 1px solid #d1d5db; border-radius: 4px; background: #fff; font-size: 12px; cursor: pointer; color: #555; }
+.filter-btn.active { background: #2563eb; color: #fff; border-color: #2563eb; }
+.filter-btn:hover { background: #eff6ff; }
+.filter-btn.active:hover { background: #1d4ed8; }
+.search-area { display: flex; gap: 6px; align-items: center; }
+.search-area select { padding: 6px 8px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 12px; }
+.search-area input { padding: 6px 10px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 12px; width: 180px; }
+.search-area button { padding: 6px 14px; background: #374151; color: #fff; border: none; border-radius: 4px; font-size: 12px; cursor: pointer; }
+.btn-new { padding: 8px 20px; background: #2563eb; color: #fff; border: none; border-radius: 4px; font-size: 13px; cursor: pointer; text-decoration: none; }
+.btn-new:hover { background: #1d4ed8; }
+.content { padding: 0 24px 24px; }
+table { width: 100%; border-collapse: collapse; background: #fff; margin-top: 0; font-size: 12px; border: 1px solid #c8ccd0; }
+thead th { background: #3b4b5b; padding: 10px 6px; text-align: center; color: #fff; font-weight: 600; white-space: nowrap; border: 1px solid #2d3a47; font-size: 12px; }
+tbody td { padding: 7px 6px; text-align: center; border: 1px solid #e0e3e6; color: #333; font-size: 12px; }
+tbody tr:nth-child(even) { background: #f7f8fa; }
+tbody tr:hover { background: #edf2f7; }
+.td-left { text-align: left; }
+.status-ing { color: #2563eb; font-weight: 600; font-size: 12px; cursor: pointer; user-select: none; }
+.status-done { color: #dc2626; font-weight: 600; font-size: 12px; cursor: pointer; user-select: none; }
+.btn-doc { padding: 3px 8px; border: 1px solid #d1d5db; border-radius: 3px; background: #fff; font-size: 11px; cursor: pointer; color: #555; text-decoration: none; }
+.btn-doc:hover { background: #eff6ff; border-color: #2563eb; color: #2563eb; }
+.btn-print { padding: 3px 8px; border: 1px solid #d1d5db; border-radius: 3px; background: #fff; font-size: 11px; cursor: pointer; color: #555; text-decoration: none; }
+.btn-print:hover { background: #fef2f2; border-color: #dc2626; color: #dc2626; }
+.pagination { text-align: center; padding: 16px; font-size: 13px; color: #666; }
+.pagination a { display: inline-block; padding: 4px 10px; margin: 0 2px; border: 1px solid #d1d5db; border-radius: 3px; text-decoration: none; color: #555; }
+.pagination a.active { background: #2563eb; color: #fff; border-color: #2563eb; }
+.amount { text-align: right !important; }
+a.row-link { color: #334155; text-decoration: none; }
+a.row-link:hover { color: #2563eb; text-decoration: underline; }
+.date-range { display: flex; align-items: center; gap: 4px; }
+.date-range input { padding: 5px 8px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 12px; }
+/* 작업전달 공지 영역 */
+.notice-bar { background: #fff; padding: 10px 24px; border-bottom: 1px solid #e2e8f0; min-height: 44px; display: flex; align-items: center; cursor: pointer; }
+.notice-text { font-size: 13px; font-weight: 700; color: #dc2626; animation: blink 1s ease-in-out infinite; }
+@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.1; } }
+.notice-bar:hover { background: #fef2f2; }
+/* 작업전달 팝업 */
+.notice-popup { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; }
+.notice-popup.show { display: flex; }
+.notice-popup-content { background: #fff; border-radius: 8px; padding: 30px; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto; box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
+.notice-popup-content h3 { font-size: 18px; color: #dc2626; margin-bottom: 16px; padding-bottom: 10px; border-bottom: 2px solid #fecaca; }
+.notice-popup-content p { font-size: 14px; color: #333; line-height: 1.8; }
+.notice-popup-content .close-btn { margin-top: 20px; padding: 8px 30px; background: #374151; color: #fff; border: none; border-radius: 4px; font-size: 13px; cursor: pointer; }
+.notice-popup-content .done-btn { margin-top: 20px; margin-left: 8px; padding: 8px 30px; background: #2563eb; color: #fff; border: none; border-radius: 4px; font-size: 13px; cursor: pointer; }
+.notice-popup-content .done-btn:hover { background: #1d4ed8; }
+.notice-item { padding: 8px 24px; border-bottom: 1px solid #fee2e2; cursor: pointer; display: flex; align-items: center; }
+.notice-item:hover { background: #fef2f2; }
+</style>
+</head>
+<body>
+<div class="top-fixed">
+<div class="header">
+  <h1><a href="https://blackcopy.kr" style="color:#fff; text-decoration:none;">Blackcopy.kr</a> <span style="font-size:13px; font-weight:400; color:#94a3b8;">인쇄전용 ERP Bcount</span> <span style="font-size:13px; color:#60a5fa; margin-left:8px;">인쇄의장</span></h1>
+  <div class="header-right">
+    <span>정형호님 (admin01)</span>
+    <a href="admin.html">관리자</a>
+    <a href="index.html">로그아웃</a>
+  </div>
+</div>
+
+<!-- 홍보 배너 -->
+<div style="background:linear-gradient(135deg, #1e3a5f 0%, #2563eb 50%, #0ea5e9 100%); padding:10px 24px; display:flex; justify-content:space-between; align-items:center; cursor:pointer;" onclick="window.open('https://blackcopy.kr','_blank')"><div style="display:flex; align-items:center; gap:14px;"><span style="color:#fff; font-size:14px; font-weight:700;">인쇄/출력 작업기록, 견적서, 거래명세서, 발주서까지 올인원 업무관리</span></div><div style="display:flex; gap:8px; align-items:center;"><span style="background:#fbbf24; color:#1e293b; padding:4px 12px; border-radius:12px; font-size:11px; font-weight:700;">FREE</span><span style="color:#94a3b8; font-size:11px;">AD</span></div>
+</div>
+
+<!-- 작업전달 공지 영역 (여러건 쌓임) -->
+<div id="noticeArea" style="background:#fff; border-bottom:1px solid #e2e8f0;">
+  <div class="notice-item" id="notice1" onclick="openNotice(1)">
+    <span class="notice-text">긴급! 내일까지 커뮤니크 스티커 작업 완료 요망</span>
+  </div>
+  <div class="notice-item" id="notice2" onclick="openNotice(2)">
+    <span class="notice-text">방위사업청 제본 작업 - 규격 변경 안내</span>
+  </div>
+  <div class="notice-item" id="notice3" onclick="openNotice(3)">
+    <span class="notice-text">4월 용지 발주 목록 정리</span>
+  </div>
+  <div style="background:#fff; padding:8px 24px; border-bottom:1px solid #e2e8f0; display:flex; gap:8px; justify-content:flex-end;">
+    <a href="list.html" style="padding:8px 20px; background:#2563eb; color:#fff; border:none; border-radius:4px; font-size:13px; text-decoration:none;">작업리스트</a>
+    <a href="write.html" style="padding:8px 20px; background:#2563eb; color:#fff; border:none; border-radius:4px; font-size:13px; text-decoration:none;">작업등록</a>
+    <a href="order.html" style="padding:8px 20px; background:#374151; color:#fff; border:none; border-radius:4px; font-size:13px; text-decoration:none;">발주서</a>
+    <a href="memo.html" style="padding:8px 20px; background:#059669; color:#fff; border:none; border-radius:4px; font-size:13px; text-decoration:none;">작업메모</a>
+  </div>
+</div>
+
+<!-- 작업전달 팝업 1 -->
+<div class="notice-popup" id="noticePopup1" onclick="if(event.target===this) this.classList.remove('show')">
+  <div class="notice-popup-content">
+    <h3>긴급! 내일까지 커뮤니크 스티커 작업 완료 요망</h3>
+    <p style="font-size:12px; color:#999; margin-bottom:12px;">작성자: 정형호 | 2026-03-31</p>
+    <p>커뮤니크에서 요청한 에스트라 5cm 원형 스티커 50개 제작 건이 내일(4/1)까지 납품 완료되어야 합니다.<br><br>
+    - 유포지 원형컷팅 작업 우선 진행<br>
+    - 오후 3시까지 인쇄 완료 후 재단 시작<br>
+    - 포장 후 퀵 발송 예정<br><br>
+    담당자 확인 후 진행 부탁드립니다.</p>
+    <div>
+      <button class="close-btn" onclick="document.getElementById('noticePopup1').classList.remove('show')">닫기</button>
+      <button class="done-btn" onclick="completeNotice(1)">작업완료</button>
+    </div>
+  </div>
+</div>
+
+<!-- 작업전달 팝업 2 -->
+<div class="notice-popup" id="noticePopup2" onclick="if(event.target===this) this.classList.remove('show')">
+  <div class="notice-popup-content">
+    <h3>방위사업청 제본 작업 - 규격 변경 안내</h3>
+    <p style="font-size:12px; color:#999; margin-bottom:12px;">작성자: 정형호 | 2026-03-30</p>
+    <p>방위사업청 K9자주포 제본 건의 규격이 A4에서 B5로 변경되었습니다.<br><br>
+    - 기존 인쇄분 폐기<br>
+    - B5 규격으로 재인쇄 진행<br>
+    - 납기일 변동 없음<br><br>
+    작업 시 주의 바랍니다.</p>
+    <div>
+      <button class="close-btn" onclick="document.getElementById('noticePopup2').classList.remove('show')">닫기</button>
+      <button class="done-btn" onclick="completeNotice(2)">작업완료</button>
+    </div>
+  </div>
+</div>
+
+<!-- 작업전달 팝업 3 -->
+<div class="notice-popup" id="noticePopup3" onclick="if(event.target===this) this.classList.remove('show')">
+  <div class="notice-popup-content">
+    <h3>4월 용지 발주 목록 정리</h3>
+    <p style="font-size:12px; color:#999; margin-bottom:12px;">작성자: 정형호 | 2026-03-28</p>
+    <p>4월 용지 발주를 위해 현재 재고를 확인하고 필요 용지 목록을 정리해 주세요.<br><br>
+    - 모조지 80g, 100g 재고 확인<br>
+    - 아트지 150g 추가 발주 필요<br>
+    - 3/31까지 목록 제출<br><br>
+    각 담당자별 확인 후 공유 바랍니다.</p>
+    <div>
+      <button class="close-btn" onclick="document.getElementById('noticePopup3').classList.remove('show')">닫기</button>
+      <button class="done-btn" onclick="completeNotice(3)">작업완료</button>
+    </div>
+  </div>
+</div>
+
+<div class="toolbar">
+  <div style="display:flex; gap:16px; align-items:center; flex-wrap:wrap;">
+    <div class="filters">
+      <select style="padding:6px 10px; border:1px solid #d1d5db; border-radius:4px; font-size:12px;">
+        <option>전체</option>
+        <option>블랙카피</option>
+        <option>출력실</option>
+        <option>디자인실</option>
+      </select>
+    </div>
+  </div>
+  <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+    <div class="date-range">
+      <input type="date" value="2025-03-01">
+      <span>~</span>
+      <input type="date" value="2026-03-31">
+    </div>
+    <div class="search-area">
+      <select style="padding:6px 8px; border:1px solid #d1d5db; border-radius:4px; font-size:12px;">
+        <option>전체</option>
+        <option>거래처</option>
+        <option>주문자</option>
+        <option>연락처</option>
+        <option>제목</option>
+      </select>
+      <input type="text" placeholder="검색어 입력">
+      <button>검색</button>
+    </div>
+  </div>
+</div>
+</div><!-- end top-fixed -->
+
+<div class="content">
+<table>
+<thead>
+<tr>
+  <th>순번</th>
+  <th>거래처</th>
+  <th>주문자</th>
+  <th>연락처</th>
+  <th>제목</th>
+  <th>금액</th>
+  <th>제품형태</th>
+  <th>결제</th>
+  <th>진행상태</th>
+  <th>거래명세서</th>
+  <th>견적서</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>1</td>
+  <td class="td-left"><a href="write.html" class="row-link">커뮤니크</a></td>
+  <td class="td-left">한지원</td>
+  <td class="td-left">010-5324-6492</td>
+  <td class="td-left"><a href="write.html" class="row-link">에스트라 5cm원형 스티커 50개 제작</a></td>
+  <td class="amount">60,000</td>
+  <td>유포지+원형컷팅</td>
+  <td></td>
+  <td><span class="status-ing">진행중</span></td>
+  <td><a href="statement.html" class="btn-doc" target="_blank">명세서</a></td>
+  <td><a href="estimate.html" class="btn-print" target="_blank">견적서</a></td>
+</tr>
+<tr>
+  <td>2</td>
+  <td class="td-left">행정공제회</td>
+  <td class="td-left">이현진</td>
+  <td class="td-left">010-2204-4252</td>
+  <td class="td-left"><a href="write.html" class="row-link">에너지절약 실천을 위한 국민행동지침 포스터</a></td>
+  <td class="amount">180,000</td>
+  <td>반광인화지출력</td>
+  <td></td>
+  <td><span class="status-ing">진행중</span></td>
+  <td><a href="statement.html" class="btn-doc" target="_blank">명세서</a></td>
+  <td><a href="estimate.html" class="btn-print" target="_blank">견적서</a></td>
+</tr>
+<tr>
+  <td>3</td>
+  <td class="td-left">한화에어로스페이스</td>
+  <td class="td-left">송승민 주임</td>
+  <td class="td-left">010-8803-2799</td>
+  <td class="td-left"><a href="write.html" class="row-link">K9자주포 2차 성능개량 체계개발 규격3차</a></td>
+  <td class="amount">1,130,580</td>
+  <td>무선</td>
+  <td>카드결재완료</td>
+  <td><span class="status-done">완료</span></td>
+  <td><a href="statement.html" class="btn-doc" target="_blank">명세서</a></td>
+  <td><a href="estimate.html" class="btn-print" target="_blank">견적서</a></td>
+</tr>
+<tr>
+  <td>4</td>
+  <td class="td-left">경주이씨재사당공파노전종회</td>
+  <td class="td-left">이재철</td>
+  <td class="td-left">010-9354-3778</td>
+  <td class="td-left"><a href="write.html" class="row-link">우리의 조상 팜플렛</a></td>
+  <td class="amount">495,000</td>
+  <td>중철</td>
+  <td></td>
+  <td><span class="status-ing">진행중</span></td>
+  <td><a href="statement.html" class="btn-doc" target="_blank">명세서</a></td>
+  <td><a href="estimate.html" class="btn-print" target="_blank">견적서</a></td>
+</tr>
+<tr>
+  <td>5</td>
+  <td class="td-left">유니트플레이</td>
+  <td class="td-left"></td>
+  <td class="td-left">010-5651-0118</td>
+  <td class="td-left"><a href="write.html" class="row-link">유포지출력</a></td>
+  <td class="amount">40,000</td>
+  <td></td>
+  <td></td>
+  <td><span class="status-ing">진행중</span></td>
+  <td><a href="statement.html" class="btn-doc" target="_blank">명세서</a></td>
+  <td><a href="estimate.html" class="btn-print" target="_blank">견적서</a></td>
+</tr>
+<tr>
+  <td>6</td>
+  <td class="td-left">방위사업청</td>
+  <td class="td-left">임은영 중령</td>
+  <td class="td-left">02-2079-5112</td>
+  <td class="td-left"><a href="write.html" class="row-link">★★RFP구축합(KDD)상세설계 및 선도합 건조</a></td>
+  <td class="amount">500,280</td>
+  <td>무선제본</td>
+  <td></td>
+  <td><span class="status-ing">진행중</span></td>
+  <td><a href="statement.html" class="btn-doc" target="_blank">명세서</a></td>
+  <td><a href="estimate.html" class="btn-print" target="_blank">견적서</a></td>
+</tr>
+<tr>
+  <td>7</td>
+  <td class="td-left">LS E-Link</td>
+  <td class="td-left">박정길</td>
+  <td class="td-left">010-8950-0248</td>
+  <td class="td-left"><a href="write.html" class="row-link">LS E-Link 회사소개서</a></td>
+  <td class="amount">990,000</td>
+  <td>중철제본</td>
+  <td></td>
+  <td><span class="status-ing">진행중</span></td>
+  <td><a href="statement.html" class="btn-doc" target="_blank">명세서</a></td>
+  <td><a href="estimate.html" class="btn-print" target="_blank">견적서</a></td>
+</tr>
+<tr>
+  <td>8</td>
+  <td class="td-left">아모레 퍼시픽</td>
+  <td class="td-left">한울팀 육인화</td>
+  <td class="td-left">010-6773-6630</td>
+  <td class="td-left"><a href="write.html" class="row-link">드롭한울_최종인쇄파일</a></td>
+  <td class="amount">48,000</td>
+  <td>리플렛</td>
+  <td>카드</td>
+  <td><span class="status-done">완료</span></td>
+  <td><a href="statement.html" class="btn-doc" target="_blank">명세서</a></td>
+  <td><a href="estimate.html" class="btn-print" target="_blank">견적서</a></td>
+</tr>
+<tr>
+  <td>9</td>
+  <td class="td-left">주식회사 환경NPS</td>
+  <td class="td-left">김영인 선생님</td>
+  <td class="td-left">010-4767-5136</td>
+  <td class="td-left"><a href="write.html" class="row-link">분리배출 퍼즐 도무송 및 출력 2차</a></td>
+  <td class="amount">884,500</td>
+  <td>과천</td>
+  <td></td>
+  <td><span class="status-done">완료</span></td>
+  <td><a href="statement.html" class="btn-doc" target="_blank">명세서</a></td>
+  <td><a href="estimate.html" class="btn-print" target="_blank">견적서</a></td>
+</tr>
+<tr>
+  <td>10</td>
+  <td class="td-left">(주)고전정보통신</td>
+  <td class="td-left">서선배대표</td>
+  <td class="td-left">010-4788-0175</td>
+  <td class="td-left"><a href="write.html" class="row-link">(주)고전정보통신_명함2종</a></td>
+  <td class="amount">71,060</td>
+  <td>명함</td>
+  <td></td>
+  <td><span class="status-ing">진행중</span></td>
+  <td><a href="statement.html" class="btn-doc" target="_blank">명세서</a></td>
+  <td><a href="estimate.html" class="btn-print" target="_blank">견적서</a></td>
+</tr>
+</tbody>
+</table>
+<div class="pagination">
+  <span style="font-size:12px; color:#999; margin-right:10px;">40개씩 보기</span>
+  <a href="#" class="active">1</a>
+  <a href="#">2</a>
+  <a href="#">3</a>
+  <a href="#">4</a>
+  <a href="#">5</a>
+  <span style="margin-left:8px;">/ 5 페이지</span>
+</div>
+</div>
+<script>
+// 진행상태 토글
+document.querySelectorAll('.status-ing, .status-done').forEach(function(el) {
+  el.addEventListener('click', function() {
+    if (this.classList.contains('status-ing')) {
+      this.classList.remove('status-ing');
+      this.classList.add('status-done');
+      this.textContent = '완료';
+    } else {
+      this.classList.remove('status-done');
+      this.classList.add('status-ing');
+      this.textContent = '진행중';
+    }
+  });
+});
+
+// 작업전달 팝업 열기
+function openNotice(id) {
+  document.getElementById('noticePopup' + id).classList.add('show');
+}
+
+// 작업전달 완료 처리 (리스트에서 제거)
+function completeNotice(id) {
+  document.getElementById('noticePopup' + id).classList.remove('show');
+  var item = document.getElementById('notice' + id);
+  item.style.transition = 'opacity 0.3s';
+  item.style.opacity = '0';
+  setTimeout(function() { item.style.display = 'none'; }, 300);
+}
+</script>
+</body>
+</html>

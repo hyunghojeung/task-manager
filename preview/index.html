@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>업무관리 - 로그인</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Malgun Gothic', sans-serif; background: #f0f2f5; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+.login-box { background: #fff; padding: 40px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); width: 400px; text-align: center; }
+.login-box h1 { font-size: 24px; color: #333; margin-bottom: 8px; }
+.login-box p { color: #888; font-size: 13px; margin-bottom: 24px; }
+.login-box label { display: block; text-align: left; font-size: 13px; color: #555; margin-bottom: 6px; font-weight: 600; }
+.login-box input { width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; margin-bottom: 16px; font-family: inherit; }
+.login-box input:focus { outline: none; border-color: #2563eb; }
+.login-box button { width: 100%; padding: 12px; background: #2563eb; color: #fff; border: none; border-radius: 4px; font-size: 15px; cursor: pointer; }
+.login-box button:hover { background: #1d4ed8; }
+.divider { margin-top: 20px; padding-top: 16px; border-top: 1px solid #eee; }
+.divider a { color: #94a3b8; font-size: 12px; text-decoration: none; }
+.divider a:hover { color: #2563eb; }
+.hint { font-size: 11px; color: #bbb; text-align: left; margin-top: -10px; margin-bottom: 14px; }
+</style>
+</head>
+<body>
+<div class="login-box">
+  <h1><a href="https://blackcopy.kr" style="color:#333; text-decoration:none;">Blackcopy.kr</a></h1>
+  <p style="font-size:14px; color:#666; margin-bottom:4px; font-weight:600;">인쇄전용 ERP Bcount</p>
+  <p>업체 ID와 사용자 ID로 로그인하세요</p>
+
+  <label>업체 ID</label>
+  <input type="text" placeholder="업체 ID를 입력하세요" value="inche">
+  <p class="hint">예: inche, blueprint, daehan</p>
+
+  <label>사용자 ID</label>
+  <input type="text" placeholder="사용자 ID를 입력하세요" value="admin01">
+
+  <label>비밀번호</label>
+  <input type="password" placeholder="비밀번호를 입력하세요" value="********">
+
+  <button onclick="location.href='list.html'">로그인</button>
+
+  <div class="divider">
+    <a href="super-login.html">플랫폼 최고관리자 로그인</a>
+  </div>
+</div>
+</body>
+</html>

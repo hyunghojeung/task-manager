@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>업무관리 - 주문서입력</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Malgun Gothic', sans-serif; background: #f5f6fa; }
+.header { background: #1e293b; color: #fff; padding: 12px 24px; display: flex; justify-content: space-between; align-items: center; }
+.header h1 { font-size: 18px; }
+.header-right { display: flex; align-items: center; gap: 12px; font-size: 13px; }
+.header-right a { color: #94a3b8; text-decoration: none; }
+.header-right a:hover { color: #fff; }
+
+.page-wrap { max-width: 1100px; margin: 16px auto; }
+.page-title { font-size: 16px; font-weight: 700; color: #1e293b; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+
+/* 입력 폼 영역 */
+.form-box { background: #fff; border: 1px solid #d1d5db; border-radius: 4px; padding: 16px 20px; margin-bottom: 12px; }
+.form-table { width: 100%; border-collapse: collapse; }
+.form-table td { padding: 5px 4px; vertical-align: middle; font-size: 13px; color: #333; }
+.form-table .lbl { width: 70px; font-weight: 600; color: #555; white-space: nowrap; font-size: 12px; }
+.form-table .lbl2 { width: 60px; font-weight: 600; color: #555; white-space: nowrap; font-size: 12px; text-align: right; padding-right: 8px; }
+.form-table input[type="text"],
+.form-table input[type="date"],
+.form-table select { padding: 5px 8px; border: 1px solid #d1d5db; border-radius: 3px; font-size: 13px; font-family: inherit; }
+.form-table input[type="text"] { width: 100%; }
+.form-table select { min-width: 140px; }
+.form-table textarea { width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 3px; font-size: 13px; font-family: inherit; min-height: 140px; resize: vertical; }
+.form-table input:focus, .form-table select:focus, .form-table textarea:focus { outline: none; border-color: #2563eb; }
+.input-readonly { background: #f5f6fa; color: #999; }
+
+/* 첨부 영역 */
+.attach-row { border: 1px dashed #ccc; border-radius: 4px; padding: 15px; min-height: 60px; text-align: center; color: #aaa; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.attach-row:hover { border-color: #2563eb; color: #2563eb; }
+
+/* 예비항목 접기 */
+.reserve-toggle { font-size: 12px; color: #2563eb; cursor: pointer; margin: 8px 0; display: inline-block; }
+.reserve-box { background: #fafbfc; border: 1px solid #e5e7eb; border-radius: 4px; padding: 12px 16px; margin-bottom: 12px; }
+.reserve-grid { display: grid; grid-template-columns: 70px 1fr 70px 1fr; gap: 5px 8px; align-items: center; font-size: 12px; }
+.reserve-grid .rlbl { font-weight: 600; color: #888; }
+.reserve-grid input { padding: 4px 6px; border: 1px solid #d1d5db; border-radius: 3px; font-size: 12px; width: 100%; }
+
+/* 품목 테이블 */
+.item-section { background: #fff; border: 1px solid #d1d5db; border-radius: 4px; padding: 12px; margin-bottom: 12px; }
+.item-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.item-header select { padding: 5px 10px; border: 1px solid #d1d5db; border-radius: 3px; font-size: 12px; }
+.btn-add-row { padding: 3px 10px; border: 1px solid #d1d5db; border-radius: 3px; background: #fff; font-size: 11px; cursor: pointer; color: #555; }
+.btn-add-row:hover { background: #eff6ff; border-color: #2563eb; color: #2563eb; }
+.item-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.item-table th { background: #f0f2f5; padding: 7px 4px; border: 1px solid #d1d5db; color: #475569; font-weight: 600; text-align: center; font-size: 11px; }
+.item-table td { padding: 3px 2px; border: 1px solid #e2e8f0; text-align: center; }
+.item-table input { width: 100%; padding: 4px 3px; border: 1px solid #e5e7eb; border-radius: 2px; font-size: 12px; text-align: center; }
+.item-table .input-right { text-align: right; padding-right: 4px; }
+.total-row td { background: #f8fafc; font-weight: 700; font-size: 12px; }
+
+/* 거래처 검색 모달 */
+.client-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; }
+.client-modal-content { background: #fff; border-radius: 8px; padding: 24px; width: 90%; max-width: 650px; max-height: 80vh; overflow-y: auto; box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
+.client-modal-content h4 { font-size: 16px; color: #1e293b; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 2px solid #e2e8f0; }
+.client-search-bar { display: flex; gap: 6px; margin-bottom: 12px; }
+.client-search-bar input { flex: 1; padding: 7px 10px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 13px; }
+.client-list-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.client-list-table th { background: #f8fafc; padding: 8px; border-bottom: 2px solid #e2e8f0; text-align: center; color: #475569; font-weight: 600; }
+.client-list-table td { padding: 8px; border-bottom: 1px solid #f1f5f9; text-align: center; cursor: pointer; }
+.client-list-table tr:hover td { background: #eff6ff; }
+.client-list-table .cl-left { text-align: left; }
+.client-modal-btns { margin-top: 12px; display: flex; gap: 6px; justify-content: flex-end; }
+
+/* 하단 버튼 */
+.btn-bar { display: flex; gap: 6px; align-items: center; padding: 10px 0; }
+.btn-bar button { padding: 7px 24px; border-radius: 4px; font-size: 13px; cursor: pointer; border: 1px solid #d1d5db; background: #fff; color: #333; }
+.btn-save { background: #2563eb !important; color: #fff !important; border-color: #2563eb !important; }
+.btn-save:hover { background: #1d4ed8 !important; }
+.btn-del { background: #dc2626 !important; color: #fff !important; border-color: #dc2626 !important; }
+.btn-bar button:hover { background: #f5f6fa; }
+.top-fixed { position: sticky; top: 0; z-index: 100; }
+.nav-bar { background: #fff; padding: 8px 24px; border-bottom: 1px solid #e2e8f0; display: flex; gap: 8px; align-items: center; justify-content: flex-end; }
+.nav-bar a { padding: 8px 20px; border-radius: 4px; font-size: 13px; text-decoration: none; color: #fff; }
+.notice-item { padding: 6px 24px; border-bottom: 1px solid #fee2e2; cursor: pointer; }
+.notice-item:hover { background: #fef2f2; }
+.notice-text { font-size: 13px; font-weight: 700; color: #dc2626; animation: blink 1s ease-in-out infinite; }
+@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.1; } }
+</style>
+</head>
+<body>
+<div class="top-fixed">
+  <div class="header">
+    <h1><a href="https://blackcopy.kr" style="color:#fff; text-decoration:none;">Blackcopy.kr</a> <span style="font-size:13px; font-weight:400; color:#94a3b8;">인쇄전용 ERP Bcount</span></h1>
+    <div class="header-right">
+      <span>정형호님</span>
+      <a href="admin.html">관리자</a>
+      <a href="index.html">로그아웃</a>
+    </div>
+  </div>
+  <div style="background:linear-gradient(135deg, #1e3a5f 0%, #2563eb 50%, #0ea5e9 100%); padding:10px 24px; display:flex; justify-content:space-between; align-items:center; cursor:pointer;" onclick="window.open('https://blackcopy.kr','_blank')"><div style="display:flex; align-items:center; gap:14px;"><span style="color:#fff; font-size:14px; font-weight:700;">인쇄/출력 작업기록, 견적서, 거래명세서, 발주서까지 올인원 업무관리</span></div><div style="display:flex; gap:8px; align-items:center;"><span style="background:#fbbf24; color:#1e293b; padding:4px 12px; border-radius:12px; font-size:11px; font-weight:700;">FREE</span><span style="color:#94a3b8; font-size:11px;">AD</span></div></div>
+  <div style="background:#fff; border-bottom:1px solid #e2e8f0;">
+    <div class="notice-item"><span class="notice-text">긴급! 내일까지 커뮤니크 스티커 작업 완료 요망</span></div>
+    <div class="notice-item"><span class="notice-text">방위사업청 제본 작업 - 규격 변경 안내</span></div>
+  </div>
+  <div class="nav-bar">
+    <a href="list.html" style="background:#2563eb;">작업리스트</a>
+    <a href="write.html" style="background:#2563eb;">작업등록</a>
+    <a href="order.html" style="background:#374151;">발주서</a>
+    <a href="memo.html" style="background:#059669;">작업메모</a>
+  </div>
+</div>
+
+<div class="page-wrap">
+  <div class="page-title">주문서입력</div>
+
+  <!-- 기본 정보 입력 -->
+  <div class="form-box">
+    <table class="form-table">
+      <tr>
+        <td class="lbl">주문No.</td>
+        <td><input id="orderNo" type="text" value="" class="input-readonly" readonly></td>
+        <td class="lbl2">작성일</td>
+        <td style="white-space:nowrap;">
+          <select style="width:70px;"><option>2026</option></select> /
+          <select style="width:55px;"><option>3월</option><option>4월</option></select> /
+          <input type="text" value="25" style="width:40px; text-align:center;">
+        </td>
+      </tr>
+      <tr>
+        <td class="lbl">주문자</td>
+        <td><input type="text" placeholder="주문자" value="한지원"></td>
+        <td class="lbl2">연락처</td>
+        <td><input type="text" placeholder="연락처" value="010-5324-6492"></td>
+      </tr>
+      <tr>
+        <td class="lbl">거래처</td>
+        <td style="display:flex; gap:4px; align-items:center;">
+          <input id="clientName" type="text" placeholder="거래처" value="커뮤니크" style="flex:1;">
+          <button type="button" onclick="document.getElementById('clientModal').style.display='flex'" style="padding:4px 8px; background:#2563eb; color:#fff; border:none; border-radius:3px; font-size:11px; cursor:pointer; white-space:nowrap;">검색</button>
+        </td>
+        <td class="lbl2">이메일</td>
+        <td><input type="text" placeholder="이메일 주소"></td>
+      </tr>
+      <tr>
+        <td class="lbl">카테고리</td>
+        <td>
+          <select style="width:100%;">
+            <option>블랙카피</option>
+            <option>출력실</option>
+            <option>디자인실</option>
+          </select>
+        </td>
+        <td class="lbl2">제품형태</td>
+        <td><input type="text" placeholder="제품형태" value="유포지+원형컷팅"></td>
+      </tr>
+      <tr>
+        <td class="lbl">세금계산서</td>
+        <td><input type="text" placeholder="발행일 직접 입력"></td>
+        <td class="lbl2">결제</td>
+        <td><input type="text" placeholder="결제 정보"></td>
+      </tr>
+      <tr>
+        <td class="lbl">제목</td>
+        <td><input type="text" placeholder="제목" value="에스트라 5cm원형 스티커 50개 제작"></td>
+        <td class="lbl2">거래유형</td>
+        <td>
+          <select id="vatType" style="width:100%;" onchange="toggleVat()">
+            <option value="vat">부가세율 적용</option>
+            <option value="novat">부가세율 미적용</option>
+          </select>
+        </td>
+      </tr>
+      <tr>
+        <td class="lbl">첨부</td>
+        <td colspan="3">
+          <div class="attach-row">+ 파일을 드래그하여 놓거나 클릭하여 첨부 (최대 1GB, Dropbox)</div>
+        </td>
+      </tr>
+      <tr>
+        <td class="lbl" style="vertical-align:top; padding-top:8px;">세부사양/<br>후가공</td>
+        <td colspan="3">
+          <textarea placeholder="세부사양 및 후가공 내용을 입력하세요"></textarea>
+        </td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- 작업내용 영역 -->
+  <div class="form-box" style="margin-top:12px;">
+    <table class="form-table">
+      <tr>
+        <td colspan="4" style="font-weight:700; font-size:14px; color:#1e293b; padding-bottom:10px; border-bottom:1px solid #e2e8f0;">작업내용</td>
+      </tr>
+      <tr>
+        <td class="lbl">용지</td>
+        <td>
+          <select style="width:100%;">
+            <option value="">선택</option>
+            <option>모조</option>
+            <option>스노우</option>
+            <option>아트지</option>
+            <option>아르떼</option>
+            <option>펄지</option>
+            <option>CCP</option>
+          </select>
+        </td>
+        <td class="lbl2">색상</td>
+        <td>
+          <select style="width:100%;">
+            <option value="">선택</option>
+            <option>칼라</option>
+            <option>흑백</option>
+          </select>
+        </td>
+      </tr>
+      <tr>
+        <td class="lbl">인쇄면</td>
+        <td>
+          <select style="width:100%;">
+            <option value="">선택</option>
+            <option>양면</option>
+            <option>단면</option>
+          </select>
+        </td>
+        <td class="lbl2">부수</td>
+        <td><input type="text" placeholder="부수 입력"></td>
+      </tr>
+      <tr>
+        <td class="lbl">제본방식</td>
+        <td>
+          <select style="width:100%;">
+            <option value="">선택</option>
+            <option>무선제본</option>
+            <option>중철</option>
+            <option>스프링</option>
+            <option>인쇄만</option>
+          </select>
+        </td>
+        <td class="lbl2">사이즈</td>
+        <td>
+          <select id="sizeSelect" style="width:100%;" onchange="if(this.value==='direct'){document.getElementById('sizeInput').style.display='';this.style.display='none';}">
+            <option value="">선택</option>
+            <option value="direct">직접입력</option>
+            <option>A4</option>
+            <option>A3</option>
+            <option>A2</option>
+            <option>190x260</option>
+            <option>465x315</option>
+            <option>A5</option>
+            <option>B4</option>
+          </select>
+          <input id="sizeInput" type="text" placeholder="사이즈 직접 입력" style="display:none; width:100%;">
+        </td>
+      </tr>
+      <tr>
+        <td class="lbl">코팅</td>
+        <td>
+          <select style="width:100%;">
+            <option value="">선택</option>
+            <option>무광</option>
+            <option>유광</option>
+          </select>
+        </td>
+        <td class="lbl2">후가공</td>
+        <td>
+          <select style="width:100%;">
+            <option value="">선택</option>
+            <option>재단</option>
+            <option>오시</option>
+            <option>접지</option>
+            <option>금박</option>
+          </select>
+        </td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- 예비 항목 -->
+  <span class="reserve-toggle" onclick="var el=document.getElementById('reserveBox'); el.style.display = el.style.display==='none'?'block':'none';">▼ 예비항목 (1~10)</span>
+  <div class="reserve-box" id="reserveBox" style="display:none;">
+    <div class="reserve-grid">
+      <span class="rlbl">예비1</span><input type="text">
+      <span class="rlbl">예비2</span><input type="text">
+      <span class="rlbl">예비3</span><input type="text">
+      <span class="rlbl">예비4</span><input type="text">
+      <span class="rlbl">예비5</span><input type="text">
+      <span class="rlbl">예비6</span><input type="text">
+      <span class="rlbl">예비7</span><input type="text">
+      <span class="rlbl">예비8</span><input type="text">
+      <span class="rlbl">예비9</span><input type="text">
+      <span class="rlbl">예비10</span><input type="text">
+    </div>
+  </div>
+
+  <!-- 품목 테이블 -->
+  <div class="item-section">
+    <div class="item-header">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <strong style="font-size:13px;">표양식</strong>
+        <select>
+          <option>부가세포함</option>
+          <option>제본용</option>
+          <option>브로셔용</option>
+          <option>옵셋용</option>
+        </select>
+      </div>
+      <button class="btn-add-row">+ 행 추가</button>
+    </div>
+    <table class="item-table">
+      <thead>
+        <tr>
+          <th style="width:35px;">순번</th>
+          <th>품목명</th>
+          <th style="width:70px;">규격</th>
+          <th style="width:55px;">부수</th>
+          <th style="width:60px;">페이지수</th>
+          <th style="width:70px;">단가</th>
+          <th style="width:85px;">공급가</th>
+          <th style="width:70px;" class="vat-col">부가세</th>
+          <th style="width:85px;">합계</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>1</td>
+          <td><input type="text" value="에스트라 5cm원형스티커 50개 제작" style="text-align:left;"></td>
+          <td><input type="text"></td>
+          <td><input type="text" value="50"></td>
+          <td><input type="text"></td>
+          <td><input type="text" class="input-right"></td>
+          <td><input type="text" class="input-right" value="54,545"></td>
+          <td class="vat-col"><input type="text" class="input-right" value="5,455"></td>
+          <td><input type="text" class="input-right" value="60,000"></td>
+        </tr>
+        <tr>
+          <td>2</td>
+          <td><input type="text"></td>
+          <td><input type="text"></td>
+          <td><input type="text"></td>
+          <td><input type="text"></td>
+          <td><input type="text" class="input-right"></td>
+          <td><input type="text" class="input-right"></td>
+          <td class="vat-col"><input type="text" class="input-right"></td>
+          <td><input type="text" class="input-right"></td>
+        </tr>
+        <tr>
+          <td>3</td>
+          <td><input type="text"></td>
+          <td><input type="text"></td>
+          <td><input type="text"></td>
+          <td><input type="text"></td>
+          <td><input type="text" class="input-right"></td>
+          <td><input type="text" class="input-right"></td>
+          <td class="vat-col"><input type="text" class="input-right"></td>
+          <td><input type="text" class="input-right"></td>
+        </tr>
+        <tr>
+          <td>4</td>
+          <td><input type="text"></td>
+          <td><input type="text"></td>
+          <td><input type="text"></td>
+          <td><input type="text"></td>
+          <td><input type="text" class="input-right"></td>
+          <td><input type="text" class="input-right"></td>
+          <td class="vat-col"><input type="text" class="input-right"></td>
+          <td><input type="text" class="input-right"></td>
+        </tr>
+        <tr>
+          <td>5</td>
+          <td><input type="text"></td>
+          <td><input type="text"></td>
+          <td><input type="text"></td>
+          <td><input type="text"></td>
+          <td><input type="text" class="input-right"></td>
+          <td><input type="text" class="input-right"></td>
+          <td class="vat-col"><input type="text" class="input-right"></td>
+          <td><input type="text" class="input-right"></td>
+        </tr>
+        <tr class="total-row">
+          <td colspan="6" style="text-align:right; padding-right:8px;">합 계</td>
+          <td style="text-align:right; padding-right:4px;">54,545</td>
+          <td class="vat-col" style="text-align:right; padding-right:4px;">5,455</td>
+          <td style="text-align:right; padding-right:4px;">60,000</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 하단 버튼 -->
+  <div class="btn-bar">
+    <button class="btn-save" onclick="location.href='list.html'">저장</button>
+    <button onclick="location.href='list.html'">다시 작성</button>
+    <button onclick="location.href='list.html'">리스트</button>
+    <button class="btn-del" onclick="if(confirm('정말 삭제할까요?')) location.href='list.html'">삭제</button>
+  </div>
+</div>
+
+<!-- 거래처 검색 모달 -->
+<div class="client-modal" id="clientModal" onclick="if(event.target===this) this.style.display='none'">
+  <div class="client-modal-content">
+    <h4>거래처 검색</h4>
+    <div class="client-search-bar">
+      <input id="clientSearchInput" type="text" placeholder="거래처명을 입력하세요" oninput="filterClients()">
+    </div>
+    <table class="client-list-table">
+      <thead>
+        <tr>
+          <th>회사명</th>
+          <th>담당자</th>
+          <th>전화</th>
+          <th>핸드폰</th>
+          <th>이메일</th>
+        </tr>
+      </thead>
+      <tbody id="clientListBody">
+        <tr onclick="selectClient('커뮤니크','한지원','010-5324-6492')" class="client-row" data-name="커뮤니크">
+          <td class="cl-left">커뮤니크</td><td>한지원</td><td>02-1234-5678</td><td>010-5324-6492</td><td class="cl-left">hanjiwon@communique.co.kr</td>
+        </tr>
+        <tr onclick="selectClient('행정공제회','이현진','010-2204-4252')" class="client-row" data-name="행정공제회">
+          <td class="cl-left">행정공제회</td><td>이현진</td><td>02-2345-6789</td><td>010-2204-4252</td><td class="cl-left">lee@geps.or.kr</td>
+        </tr>
+        <tr onclick="selectClient('한화에어로스페이스','송승민 주임','010-8803-2799')" class="client-row" data-name="한화에어로스페이스">
+          <td class="cl-left">한화에어로스페이스</td><td>송승민 주임</td><td>02-3456-7890</td><td>010-8803-2799</td><td class="cl-left">song@hanwha.com</td>
+        </tr>
+        <tr onclick="selectClient('유니트플레이','','010-5651-0118')" class="client-row" data-name="유니트플레이">
+          <td class="cl-left">유니트플레이</td><td></td><td></td><td>010-5651-0118</td><td class="cl-left"></td>
+        </tr>
+        <tr onclick="selectClient('방위사업청','임은영 중령','02-2079-5112')" class="client-row" data-name="방위사업청">
+          <td class="cl-left">방위사업청</td><td>임은영 중령</td><td>02-2079-5112</td><td></td><td class="cl-left"></td>
+        </tr>
+        <tr onclick="selectClient('LS E-Link','박정길','010-8950-0248')" class="client-row" data-name="LS E-Link">
+          <td class="cl-left">LS E-Link</td><td>박정길</td><td></td><td>010-8950-0248</td><td class="cl-left">park@lselink.com</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="client-modal-btns">
+      <button onclick="document.getElementById('clientModal').style.display='none'" style="padding:6px 20px; background:#374151; color:#fff; border:none; border-radius:4px; font-size:12px; cursor:pointer;">닫기</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// 거래처 선택
+function selectClient(name, person, phone) {
+  document.getElementById('clientName').value = name;
+  // 주문자, 연락처 자동 입력
+  var inputs = document.querySelectorAll('.form-table input[type="text"]');
+  inputs.forEach(function(inp) {
+    if (inp.placeholder === '주문자' && person) inp.value = person;
+    if (inp.placeholder === '연락처' && phone) inp.value = phone;
+  });
+  document.getElementById('clientModal').style.display = 'none';
+}
+
+// 거래처 검색 필터
+function filterClients() {
+  var keyword = document.getElementById('clientSearchInput').value.toLowerCase();
+  document.querySelectorAll('.client-row').forEach(function(row) {
+    var name = row.getAttribute('data-name').toLowerCase();
+    row.style.display = name.indexOf(keyword) >= 0 ? '' : 'none';
+  });
+}
+
+// 거래처 입력시 자동완성
+document.getElementById('clientName').addEventListener('input', function() {
+  var val = this.value.toLowerCase();
+  if (!val) return;
+  var clients = ['커뮤니크','행정공제회','한화에어로스페이스','유니트플레이','방위사업청','LS E-Link'];
+  var match = clients.find(function(c) { return c.toLowerCase().indexOf(val) === 0; });
+  if (match && match.toLowerCase() !== val) {
+    this.value = match;
+    this.setSelectionRange(val.length, match.length);
+  }
+});
+
+// 주문번호 자동 생성: 년월일-순번
+(function() {
+  var today = new Date();
+  var y = today.getFullYear();
+  var m = String(today.getMonth() + 1).padStart(2, '0');
+  var d = String(today.getDate()).padStart(2, '0');
+  var dateStr = y + m + d;
+  // localStorage로 하루 순번 관리
+  var key = 'orderCount_' + dateStr;
+  var count = parseInt(localStorage.getItem(key) || '0') + 1;
+  localStorage.setItem(key, count);
+  document.getElementById('orderNo').value = dateStr + '-' + count;
+})();
+
+// 거래유형 변경 시 부가세 컬럼 표시/숨김
+function toggleVat() {
+  var vatType = document.getElementById('vatType').value;
+  var vatCols = document.querySelectorAll('.vat-col');
+  if (vatType === 'novat') {
+    vatCols.forEach(function(el) { el.style.display = 'none'; });
+  } else {
+    vatCols.forEach(function(el) { el.style.display = ''; });
+  }
+}
+</script>
+</body>
+</html>
