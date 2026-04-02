@@ -295,7 +295,16 @@ function TemplateTab() {
                   <select value={c.type} onChange={e => updateCol(i, "type", e.target.value)} className="text-xs px-1 py-0.5 border border-gray-300 rounded">
                     {c.type === "auto" ? <option>자동순번</option> : <><option>텍스트</option><option>숫자</option><option>자동계산</option></>}
                   </select>
-                  {c.type === "자동계산" && <span className="text-xs text-amber-700">계산식 적용</span>}
+                  {c.type === "자동계산" && (
+                    <>
+                      <span className="text-xs text-amber-700 shrink-0">계산식 적용</span>
+                      <input type="text" placeholder={`${c.name} 계산식 입력 (예: 수량 * 단가)`} value={formulas.find(f => f.target === c.name)?.expression || ""} onChange={e => {
+                        const idx = formulas.findIndex(f => f.target === c.name);
+                        if (idx >= 0) { updateFormula(idx, "expression", e.target.value); }
+                        else { setFormulas(p => [...p, {target: c.name, expression: e.target.value}]); }
+                      }} className="flex-1 px-2 py-0.5 border border-amber-300 rounded text-xs font-mono bg-amber-50 min-w-[150px]" />
+                    </>
+                  )}
                   {c.type !== "auto" && <button onClick={() => removeCol(i)} className="text-red-500 text-sm">x</button>}
                 </div>
               ))}
