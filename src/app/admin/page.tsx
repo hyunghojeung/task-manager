@@ -142,9 +142,31 @@ function CategoryTab() {
 function CrudTab({endpoint, title, fields, subtitle}:{endpoint:string; title:string; fields:{k:string;l:string}[]; subtitle?:string}) {
   const [items, setItems] = useState<Array<Record<string,string>>>([]);
   const [form, setForm] = useState<Record<string,string>>({});
+  const [editId, setEditId] = useState<string | null>(null);
   const load = useCallback(async () => { const r = await fetch(`/api/${endpoint}?_=${Date.now()}`); if(r.ok) setItems(await r.json()); }, [endpoint]);
   useEffect(() => { load(); }, [load]);
-  async function create() { if(!form[fields[0].k]) return; await fetch(`/api/${endpoint}`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(form)}); setForm({}); load(); }
+
+  async function save() {
+    if(!form[fields[0].k]) return;
+    if (editId) {
+      await fetch(`/api/${endpoint}/${editId}`,{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify(form)});
+      setEditId(null);
+    } else {
+      await fetch(`/api/${endpoint}`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(form)});
+    }
+    setForm({});
+    load();
+  }
+
+  function startEdit(item: Record<string,string>) {
+    setEditId(item.id);
+    const newForm: Record<string,string> = {};
+    fields.forEach(f => { newForm[f.k] = item[f.k] || ""; });
+    setForm(newForm);
+  }
+
+  function cancelEdit() { setEditId(null); setForm({}); }
+
   async function remove(id:string) { if(!confirm("정말 삭제할까요?")) return; await fetch(`/api/${endpoint}/${id}`,{method:"DELETE"}); load(); }
 
   return (
@@ -159,7 +181,7 @@ function CrudTab({endpoint, title, fields, subtitle}:{endpoint:string; title:str
               <td className="border border-gray-200 px-1.5 py-[7px] text-center">{i+1}</td>
               {fields.map(f=><td key={f.k} className="border border-gray-200 px-1.5 py-[7px] text-left">{item[f.k]}</td>)}
               <td className="border border-gray-200 px-1.5 py-[7px] text-center whitespace-nowrap">
-                <button className="text-blue-600 border border-blue-600 px-2 py-0.5 rounded text-xs mr-1">수정</button>
+                <button onClick={()=>startEdit(item)} className="text-blue-600 border border-blue-600 px-2 py-0.5 rounded text-xs mr-1">수정</button>
                 <button onClick={()=>remove(item.id)} className="text-red-600 border border-red-600 px-2 py-0.5 rounded text-xs">삭제</button>
               </td>
             </tr>
@@ -180,7 +202,8 @@ function CrudTab({endpoint, title, fields, subtitle}:{endpoint:string; title:str
           })}
         </div>
         <div className="mt-3">
-          <button onClick={create} className="px-4 py-1.5 bg-blue-600 text-white rounded text-sm">+ {title.replace(" 관리","")} 등록</button>
+          <button onClick={save} className="px-4 py-1.5 bg-blue-600 text-white rounded text-sm">{editId ? "수정 저장" : `+ ${title.replace(" 관리","")} 등록`}</button>
+          {editId && <button onClick={cancelEdit} className="px-4 py-1.5 border border-gray-300 rounded text-sm">취소</button>}
         </div>
       </div>
     </div>
