@@ -31,17 +31,21 @@ export default function SuperAdminDashboard() {
     adminName: "", adminUserId: "", adminPassword: "@admin1234",
   });
 
-  const fetchCompanies = useCallback(async () => {
-    setLoading(true);
-    const res = await fetch(`/api/admin/companies?t=${Date.now()}`, { cache: "no-store", headers: { "Cache-Control": "no-cache, no-store, must-revalidate", "Pragma": "no-cache" } });
-    if (res.ok) {
-      const data = await res.json();
-      setCompanies(data);
-    }
-    setLoading(false);
-  }, []);
+  const [refreshKey, setRefreshKey] = useState(0);
 
-  useEffect(() => { fetchCompanies(); }, [fetchCompanies]);
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    fetch(`/api/admin/companies?_=${Date.now()}`)
+      .then(res => res.json())
+      .then(data => { if (!cancelled) { setCompanies(data); setLoading(false); } })
+      .catch(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [refreshKey]);
+
+  function refreshList() {
+    setRefreshKey(k => k + 1);
+  }
 
   const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
@@ -61,7 +65,7 @@ export default function SuperAdminDashboard() {
         setShowModal(false);
         setForm({ company_code: "", company_id: "", company_name: "", business_number: "", representative: "", phone: "", fax: "", email: "", address: "", business_type: "", business_category: "", password: "@admin1234", adminName: "", adminUserId: "", adminPassword: "@admin1234" });
         alert("업체가 등록되었습니다.");
-        setTimeout(() => fetchCompanies(), 500);
+        setTimeout(() => refreshList(), 500);
       } else {
         setErrorMsg(data.error || "등록에 실패했습니다.");
       }
@@ -78,7 +82,7 @@ export default function SuperAdminDashboard() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status: newStatus }),
     });
-    fetchCompanies();
+    refreshList();
   }
 
   function openEdit(c: CompanyData) {
@@ -113,7 +117,7 @@ export default function SuperAdminDashboard() {
           representative: form.representative, phone: form.phone, email: form.email,
         }),
       });
-      if (res.ok) { setShowModal(false); alert("수정되었습니다."); setTimeout(() => fetchCompanies(), 500); }
+      if (res.ok) { setShowModal(false); alert("수정되었습니다."); setTimeout(() => refreshList(), 500); }
       else { const d = await res.json(); setErrorMsg(d.error || "수정 실패"); }
     } catch (err) { setErrorMsg("서버 오류: " + (err instanceof Error ? err.message : "")); }
     finally { setSubmitting(false); }
@@ -122,7 +126,7 @@ export default function SuperAdminDashboard() {
   async function handleDelete(id: string) {
     if (!confirm("정말 삭제할까요? 업체의 모든 데이터가 삭제됩니다.")) return;
     await fetch(`/api/admin/companies/${id}`, { method: "DELETE" });
-    fetchCompanies();
+    refreshList();
   }
 
   const activeCount = companies.filter(c => c.status === "active").length;
