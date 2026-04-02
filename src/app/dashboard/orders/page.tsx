@@ -220,7 +220,7 @@ export default function OrdersPage() {
             <th className="border border-[#2d3a47] px-3 py-2.5 w-[150px]">거래처명</th>
             <th className="border border-[#2d3a47] px-3 py-2.5 w-[90px]">담당자명</th>
             <th className="border border-[#2d3a47] px-3 py-2.5">용지종류 및 평량</th>
-            <th className="border border-[#2d3a47] px-2 py-2.5 w-[50px]">인쇄</th>
+            <th className="border border-[#2d3a47] px-3 py-2.5 w-[60px]">인쇄</th>
           </tr></thead>
           <tbody>
             {orders.length === 0 ? <tr><td colSpan={7} className="text-center py-8 text-gray-400">등록된 발주서가 없습니다.</td></tr> :
@@ -233,7 +233,7 @@ export default function OrdersPage() {
                 <td className="border border-gray-200 px-3 py-2 text-center">{o.orderer}</td>
                 <td className="border border-gray-200 px-3 py-2 text-left">{o.request_note?.slice(0, 50)}</td>
                 <td className="border border-gray-200 px-2 py-2 text-center">
-                  <button onClick={() => window.open(`/dashboard/orders/print?id=${o.id}`, '_blank')} className="px-2 py-0.5 bg-red-600 text-white rounded text-xs">인쇄</button>
+                  <button onClick={() => window.open(`/dashboard/orders/print?id=${o.id}`, '_blank')} className="px-3 py-0.5 bg-red-600 text-white rounded text-xs whitespace-nowrap">인쇄</button>
                 </td>
               </tr>
             ))}

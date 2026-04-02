@@ -33,14 +33,43 @@ export default function PrintPage() {
           <table className="border-collapse text-xs">
             <tbody>
               <tr><td colSpan={2} className="border border-gray-800 bg-gray-50 px-2 py-1 text-center font-bold">공급자정보</td></tr>
-              <tr><th className="border border-gray-800 bg-gray-50 px-2 py-1 w-[80px]">상 호</th><td className="border border-gray-800 px-2 py-1">인쇄의장</td></tr>
-              <tr><th className="border border-gray-800 bg-gray-50 px-2 py-1">TEL / FAX</th><td className="border border-gray-800 px-2 py-1">02-793-4332</td></tr>
+              <tr><th className="border border-gray-800 bg-gray-50 px-2 py-1 w-[100px]">사업자등록번호</th><td className="border border-gray-800 px-2 py-1">114-04-56136</td></tr>
+              <tr><th className="border border-gray-800 bg-gray-50 px-2 py-1">상 호</th><td className="border border-gray-800 px-2 py-1">인쇄의장</td></tr>
+              <tr><th className="border border-gray-800 bg-gray-50 px-2 py-1">대표자</th><td className="border border-gray-800 px-2 py-1">정형호</td></tr>
+              <tr><th className="border border-gray-800 bg-gray-50 px-2 py-1">TEL / FAX</th><td className="border border-gray-800 px-2 py-1">02-793-4332 / 027934338</td></tr>
+              <tr><th className="border border-gray-800 bg-gray-50 px-2 py-1">주 소</th><td className="border border-gray-800 px-2 py-1">서울특별시 용산구 한강로2가 74-2 성산빌딩 2층</td></tr>
             </tbody>
           </table>
         </div>
 
         <div className="text-left text-sm mb-2 p-2 border border-gray-200 rounded"><strong>주문자:</strong> {po.orderer} &nbsp; {po.contact}</div>
         <div className="text-sm mb-4"><strong>요청사항:</strong><br/>{po.request_note}</div>
+
+        {/* 품목 테이블 */}
+        <table className="w-full border-collapse text-sm">
+          <thead>
+            <tr>
+              <th className="border border-gray-800 bg-gray-100 px-2 py-2 w-10">순번</th>
+              <th className="border border-gray-800 bg-gray-100 px-2 py-2">품목명</th>
+              <th className="border border-gray-800 bg-gray-100 px-2 py-2 w-[80px]">규격(원지)</th>
+              <th className="border border-gray-800 bg-gray-100 px-2 py-2 w-[55px]">종이결</th>
+              <th className="border border-gray-800 bg-gray-100 px-2 py-2 w-[70px]">주문수량</th>
+              <th className="border border-gray-800 bg-gray-100 px-2 py-2 w-[70px]">재단사이즈</th>
+            </tr>
+          </thead>
+          <tbody>
+            {[1,2,3,4,5,6,7].map(n => (
+              <tr key={n}>
+                <td className="border border-gray-300 px-2 py-2 text-center">{n <= 3 ? n : "\u00A0"}</td>
+                <td className="border border-gray-300 px-2 py-2 text-left">{n === 1 ? "드라이보루지 1800g" : n === 2 ? "드라이보루지 1800g" : n === 3 ? "드라이보루지 1800g" : ""}</td>
+                <td className="border border-gray-300 px-2 py-2 text-center">{n === 1 ? "4x6전지" : n === 2 ? "4x6전지" : n === 3 ? "국전" : ""}</td>
+                <td className="border border-gray-300 px-2 py-2 text-center">{n <= 3 ? "종목" : ""}</td>
+                <td className="border border-gray-300 px-2 py-2 text-center">{n === 1 ? "전지20장" : n === 2 ? "전지40장" : n === 3 ? "전지40장" : ""}</td>
+                <td className="border border-gray-300 px-2 py-2 text-center">{n === 1 ? "701x310" : n === 2 ? "741x310" : n === 3 ? "635x310" : ""}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
 
       {/* 하단 버튼 */}
