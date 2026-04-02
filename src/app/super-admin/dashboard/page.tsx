@@ -90,15 +90,26 @@ export default function SuperAdminDashboard() {
     refreshList();
   }
 
-  function openEdit(c: CompanyData) {
+  async function openEdit(c: CompanyData) {
     setEditId(c.id);
+    // 관리자 사용자 조회
+    let adminName = "", adminUserId = "", adminPassword = "";
+    try {
+      const res = await fetch(`/api/admin/companies/${c.id}/admin?_=${Date.now()}`);
+      if (res.ok) {
+        const admin = await res.json();
+        adminName = admin.name || "";
+        adminUserId = admin.user_id || "";
+        adminPassword = admin.password || "";
+      }
+    } catch { /* ignore */ }
     setForm({
       company_code: c.company_code || "", company_id: c.company_id || "",
       company_name: c.company_name || "", business_number: c.business_number || "",
       representative: c.representative || "", phone: c.phone || "",
       fax: c.fax || "", email: c.email || "", address: c.address || "",
       business_type: c.business_type || "", business_category: c.business_category || "",
-      password: c.password || "", adminName: "", adminUserId: "", adminPassword: "",
+      password: c.password || "", adminName, adminUserId, adminPassword,
     });
     setShowModal(true);
   }
@@ -126,8 +137,17 @@ export default function SuperAdminDashboard() {
           password: form.password,
         }),
       });
-      if (res.ok) { setShowModal(false); alert("수정되었습니다."); setTimeout(() => refreshList(), 500); }
-      else { const d = await res.json(); setErrorMsg(d.error || "수정 실패"); }
+      if (res.ok) {
+        // 관리자 정보도 업데이트
+        if (form.adminName || form.adminUserId) {
+          await fetch(`/api/admin/companies/${editId}/admin`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name: form.adminName, user_id: form.adminUserId, password: form.adminPassword }),
+          });
+        }
+        setShowModal(false); alert("수정되었습니다."); setTimeout(() => refreshList(), 500);
+      } else { const d = await res.json(); setErrorMsg(d.error || "수정 실패"); }
     } catch (err) { setErrorMsg("서버 오류: " + (err instanceof Error ? err.message : "")); }
     finally { setSubmitting(false); }
   }
