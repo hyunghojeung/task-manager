@@ -5,12 +5,8 @@ export async function GET(_: NextRequest, { params }: { params: Promise<{ id: st
   const { id } = await params;
   const supabase = getSupabase();
   // 조회수 증가
-  await supabase.rpc("increment_view_count", { post_id: id }).catch(() => {
-    // RPC 없으면 수동 증가
-    supabase.from("board_posts").select("view_count").eq("id", id).single().then(({ data }) => {
-      if (data) supabase.from("board_posts").update({ view_count: (data.view_count || 0) + 1 }).eq("id", id);
-    });
-  });
+  const { data: post } = await supabase.from("board_posts").select("view_count").eq("id", id).single();
+  if (post) await supabase.from("board_posts").update({ view_count: (post.view_count || 0) + 1 }).eq("id", id);
   const { data, error } = await supabase.from("board_posts").select("*").eq("id", id).single();
   if (error) return NextResponse.json({ error: error.message }, { status: 404 });
   // 댓글 조회
