@@ -13,6 +13,8 @@ export default function WritePage() {
   const [clientSearch, setClientSearch] = useState("");
   const [showAutoComplete, setShowAutoComplete] = useState(false);
   const [autoClients, setAutoClients] = useState<Array<{id:string;name:string;contact_person:string;phone:string;mobile:string;email:string}>>([]);
+  const [showRegisterModal, setShowRegisterModal] = useState(false);
+  const [newClient, setNewClient] = useState({name:"",contact_person:"",phone:"",mobile:"",email:""});
   const [formData, setFormData] = useState({
     orderer: "", contact: "", email: "", client_name: "",
     product_type: "", title: "", category_id: "",
@@ -54,6 +56,20 @@ export default function WritePage() {
   function selectClient(c: {name:string;contact_person:string;phone:string;mobile:string;email:string}) {
     setFormData(prev => ({ ...prev, client_name: c.name, orderer: c.contact_person || prev.orderer, contact: c.mobile || c.phone || prev.contact, email: c.email || prev.email }));
     setShowClientModal(false);
+  }
+
+  async function registerClient() {
+    if (!newClient.name) { alert("회사명을 입력해주세요."); return; }
+    const res = await fetch("/api/clients", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(newClient) });
+    if (res.ok) {
+      const created = await res.json();
+      setFormData(prev => ({ ...prev, client_name: newClient.name, orderer: newClient.contact_person || prev.orderer, contact: newClient.mobile || newClient.phone || prev.contact, email: newClient.email || prev.email }));
+      setNewClient({name:"",contact_person:"",phone:"",mobile:"",email:""});
+      setShowRegisterModal(false);
+      alert("거래처가 등록되었습니다.");
+    } else {
+      alert("등록 실패");
+    }
   }
 
   function handleClientInput(value: string) {
@@ -115,7 +131,9 @@ export default function WritePage() {
             <td className="py-1"><input type="text" placeholder="연락처" value={formData.contact} onChange={e => handleChange("contact", e.target.value)} className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm" /></td>
           </tr>
           <tr>
-            <td className="font-semibold text-gray-600 text-xs py-1">거래처</td>
+            <td className="font-semibold text-gray-600 text-xs py-1">
+              <button type="button" onClick={() => setShowRegisterModal(true)} className="px-2 py-0.5 bg-blue-600 text-white rounded text-xs">거래처</button>
+            </td>
             <td className="py-1">
               <div style={{display:"flex",gap:"4px",alignItems:"center",position:"relative"}}>
                 <input type="text" placeholder="거래처" value={formData.client_name} onChange={e => handleClientInput(e.target.value)} onBlur={() => setTimeout(() => setShowAutoComplete(false), 200)} className="flex-1 px-2 py-1.5 border border-gray-300 rounded text-sm" />
@@ -301,6 +319,30 @@ export default function WritePage() {
             </table>
             <div className="flex justify-end mt-3">
               <button onClick={() => setShowClientModal(false)} className="px-5 py-2 bg-gray-700 text-white rounded text-xs">닫기</button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* 거래처 간편 등록 모달 */}
+      {showRegisterModal && (
+        <div className="fixed inset-0 bg-black/50 z-[1000] flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-xl">
+            <h4 className="text-base font-bold text-gray-800 mb-4 pb-2 border-b-2 border-gray-200">거래처 등록</h4>
+            <div className="grid grid-cols-[70px_1fr] gap-2 text-sm items-center">
+              <span className="font-semibold text-gray-600 text-xs">회사명</span>
+              <input type="text" placeholder="회사명" value={newClient.name} onChange={e => setNewClient(p => ({...p, name: e.target.value}))} className="px-2 py-1.5 border border-gray-300 rounded text-sm" />
+              <span className="font-semibold text-gray-600 text-xs">담당자</span>
+              <input type="text" placeholder="담당자" value={newClient.contact_person} onChange={e => setNewClient(p => ({...p, contact_person: e.target.value}))} className="px-2 py-1.5 border border-gray-300 rounded text-sm" />
+              <span className="font-semibold text-gray-600 text-xs">전화</span>
+              <input type="text" placeholder="02-0000-0000" value={newClient.phone} onChange={e => setNewClient(p => ({...p, phone: e.target.value}))} className="px-2 py-1.5 border border-gray-300 rounded text-sm" />
+              <span className="font-semibold text-gray-600 text-xs">핸드폰</span>
+              <input type="text" placeholder="010-0000-0000" value={newClient.mobile} onChange={e => setNewClient(p => ({...p, mobile: e.target.value}))} className="px-2 py-1.5 border border-gray-300 rounded text-sm" />
+              <span className="font-semibold text-gray-600 text-xs">이메일</span>
+              <input type="text" placeholder="email@example.com" value={newClient.email} onChange={e => setNewClient(p => ({...p, email: e.target.value}))} className="px-2 py-1.5 border border-gray-300 rounded text-sm" />
+            </div>
+            <div className="flex gap-2 justify-end mt-4">
+              <button onClick={registerClient} className="px-5 py-2 bg-blue-600 text-white rounded text-sm">등록</button>
+              <button onClick={() => setShowRegisterModal(false)} className="px-5 py-2 border border-gray-300 rounded text-sm">닫기</button>
             </div>
           </div>
         </div>
