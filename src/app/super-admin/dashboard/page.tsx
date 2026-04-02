@@ -267,7 +267,7 @@ export default function SuperAdminDashboard() {
 
       {/* 업체 등록 모달 */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/50 z-[1000] flex items-center justify-center p-4" onClick={(e) => { if (e.target === e.currentTarget) setShowModal(false); }}>
+        <div className="fixed inset-0 bg-black/50 z-[1000] flex items-center justify-center p-4">
           <div className="bg-white rounded-lg p-6 w-full max-w-lg max-h-[85vh] overflow-y-auto shadow-xl">
             <h4 className="text-base font-bold text-gray-800 mb-4 pb-2 border-b-2 border-gray-200">{editId ? "업체 수정" : "업체 등록"}</h4>
             <form onSubmit={editId ? handleUpdate : handleCreateCompany}>
