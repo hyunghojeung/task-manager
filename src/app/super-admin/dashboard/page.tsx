@@ -42,20 +42,32 @@ export default function SuperAdminDashboard() {
 
   useEffect(() => { fetchCompanies(); }, [fetchCompanies]);
 
+  const [submitting, setSubmitting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
+
   async function handleCreateCompany(e: React.FormEvent) {
     e.preventDefault();
-    const res = await fetch("/api/admin/companies", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
-    });
-    if (res.ok) {
-      setShowModal(false);
-      setForm({ company_code: "", company_id: "", company_name: "", business_number: "", representative: "", phone: "", fax: "", email: "", address: "", business_type: "", business_category: "", password: "@admin1234", adminName: "", adminUserId: "", adminPassword: "@admin1234" });
-      fetchCompanies();
-    } else {
+    setSubmitting(true);
+    setErrorMsg("");
+    try {
+      const res = await fetch("/api/admin/companies", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
       const data = await res.json();
-      alert(data.error || "등록에 실패했습니다.");
+      if (res.ok) {
+        setShowModal(false);
+        setForm({ company_code: "", company_id: "", company_name: "", business_number: "", representative: "", phone: "", fax: "", email: "", address: "", business_type: "", business_category: "", password: "@admin1234", adminName: "", adminUserId: "", adminPassword: "@admin1234" });
+        fetchCompanies();
+        alert("업체가 등록되었습니다.");
+      } else {
+        setErrorMsg(data.error || "등록에 실패했습니다.");
+      }
+    } catch (err) {
+      setErrorMsg("서버 연결에 실패했습니다: " + (err instanceof Error ? err.message : ""));
+    } finally {
+      setSubmitting(false);
     }
   }
 
@@ -235,8 +247,9 @@ export default function SuperAdminDashboard() {
                 </div>
               </div>
 
+              {errorMsg && <p className="text-red-500 text-xs mt-3 bg-red-50 p-2 rounded">{errorMsg}</p>}
               <div className="flex gap-2 justify-end mt-4">
-                <button type="submit" className="px-6 py-2 bg-blue-600 text-white rounded text-sm">등록</button>
+                <button type="submit" disabled={submitting} className="px-6 py-2 bg-blue-600 text-white rounded text-sm disabled:opacity-50">{submitting ? "등록중..." : "등록"}</button>
                 <button type="button" onClick={() => setShowModal(false)} className="px-6 py-2 bg-white text-gray-600 border border-gray-300 rounded text-sm">취소</button>
               </div>
             </form>
