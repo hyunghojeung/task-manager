@@ -27,9 +27,12 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
   const { id } = await params;
   const body = await request.json();
 
-  // 빈 문자열 UUID 필드를 null로 변환
-  if (body.category_id === "") body.category_id = null;
-  if (body.client_id === "") body.client_id = null;
+  // UUID가 아닌 값이 들어오면 null로 변환
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (body.category_id && !uuidRegex.test(body.category_id)) body.category_id = null;
+  if (body.client_id && !uuidRegex.test(body.client_id)) body.client_id = null;
+  if (!body.category_id) body.category_id = null;
+  if (!body.client_id) body.client_id = null;
 
   const supabase = getSupabase();
   const { data, error } = await supabase
