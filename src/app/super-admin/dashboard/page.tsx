@@ -33,7 +33,7 @@ export default function SuperAdminDashboard() {
 
   const fetchCompanies = useCallback(async () => {
     setLoading(true);
-    const res = await fetch(`/api/admin/companies?t=${Date.now()}`, { cache: "no-store" });
+    const res = await fetch(`/api/admin/companies?t=${Date.now()}`, { cache: "no-store", headers: { "Cache-Control": "no-cache, no-store, must-revalidate", "Pragma": "no-cache" } });
     if (res.ok) {
       const data = await res.json();
       setCompanies(data);
@@ -60,8 +60,8 @@ export default function SuperAdminDashboard() {
       if (res.ok) {
         setShowModal(false);
         setForm({ company_code: "", company_id: "", company_name: "", business_number: "", representative: "", phone: "", fax: "", email: "", address: "", business_type: "", business_category: "", password: "@admin1234", adminName: "", adminUserId: "", adminPassword: "@admin1234" });
-        fetchCompanies();
         alert("업체가 등록되었습니다.");
+        setTimeout(() => fetchCompanies(), 500);
       } else {
         setErrorMsg(data.error || "등록에 실패했습니다.");
       }
@@ -113,7 +113,7 @@ export default function SuperAdminDashboard() {
           representative: form.representative, phone: form.phone, email: form.email,
         }),
       });
-      if (res.ok) { setShowModal(false); fetchCompanies(); alert("수정되었습니다."); }
+      if (res.ok) { setShowModal(false); alert("수정되었습니다."); setTimeout(() => fetchCompanies(), 500); }
       else { const d = await res.json(); setErrorMsg(d.error || "수정 실패"); }
     } catch (err) { setErrorMsg("서버 오류: " + (err instanceof Error ? err.message : "")); }
     finally { setSubmitting(false); }
