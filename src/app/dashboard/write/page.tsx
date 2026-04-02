@@ -351,16 +351,28 @@ export default function WritePage() {
                   ))}
                 </tr>
               ))}
-              <tr className="bg-gray-50 font-bold">
-                {templateCols.map((c, ci) => {
-                  const calcCols = templateCols.filter(tc => tc.type === "자동계산");
-                  const nonCalcCount = templateCols.length - calcCols.length;
-                  if (ci === 0) return <td key={ci} colSpan={nonCalcCount} className="border border-gray-200 px-2 py-2 text-right">합 계</td>;
-                  if (ci < nonCalcCount) return null;
-                  const sum = itemData.reduce((acc, row) => acc + (parseInt(row[c.name]) || 0), 0);
-                  return <td key={ci} className="border border-gray-200 px-2 py-2 text-right bg-amber-50">{sum.toLocaleString()}</td>;
-                })}
-              </tr>
+              {(() => {
+                const calcCols = templateCols.filter(tc => tc.type === "자동계산");
+                const nonCalcCount = templateCols.length - calcCols.length;
+                const sums: Record<string, number> = {};
+                calcCols.forEach(c => { sums[c.name] = itemData.reduce((acc, row) => acc + (parseInt(row[c.name]) || 0), 0); });
+                const grandTotal = Object.values(sums).reduce((a, b) => a + b, 0);
+                return (
+                  <>
+                    <tr className="bg-gray-50 font-bold">
+                      {templateCols.map((c, ci) => {
+                        if (ci === 0) return <td key={ci} colSpan={nonCalcCount} className="border border-gray-200 px-2 py-2 text-right">합 계</td>;
+                        if (ci < nonCalcCount) return null;
+                        return <td key={ci} className="border border-gray-200 px-2 py-2 text-right bg-amber-50">{(sums[c.name] || 0).toLocaleString()}</td>;
+                      })}
+                    </tr>
+                    <tr className="bg-blue-50 font-bold">
+                      <td colSpan={nonCalcCount} className="border border-gray-200 px-2 py-2 text-right text-blue-700">총 액</td>
+                      <td colSpan={calcCols.length} className="border border-gray-200 px-2 py-2 text-right text-blue-700 text-sm">{grandTotal.toLocaleString()}</td>
+                    </tr>
+                  </>
+                );
+              })()}
             </tbody>
           </table>
         </div>
