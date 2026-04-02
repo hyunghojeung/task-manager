@@ -4,7 +4,8 @@ import { createClient } from "@supabase/supabase-js";
 function getSupabase() {
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL || "",
-    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ""
+    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "",
+    { auth: { autoRefreshToken: false, persistSession: false } }
   );
 }
 
@@ -12,9 +13,14 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
   const { id } = await params;
   const body = await request.json();
   const supabase = getSupabase();
-  const { data, error } = await supabase.from("companies").update({ ...body, updated_at: new Date().toISOString() }).eq("id", id).select().single();
+
+  const { error } = await supabase
+    .from("companies")
+    .update({ ...body, updated_at: new Date().toISOString() })
+    .eq("id", id);
+
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json(data);
+  return NextResponse.json({ success: true });
 }
 
 export async function DELETE(_: NextRequest, { params }: { params: Promise<{ id: string }> }) {

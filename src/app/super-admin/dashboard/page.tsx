@@ -33,7 +33,7 @@ export default function SuperAdminDashboard() {
 
   const fetchCompanies = useCallback(async () => {
     setLoading(true);
-    const res = await fetch("/api/admin/companies");
+    const res = await fetch("/api/admin/companies", { cache: "no-store" });
     if (res.ok) {
       const data = await res.json();
       setCompanies(data);
