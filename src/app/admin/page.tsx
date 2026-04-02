@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 
 type Tab = "notice" | "users" | "category" | "client" | "supplier" | "template" | "company";
 
@@ -28,7 +28,7 @@ export default function AdminPage() {
         {tab === "users" && <UsersTab />}
         {tab === "category" && <CategoryTab />}
         {tab === "client" && <CrudTab endpoint="clients" title="거래처 관리" fields={[{k:"name",l:"회사명"},{k:"contact_person",l:"담당자"},{k:"phone",l:"전화"},{k:"mobile",l:"핸드폰"},{k:"email",l:"이메일"}]} />}
-        {tab === "supplier" && <CrudTab endpoint="suppliers" title="발주처 관리" fields={[{k:"name",l:"발주처명"},{k:"contact_person",l:"담당자"},{k:"phone",l:"전화"},{k:"fax",l:"팩스"},{k:"email",l:"이메일"}]} />}
+        {tab === "supplier" && <CrudTab endpoint="suppliers" title="발주처 관리" subtitle="발주처는 거래처와 별도로 관리됩니다. 발주서 작성 시 이 목록에서 선택합니다." fields={[{k:"name",l:"발주처명"},{k:"contact_person",l:"담당자"},{k:"phone",l:"전화"},{k:"fax",l:"팩스"},{k:"email",l:"이메일"}]} />}
         {tab === "template" && <TemplateTab />}
         {tab === "company" && <CompanyTab />}
       </div>
@@ -139,28 +139,49 @@ function CategoryTab() {
 }
 
 // ===== 거래처/발주처 공통 =====
-function CrudTab({endpoint, title, fields}:{endpoint:string; title:string; fields:{k:string;l:string}[]}) {
+function CrudTab({endpoint, title, fields, subtitle}:{endpoint:string; title:string; fields:{k:string;l:string}[]; subtitle?:string}) {
   const [items, setItems] = useState<Array<Record<string,string>>>([]);
   const [form, setForm] = useState<Record<string,string>>({});
-  const load = useCallback(async () => { const r = await fetch(`/api/${endpoint}`); if(r.ok) setItems(await r.json()); }, [endpoint]);
+  const load = useCallback(async () => { const r = await fetch(`/api/${endpoint}?_=${Date.now()}`); if(r.ok) setItems(await r.json()); }, [endpoint]);
   useEffect(() => { load(); }, [load]);
   async function create() { if(!form[fields[0].k]) return; await fetch(`/api/${endpoint}`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(form)}); setForm({}); load(); }
   async function remove(id:string) { if(!confirm("정말 삭제할까요?")) return; await fetch(`/api/${endpoint}/${id}`,{method:"DELETE"}); load(); }
 
   return (
     <div className="bg-white rounded-lg shadow p-6">
-      <h3 className="text-base font-bold text-gray-800 mb-4 pb-2 border-b-2 border-gray-200">{title}</h3>
+      <h3 className="text-base font-bold text-gray-800 mb-2 pb-2 border-b-2 border-gray-200">{title}</h3>
+      {subtitle && <p className="text-xs text-gray-500 mb-4">{subtitle}</p>}
       <div className="overflow-x-auto">
         <table className="w-full border-collapse text-xs border border-gray-300">
-          <thead><tr className="bg-[#3b4b5b] text-white"><th className="border border-[#2d3a47] px-2 py-2.5 w-10">순번</th>{fields.map(f=><th key={f.k} className="border border-[#2d3a47] px-2 py-2.5">{f.l}</th>)}<th className="border border-[#2d3a47] px-2 py-2.5 w-20">관리</th></tr></thead>
+          <thead><tr className="bg-[#3b4b5b] text-white"><th className="border border-[#2d3a47] px-1.5 py-2.5 w-10">순번</th>{fields.map(f=><th key={f.k} className="border border-[#2d3a47] px-1.5 py-2.5">{f.l}</th>)}<th className="border border-[#2d3a47] px-1.5 py-2.5 w-[100px]">관리</th></tr></thead>
           <tbody>{items.map((item,i) => (
-            <tr key={item.id} className={i%2===1?"bg-gray-50":""}><td className="border border-gray-200 px-2 py-2 text-center">{i+1}</td>{fields.map(f=><td key={f.k} className="border border-gray-200 px-2 py-2 text-left">{item[f.k]}</td>)}<td className="border border-gray-200 px-2 py-2 text-center"><button onClick={()=>remove(item.id)} className="text-red-600 border border-red-600 px-2 py-0.5 rounded text-xs">삭제</button></td></tr>
+            <tr key={item.id} className={i%2===1?"bg-gray-50":""}>
+              <td className="border border-gray-200 px-1.5 py-[7px] text-center">{i+1}</td>
+              {fields.map(f=><td key={f.k} className="border border-gray-200 px-1.5 py-[7px] text-left">{item[f.k]}</td>)}
+              <td className="border border-gray-200 px-1.5 py-[7px] text-center whitespace-nowrap">
+                <button className="text-blue-600 border border-blue-600 px-2 py-0.5 rounded text-xs mr-1">수정</button>
+                <button onClick={()=>remove(item.id)} className="text-red-600 border border-red-600 px-2 py-0.5 rounded text-xs">삭제</button>
+              </td>
+            </tr>
           ))}</tbody>
         </table>
       </div>
-      <div className="flex flex-wrap gap-2 mt-4">
-        {fields.map(f=><input key={f.k} type="text" placeholder={f.l} value={form[f.k]||""} onChange={e=>setForm(p=>({...p,[f.k]:e.target.value}))} className="px-2 py-1.5 border border-gray-300 rounded text-sm w-32" />)}
-        <button onClick={create} className="px-4 py-1.5 bg-blue-600 text-white rounded text-sm">+ 등록</button>
+      {/* 등록 폼 - 미리보기 HTML과 동일한 grid 레이아웃 */}
+      <div className="bg-gray-50 border border-gray-200 rounded-md p-4 mt-4">
+        <div className="grid grid-cols-[70px_1fr_70px_1fr] gap-2 items-center text-sm">
+          {fields.map((f, idx) => {
+            const isLast = idx === fields.length - 1 && fields.length % 2 !== 0;
+            return (
+              <React.Fragment key={f.k}>
+                <span className="font-semibold text-gray-600 text-xs">{f.l}</span>
+                <input type="text" placeholder={f.l} value={form[f.k]||""} onChange={e=>setForm(p=>({...p,[f.k]:e.target.value}))} className={`px-2 py-1.5 border border-gray-300 rounded text-sm ${isLast ? "col-span-3" : ""}`} />
+              </React.Fragment>
+            );
+          })}
+        </div>
+        <div className="mt-3">
+          <button onClick={create} className="px-4 py-1.5 bg-blue-600 text-white rounded text-sm">+ {title.replace(" 관리","")} 등록</button>
+        </div>
       </div>
     </div>
   );
