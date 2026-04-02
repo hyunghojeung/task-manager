@@ -23,6 +23,7 @@ export default function SuperAdminDashboard() {
   const [companies, setCompanies] = useState<CompanyData[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState({
     company_code: "", company_id: "", company_name: "", business_number: "",
     representative: "", phone: "", fax: "", email: "", address: "",
@@ -78,6 +79,44 @@ export default function SuperAdminDashboard() {
       body: JSON.stringify({ status: newStatus }),
     });
     fetchCompanies();
+  }
+
+  function openEdit(c: CompanyData) {
+    setEditId(c.id);
+    setForm({
+      company_code: c.company_code || "", company_id: c.company_id || "",
+      company_name: c.company_name || "", business_number: c.business_number || "",
+      representative: c.representative || "", phone: c.phone || "",
+      fax: "", email: c.email || "", address: "", business_type: "", business_category: "",
+      password: "", adminName: "", adminUserId: "", adminPassword: "",
+    });
+    setShowModal(true);
+  }
+
+  function openCreate() {
+    setEditId(null);
+    setForm({ company_code: "", company_id: "", company_name: "", business_number: "", representative: "", phone: "", fax: "", email: "", address: "", business_type: "", business_category: "", password: "@admin1234", adminName: "", adminUserId: "", adminPassword: "@admin1234" });
+    setShowModal(true);
+  }
+
+  async function handleUpdate(e: React.FormEvent) {
+    e.preventDefault();
+    if (!editId) return;
+    setSubmitting(true);
+    setErrorMsg("");
+    try {
+      const res = await fetch(`/api/admin/companies/${editId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          company_name: form.company_name, business_number: form.business_number,
+          representative: form.representative, phone: form.phone, email: form.email,
+        }),
+      });
+      if (res.ok) { setShowModal(false); fetchCompanies(); alert("수정되었습니다."); }
+      else { const d = await res.json(); setErrorMsg(d.error || "수정 실패"); }
+    } catch (err) { setErrorMsg("서버 오류: " + (err instanceof Error ? err.message : "")); }
+    finally { setSubmitting(false); }
   }
 
   async function handleDelete(id: string) {
@@ -151,6 +190,7 @@ export default function SuperAdminDashboard() {
                           <td className="border border-gray-200 px-2 py-2 text-center">{statusBadge(c.status)}</td>
                           <td className="border border-gray-200 px-2 py-2 text-center">{c.user_count}명</td>
                           <td className="border border-gray-200 px-2 py-2 text-center whitespace-nowrap">
+                            <button onClick={()=>openEdit(c)} className="text-blue-600 border border-blue-600 px-2 py-0.5 rounded text-xs mr-1">수정</button>
                             <button onClick={()=>handleStatusChange(c.id, c.status==="active"?"inactive":"active")} className={`px-2 py-0.5 rounded text-xs mr-1 border ${c.status==="active"?"text-red-600 border-red-600":"text-emerald-600 border-emerald-600"}`}>{c.status==="active"?"정지":"활성"}</button>
                             <button onClick={()=>handleDelete(c.id)} className="text-red-600 border border-red-600 px-2 py-0.5 rounded text-xs">삭제</button>
                           </td>
@@ -168,7 +208,7 @@ export default function SuperAdminDashboard() {
           <div className="bg-white rounded-lg shadow p-6">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-base font-bold text-gray-800">업체 목록</h3>
-              <button onClick={() => setShowModal(true)} className="px-5 py-2 bg-blue-600 text-white rounded text-sm font-medium">+ 업체 등록</button>
+              <button onClick={openCreate} className="px-5 py-2 bg-blue-600 text-white rounded text-sm font-medium">+ 업체 등록</button>
             </div>
             {loading ? <p className="text-sm text-gray-400">로딩중...</p> : (
               <div className="overflow-x-auto">
@@ -228,8 +268,8 @@ export default function SuperAdminDashboard() {
       {showModal && (
         <div className="fixed inset-0 bg-black/50 z-[1000] flex items-center justify-center p-4" onClick={(e) => { if (e.target === e.currentTarget) setShowModal(false); }}>
           <div className="bg-white rounded-lg p-6 w-full max-w-lg max-h-[85vh] overflow-y-auto shadow-xl">
-            <h4 className="text-base font-bold text-gray-800 mb-4 pb-2 border-b-2 border-gray-200">업체 등록</h4>
-            <form onSubmit={handleCreateCompany}>
+            <h4 className="text-base font-bold text-gray-800 mb-4 pb-2 border-b-2 border-gray-200">{editId ? "업체 수정" : "업체 등록"}</h4>
+            <form onSubmit={editId ? handleUpdate : handleCreateCompany}>
               <div className="grid grid-cols-2 gap-3 text-sm">
                 {[
                   ["업체ID", "company_id", "영문 소문자 (로그인용)"],
@@ -271,7 +311,7 @@ export default function SuperAdminDashboard() {
 
               {errorMsg && <p className="text-red-500 text-xs mt-3 bg-red-50 p-2 rounded">{errorMsg}</p>}
               <div className="flex gap-2 justify-end mt-4">
-                <button type="submit" disabled={submitting} className="px-6 py-2 bg-blue-600 text-white rounded text-sm disabled:opacity-50">{submitting ? "등록중..." : "등록"}</button>
+                <button type="submit" disabled={submitting} className="px-6 py-2 bg-blue-600 text-white rounded text-sm disabled:opacity-50">{submitting ? "처리중..." : editId ? "수정" : "등록"}</button>
                 <button type="button" onClick={() => setShowModal(false)} className="px-6 py-2 bg-white text-gray-600 border border-gray-300 rounded text-sm">취소</button>
               </div>
             </form>
