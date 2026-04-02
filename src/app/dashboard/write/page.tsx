@@ -100,6 +100,14 @@ export default function WritePage() {
             order_date: data.order_date || new Date().toISOString().slice(0, 10),
           });
           setOrderNo(data.order_no || "");
+          // 품목 데이터 복원
+          if (data.order_items && data.order_items.length > 0) {
+            const restored = data.order_items
+              .sort((a: {sort_order:number}, b: {sort_order:number}) => a.sort_order - b.sort_order)
+              .map((item: {data: Record<string,string>}) => item.data || {});
+            setItemData(restored.length >= 5 ? restored : [...restored, ...Array.from({length: 5 - restored.length}, () => ({}))]);
+            setItemRows(Math.max(restored.length, 5));
+          }
         }
       });
     }
@@ -152,8 +160,31 @@ export default function WritePage() {
     try {
       const url = editId ? `/api/orders/${editId}` : "/api/orders";
       const method = editId ? "PUT" : "POST";
-      const res = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(formData) });
+      // 합계 계산
+      const calcCols = templateCols.filter(c => c.type === "자동계산");
+      let totalAmount = 0;
+      let totalSupply = 0;
+      let totalVat = 0;
+      if (calcCols.length > 0) {
+        const supplyCol = calcCols.find(c => c.name.includes("공급"));
+        const vatCol = calcCols.find(c => c.name.includes("부가"));
+        const totalCol = calcCols.find(c => c.name.includes("합계"));
+        itemData.forEach(row => {
+          if (supplyCol) totalSupply += parseInt(row[supplyCol.name]) || 0;
+          if (vatCol) totalVat += parseInt(row[vatCol.name]) || 0;
+          if (totalCol) totalAmount += parseInt(row[totalCol.name]) || 0;
+        });
+      }
+
+      const res = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...formData, total_supply: totalSupply, total_vat: totalVat, total_amount: totalAmount }) });
       if (res.ok) {
+        const savedOrder = await res.json();
+        const orderId = editId || savedOrder?.id;
+        // 품목 데이터 저장
+        if (orderId) {
+          // 기존 품목 삭제 후 새로 저장
+          await fetch(`/api/orders/${orderId}/items`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ items: itemData.filter(d => Object.keys(d).length > 0).map((d, i) => ({ sort_order: i, data: d })) }) });
+        }
         alert(editId ? "수정되었습니다." : "저장되었습니다.");
         router.push("/dashboard");
       } else {
