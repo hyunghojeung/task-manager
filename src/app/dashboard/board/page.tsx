@@ -8,6 +8,23 @@ interface Comment { id: string; post_id: string; parent_id: string | null; autho
 
 export default function BoardPage() {
   const [view, setView] = useState<View>("list");
+  const [currentUser, setCurrentUser] = useState("");
+
+  useEffect(() => {
+    // 쿠키에서 세션 정보 추출
+    try {
+      const cookies = document.cookie.split(";").map(c => c.trim());
+      const sessionCookie = cookies.find(c => c.startsWith("session="));
+      if (sessionCookie) {
+        const decoded = decodeURIComponent(sessionCookie.split("=").slice(1).join("="));
+        const session = JSON.parse(decoded);
+        const userName = `${session.user?.name || ""}(${session.user?.user_id || ""})`;
+        setCurrentUser(userName);
+        setFormAuthor(userName);
+        setCommentAuthor(userName);
+      }
+    } catch { /* ignore */ }
+  }, []);
   const [posts, setPosts] = useState<Post[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -75,7 +92,7 @@ export default function BoardPage() {
   }
 
   function resetForm() { setFormTitle(""); setFormContent(""); setFormAuthor(""); setFormPassword(""); }
-  function openWrite() { resetForm(); setView("write"); }
+  function openWrite() { resetForm(); setFormAuthor(currentUser); setCommentAuthor(currentUser); setView("write"); }
   function openEdit() { if (current) { setFormTitle(current.title); setFormContent(current.content); setFormAuthor(current.author); setFormPassword(""); setView("edit"); } }
 
   const totalPages = Math.ceil(total / 20);
