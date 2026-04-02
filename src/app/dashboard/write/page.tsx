@@ -32,6 +32,37 @@ export default function WritePage() {
     {name:"부수",type:"숫자"},{name:"페이지수",type:"숫자"},{name:"단가",type:"숫자"},
     {name:"공급가",type:"자동계산"},{name:"부가세",type:"자동계산"},{name:"합계",type:"자동계산"}
   ]);
+  const [templateFormulas, setTemplateFormulas] = useState<Array<{target:string;expression:string}>>([]);
+  const [itemData, setItemData] = useState<Array<Record<string,string>>>(Array.from({length:5}, () => ({})));
+
+  function calcFormulas(rowData: Record<string,string>, formulas: Array<{target:string;expression:string}>): Record<string,string> {
+    const result = {...rowData};
+    for (const f of formulas) {
+      try {
+        let expr = f.expression;
+        for (const key of Object.keys(result)) {
+          const val = parseFloat(result[key]) || 0;
+          expr = expr.replace(new RegExp(key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), String(val));
+        }
+        const computed = Function('"use strict"; return (' + expr + ')')();
+        if (typeof computed === 'number' && !isNaN(computed)) {
+          result[f.target] = String(Math.round(computed));
+        }
+      } catch { /* ignore */ }
+    }
+    return result;
+  }
+
+  function handleItemChange(rowIdx: number, colName: string, value: string) {
+    setItemData(prev => {
+      const newData = [...prev];
+      newData[rowIdx] = {...newData[rowIdx], [colName]: value};
+      if (templateFormulas.length > 0) {
+        newData[rowIdx] = calcFormulas(newData[rowIdx], templateFormulas);
+      }
+      return newData;
+    });
+  }
 
   useEffect(() => {
     fetch(`/api/templates?_=${Date.now()}`).then(r => r.json()).then(d => {
@@ -39,6 +70,7 @@ export default function WritePage() {
         setTemplateList(d);
         setSelectedTemplate(d[0].name);
         if (d[0].columns?.length > 0) setTemplateCols(d[0].columns);
+        if (d[0].formulas?.length > 0) setTemplateFormulas(d[0].formulas);
       }
     });
   }, []);
@@ -47,6 +79,8 @@ export default function WritePage() {
     setSelectedTemplate(name);
     const tmpl = templateList.find(t => t.name === name);
     if (tmpl?.columns?.length) setTemplateCols(tmpl.columns);
+    if (tmpl?.formulas?.length) setTemplateFormulas(tmpl.formulas);
+    else setTemplateFormulas([]);
   }
 
   useEffect(() => {
@@ -262,7 +296,7 @@ export default function WritePage() {
               {templateList.map(t => <option key={t.id} value={t.name}>{t.name}</option>)}
             </select>
           </div>
-          <button onClick={() => setItemRows(r => r + 1)} className="px-3 py-1 border border-gray-300 rounded text-xs text-gray-500 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-500 transition">+ 행 추가</button>
+          <button onClick={() => { setItemRows(r => r + 1); setItemData(p => [...p, {}]); }} className="px-3 py-1 border border-gray-300 rounded text-xs text-gray-500 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-500 transition">+ 행 추가</button>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full border-collapse text-xs">
@@ -274,12 +308,13 @@ export default function WritePage() {
               </tr>
             </thead>
             <tbody>
-              {Array.from({ length: itemRows }, (_, i) => i + 1).map((num) => (
-                <tr key={num}>
+              {Array.from({ length: itemRows }, (_, i) => i).map((rowIdx) => (
+                <tr key={rowIdx}>
                   {templateCols.map((c, ci) => (
                     <td key={ci} className={`border border-gray-200 px-1 py-1 ${c.type === "자동계산" ? "bg-amber-50" : ""}`}>
-                      {c.type === "auto" ? <span className="text-center block">{num}</span> :
-                       <input type="text" className={`w-full px-1 py-1 border border-gray-200 rounded text-xs ${c.type === "숫자" || c.type === "자동계산" ? "text-right" : ""}`} />}
+                      {c.type === "auto" ? <span className="text-center block">{rowIdx + 1}</span> :
+                       c.type === "자동계산" ? <span className="block text-right text-xs px-1 py-1">{itemData[rowIdx]?.[c.name] || ""}</span> :
+                       <input type="text" value={itemData[rowIdx]?.[c.name] || ""} onChange={e => handleItemChange(rowIdx, c.name, e.target.value)} className={`w-full px-1 py-1 border border-gray-200 rounded text-xs ${c.type === "숫자" ? "text-right" : ""}`} />}
                     </td>
                   ))}
                 </tr>
@@ -290,7 +325,8 @@ export default function WritePage() {
                   const nonCalcCount = templateCols.length - calcCols.length;
                   if (ci === 0) return <td key={ci} colSpan={nonCalcCount} className="border border-gray-200 px-2 py-2 text-right">합 계</td>;
                   if (ci < nonCalcCount) return null;
-                  return <td key={ci} className="border border-gray-200 px-2 py-2 text-right bg-amber-50">0</td>;
+                  const sum = itemData.reduce((acc, row) => acc + (parseInt(row[c.name]) || 0), 0);
+                  return <td key={ci} className="border border-gray-200 px-2 py-2 text-right bg-amber-50">{sum.toLocaleString()}</td>;
                 })}
               </tr>
             </tbody>
