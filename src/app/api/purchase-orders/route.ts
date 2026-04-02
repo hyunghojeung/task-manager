@@ -11,9 +11,22 @@ export async function GET(request: NextRequest) {
   const limit = 20;
   const supabase = getSupabase();
   const from = (page - 1) * limit;
-  const { data, error, count } = await supabase.from("purchase_orders").select("*, purchase_order_items(*)", { count: "exact" }).eq("company_id", session.company.id).order("po_date", { ascending: false }).range(from, from + limit - 1);
+  const { data, error, count } = await supabase.from("purchase_orders").select("*", { count: "exact" }).eq("company_id", session.company.id).order("po_date", { ascending: false }).range(from, from + limit - 1);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ data, total: count, page, limit });
+  // 품목 데이터 별도 조회
+  const poIds = (data || []).map((o: Record<string, unknown>) => o.id).filter(Boolean);
+  let itemsMap: Record<string, Record<string, string>[]> = {};
+  if (poIds.length > 0) {
+    const { data: itemsData } = await supabase.from("purchase_order_items").select("*").in("purchase_order_id", poIds).order("sort_order");
+    if (itemsData) {
+      for (const it of itemsData) {
+        if (!itemsMap[it.purchase_order_id]) itemsMap[it.purchase_order_id] = [];
+        itemsMap[it.purchase_order_id].push(it);
+      }
+    }
+  }
+  const result = (data || []).map((o: Record<string, unknown>) => ({ ...o, purchase_order_items: itemsMap[o.id as string] || [] }));
+  return NextResponse.json({ data: result, total: count, page, limit });
 }
 
 export async function POST(request: NextRequest) {
