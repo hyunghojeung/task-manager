@@ -9,7 +9,7 @@ export default function NavBar() {
     { href: "/dashboard", label: "작업리스트", color: "bg-blue-600 hover:bg-blue-700" },
     { href: "/dashboard/write", label: "작업등록", color: "bg-blue-600 hover:bg-blue-700" },
     { href: "/dashboard/orders", label: "발주서", color: "bg-gray-700 hover:bg-gray-800" },
-    { href: "/dashboard/memo", label: "작업메모", color: "bg-emerald-600 hover:bg-emerald-700" },
+    { href: "/dashboard/memo", label: "업무용메모", color: "bg-emerald-600 hover:bg-emerald-700" },
     { href: "/dashboard/board", label: "프로그램 문의", color: "bg-indigo-600 hover:bg-indigo-700" },
   ];
 
