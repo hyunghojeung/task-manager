@@ -1,10 +1,27 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
+
+interface OrderItem { product_name: string; quantity: number; unit_price: number; supply_amount: number; vat: number; [key: string]: unknown }
+interface OrderData { id: string; order_no: string; client_name: string; title: string; total_amount: number; supply_amount: number; vat_amount: number; created_at: string; order_items?: OrderItem[] }
+interface CompanyData { company_name: string; business_number: string; representative: string; address: string; business_type: string; business_category: string; phone: string; email: string }
+
+function fmt(n: number) { return (n || 0).toLocaleString(); }
 
 export default function StatementPage() {
+  const searchParams = useSearchParams();
+  const orderId = searchParams.get("id");
+  const [order, setOrder] = useState<OrderData | null>(null);
+  const [company, setCompany] = useState<CompanyData | null>(null);
   const [emailTo, setEmailTo] = useState("");
   const [sending, setSending] = useState(false);
+
+  useEffect(() => {
+    if (!orderId) return;
+    fetch(`/api/orders/${orderId}?_=${Date.now()}`).then(r => r.json()).then(d => setOrder(d));
+    fetch(`/api/company?_=${Date.now()}`).then(r => r.json()).then(d => setCompany(d));
+  }, [orderId]);
 
   async function handleSendEmail() {
     if (!emailTo) { alert("수신 이메일을 입력해주세요."); return; }
@@ -12,8 +29,7 @@ export default function StatementPage() {
     try {
       const pageHtml = document.querySelector(".print-wrap")?.innerHTML || "";
       const res = await fetch("/api/email", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+        method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ to: emailTo, subject: "거래명세서", html: `<div style="font-family:sans-serif;">${pageHtml}</div>` }),
       });
       if (res.ok) alert("이메일이 발송되었습니다.");
@@ -22,41 +38,54 @@ export default function StatementPage() {
     finally { setSending(false); }
   }
 
+  if (!orderId) return <div className="p-10 text-center text-gray-500">주문 ID가 없습니다.</div>;
+  if (!order || !company) return <div className="p-10 text-center text-gray-400">로딩중...</div>;
+
+  const items = order.order_items || [];
+  const supplyTotal = order.supply_amount || items.reduce((s, it) => s + (it.supply_amount || 0), 0);
+  const vatTotal = order.vat_amount || items.reduce((s, it) => s + (it.vat || 0), 0);
+  const grandTotal = order.total_amount || (supplyTotal + vatTotal);
+  const orderDate = new Date(order.created_at);
+  const dateStr = `${orderDate.getFullYear()}년 ${String(orderDate.getMonth() + 1).padStart(2, "0")}월 ${String(orderDate.getDate()).padStart(2, "0")}일`;
+  const emptyRows = Math.max(8 - items.length, 0);
+
   return (
     <div className="min-h-screen bg-gray-100 py-5 print:bg-white print:py-0">
       <div className="print-wrap max-w-[800px] mx-auto bg-white p-8 md:p-10 shadow print:shadow-none print:p-5">
-        <p className="text-sm text-gray-700 mb-5">No. 20260325-6</p>
+        <p className="text-sm text-gray-700 mb-5">No. {order.order_no}</p>
         <h1 className="text-center text-3xl font-black tracking-[20px] text-gray-800 py-3 border-t-[3px] border-b-[3px] border-double border-gray-800 mb-6">
           거 래 명 세 서
         </h1>
 
         <div className="flex justify-between mb-4 text-sm">
           <div>
-            <p className="mb-1"><strong>납품일: 2026년 03월 25일</strong></p>
-            <p className="mb-4"><strong>업체명: 커뮤니크 귀하</strong></p>
+            <p className="mb-1"><strong>납품일: {dateStr}</strong></p>
+            <p className="mb-4"><strong>업체명: {order.client_name} 귀하</strong></p>
             <p>아래와 같이 납품합니다.</p>
           </div>
           <table className="border-collapse text-xs">
             <tbody>
-              <tr><th className="border border-gray-800 bg-gray-50 px-2 py-1 w-[70px]">등록번호</th><td className="border border-gray-800 px-2 py-1" colSpan={3}>114-04-56136</td></tr>
-              <tr><th className="border border-gray-800 bg-gray-50 px-2 py-1">상호(법인명)</th><td className="border border-gray-800 px-2 py-1">인쇄의장</td><th className="border border-gray-800 bg-gray-50 px-2 py-1">성명</th><td className="border border-gray-800 px-2 py-1">[직인]</td></tr>
-              <tr><th className="border border-gray-800 bg-gray-50 px-2 py-1">주소</th><td className="border border-gray-800 px-2 py-1" colSpan={3}>서울특별시 용산구 한강로2가 74-2 성산빌딩2층</td></tr>
-              <tr><th className="border border-gray-800 bg-gray-50 px-2 py-1">업태</th><td className="border border-gray-800 px-2 py-1">서비스, 제조</td><th className="border border-gray-800 bg-gray-50 px-2 py-1">종목</th><td className="border border-gray-800 px-2 py-1">출판, 인쇄, 기획</td></tr>
-              <tr><th className="border border-gray-800 bg-gray-50 px-2 py-1">TEL / E-mail</th><td className="border border-gray-800 px-2 py-1" colSpan={3}>02-793-4332 / pwindow@naver.com</td></tr>
+              <tr><th className="border border-gray-800 bg-gray-50 px-2 py-1 w-[70px]">등록번호</th><td className="border border-gray-800 px-2 py-1" colSpan={3}>{company.business_number || "-"}</td></tr>
+              <tr><th className="border border-gray-800 bg-gray-50 px-2 py-1">상호(법인명)</th><td className="border border-gray-800 px-2 py-1">{company.company_name}</td><th className="border border-gray-800 bg-gray-50 px-2 py-1">성명</th><td className="border border-gray-800 px-2 py-1">{company.representative || "[직인]"}</td></tr>
+              <tr><th className="border border-gray-800 bg-gray-50 px-2 py-1">주소</th><td className="border border-gray-800 px-2 py-1" colSpan={3}>{company.address || "-"}</td></tr>
+              <tr><th className="border border-gray-800 bg-gray-50 px-2 py-1">업태</th><td className="border border-gray-800 px-2 py-1">{company.business_type || "-"}</td><th className="border border-gray-800 bg-gray-50 px-2 py-1">종목</th><td className="border border-gray-800 px-2 py-1">{company.business_category || "-"}</td></tr>
+              <tr><th className="border border-gray-800 bg-gray-50 px-2 py-1">TEL / E-mail</th><td className="border border-gray-800 px-2 py-1" colSpan={3}>{company.phone || "-"} / {company.email || "-"}</td></tr>
             </tbody>
           </table>
         </div>
 
-        <p className="text-lg font-extrabold text-gray-800 my-4">작업명: 에스트라 5cm원형 스티커 50개 제작</p>
+        <p className="text-lg font-extrabold text-gray-800 my-4">작업명: {order.title}</p>
 
         <table className="w-full border-collapse text-sm mb-4">
           <thead>
             <tr><th className="border border-gray-800 bg-gray-100 px-2 py-2 w-12">순번</th><th className="border border-gray-800 bg-gray-100 px-2 py-2">품목명(규격)</th><th className="border border-gray-800 bg-gray-100 px-2 py-2 w-14">수량</th><th className="border border-gray-800 bg-gray-100 px-2 py-2 w-16">단가</th><th className="border border-gray-800 bg-gray-100 px-2 py-2 w-20">공급가액</th><th className="border border-gray-800 bg-gray-100 px-2 py-2 w-16">부가세</th></tr>
           </thead>
           <tbody>
-            <tr><td className="border border-gray-300 px-2 py-2 text-center">1</td><td className="border border-gray-300 px-2 py-2 text-left">에스트라 5cm원형스티커 50개 제작</td><td className="border border-gray-300 px-2 py-2 text-center">50</td><td className="border border-gray-300 px-2 py-2 text-right"></td><td className="border border-gray-300 px-2 py-2 text-right">54,545</td><td className="border border-gray-300 px-2 py-2 text-right">5,455</td></tr>
-            {[2, 3, 4, 5, 6, 7, 8].map((n) => (
-              <tr key={n}><td className="border border-gray-300 px-2 py-2 text-center">&nbsp;</td><td className="border border-gray-300 px-2 py-2"></td><td className="border border-gray-300 px-2 py-2"></td><td className="border border-gray-300 px-2 py-2"></td><td className="border border-gray-300 px-2 py-2"></td><td className="border border-gray-300 px-2 py-2"></td></tr>
+            {items.map((it, i) => (
+              <tr key={i}><td className="border border-gray-300 px-2 py-2 text-center">{i + 1}</td><td className="border border-gray-300 px-2 py-2 text-left">{it.product_name}</td><td className="border border-gray-300 px-2 py-2 text-center">{it.quantity || ""}</td><td className="border border-gray-300 px-2 py-2 text-right">{it.unit_price ? fmt(it.unit_price) : ""}</td><td className="border border-gray-300 px-2 py-2 text-right">{it.supply_amount ? fmt(it.supply_amount) : ""}</td><td className="border border-gray-300 px-2 py-2 text-right">{it.vat ? fmt(it.vat) : ""}</td></tr>
+            ))}
+            {Array.from({ length: emptyRows }, (_, i) => (
+              <tr key={`e${i}`}><td className="border border-gray-300 px-2 py-2 text-center">&nbsp;</td><td className="border border-gray-300 px-2 py-2"></td><td className="border border-gray-300 px-2 py-2"></td><td className="border border-gray-300 px-2 py-2"></td><td className="border border-gray-300 px-2 py-2"></td><td className="border border-gray-300 px-2 py-2"></td></tr>
             ))}
           </tbody>
         </table>
@@ -66,24 +95,22 @@ export default function StatementPage() {
             <tbody>
               <tr>
                 <th className="border border-gray-800 bg-gray-100 px-3 py-2">공급가액 합계</th>
-                <td className="border border-gray-800 px-3 py-2 text-right">54,545</td>
+                <td className="border border-gray-800 px-3 py-2 text-right">{fmt(supplyTotal)}</td>
                 <th className="border border-gray-800 bg-gray-100 px-3 py-2">부가세 합계</th>
-                <td className="border border-gray-800 px-3 py-2 text-right">5,455</td>
+                <td className="border border-gray-800 px-3 py-2 text-right">{fmt(vatTotal)}</td>
                 <th className="border border-gray-800 bg-gray-100 px-3 py-2">총 합계</th>
-                <td className="border border-gray-800 px-3 py-2 text-right font-bold">60,000</td>
+                <td className="border border-gray-800 px-3 py-2 text-right font-bold">{fmt(grandTotal)}</td>
               </tr>
             </tbody>
           </table>
         </div>
       </div>
 
-      {/* 하단 버튼 (인쇄 시 숨김) */}
       <div className="max-w-[800px] mx-auto mt-3 flex flex-col gap-2 print:hidden">
         <div className="flex gap-2 items-center">
           <label className="text-sm">수신 이메일:</label>
           <input type="email" placeholder="이메일 주소를 입력하세요" value={emailTo} onChange={e => setEmailTo(e.target.value)} className="px-3 py-1.5 border border-gray-300 rounded text-sm w-64" />
           <button onClick={handleSendEmail} disabled={sending} className="px-4 py-1.5 bg-gray-700 text-white rounded text-sm disabled:opacity-50">{sending ? "발송중..." : "발송"}</button>
-          <span className="text-xs text-gray-400">발신: pwindow@naver.com</span>
         </div>
         <div className="flex gap-2">
           <button onClick={() => window.print()} className="px-6 py-2 bg-blue-600 text-white rounded text-sm">인쇄</button>
