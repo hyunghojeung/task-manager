@@ -46,7 +46,16 @@ export async function GET(request: NextRequest) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  return NextResponse.json({ data, total: count, page, limit });
+  // 작성자 정보 조회
+  const createdByIds = (data || []).map((o: Record<string, unknown>) => o.created_by).filter(Boolean);
+  let usersMap: Record<string, string> = {};
+  if (createdByIds.length > 0) {
+    const { data: users } = await supabase.from("users").select("id, name, user_id").in("id", createdByIds);
+    if (users) for (const u of users) usersMap[u.id] = `${u.name}(${u.user_id})`;
+  }
+  const result = (data || []).map((o: Record<string, unknown>) => ({ ...o, author: o.created_by ? usersMap[o.created_by as string] || "-" : "-" }));
+
+  return NextResponse.json({ data: result, total: count, page, limit });
 }
 
 // 작업 등록

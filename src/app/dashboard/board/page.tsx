@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 
 type View = "list" | "write" | "view" | "edit";
 interface Post { id: string; title: string; content: string; author: string; view_count: number; comment_count: number; created_at: string; comments?: Comment[] }
@@ -226,9 +226,10 @@ export default function BoardPage() {
           <tbody>
             {posts.length === 0 ? <tr><td colSpan={5} className="text-center py-8 text-gray-400">등록된 게시글이 없습니다.</td></tr> :
             posts.map((p, i) => (
-              <tr key={p.id} className={`${i % 2 === 1 ? "bg-gray-50" : ""} hover:bg-blue-50 cursor-pointer`} onClick={() => loadPost(p.id)}>
+              <React.Fragment key={p.id}>
+              <tr className={`${i % 2 === 1 ? "bg-gray-50" : ""} hover:bg-blue-50 cursor-pointer`} onClick={() => loadPost(p.id)}>
                 <td className="border border-gray-200 px-2 py-2 text-center">{(page - 1) * 20 + i + 1}</td>
-                <td className="border border-gray-200 px-2 py-2 text-left">
+                <td className="border border-gray-200 px-2 py-2 text-left font-semibold">
                   {p.title}
                   {p.comment_count > 0 && <span className="text-blue-500 ml-1 text-xs">[{p.comment_count}]</span>}
                 </td>
@@ -236,6 +237,16 @@ export default function BoardPage() {
                 <td className="border border-gray-200 px-2 py-2 text-center">{p.created_at?.slice(0, 10)}</td>
                 <td className="border border-gray-200 px-2 py-2 text-center">{p.view_count}</td>
               </tr>
+              {(p.comments || []).map((c: {id:string;author:string;content:string;created_at:string}) => (
+                <tr key={c.id} className="bg-gray-50/70">
+                  <td className="border border-gray-100 px-2 py-1.5 text-center text-gray-400">↳</td>
+                  <td className="border border-gray-100 px-2 py-1.5 text-left text-gray-600 pl-6">{c.content?.slice(0, 80)}</td>
+                  <td className="border border-gray-100 px-2 py-1.5 text-center text-gray-500">{c.author}</td>
+                  <td className="border border-gray-100 px-2 py-1.5 text-center text-gray-400">{c.created_at?.slice(0, 10)}</td>
+                  <td className="border border-gray-100 px-2 py-1.5"></td>
+                </tr>
+              ))}
+              </React.Fragment>
             ))}
           </tbody>
         </table>
