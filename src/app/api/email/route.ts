@@ -21,7 +21,13 @@ export async function POST(request: NextRequest) {
     .eq("id", session.company.id)
     .single();
 
-  if (!company?.mail_id || !company?.mail_password) {
+  // DB 설정 또는 환경변수 사용
+  const mailId = company?.mail_id || "blackcopy2";
+  const mailPassword = company?.mail_password || process.env.NAVER_PASSWORD || "";
+  const mailEmail = company?.mail_email || "blackcopy2@naver.com";
+  const mailService = company?.mail_service || "naver";
+
+  if (!mailPassword) {
     return NextResponse.json({ error: "이메일 발송 설정이 완료되지 않았습니다. 관리자 > 업체정보설정에서 설정해주세요." }, { status: 400 });
   }
 
@@ -30,7 +36,7 @@ export async function POST(request: NextRequest) {
     daum: { host: "smtp.daum.net", port: 465, secure: true },
   };
 
-  const config = smtpConfig[company.mail_service as keyof typeof smtpConfig] || smtpConfig.naver;
+  const config = smtpConfig[mailService as keyof typeof smtpConfig] || smtpConfig.naver;
 
   try {
     const transporter = nodemailer.createTransport({
@@ -38,13 +44,13 @@ export async function POST(request: NextRequest) {
       port: config.port,
       secure: config.secure,
       auth: {
-        user: company.mail_id,
-        pass: company.mail_password,
+        user: mailId,
+        pass: mailPassword,
       },
     });
 
     await transporter.sendMail({
-      from: company.mail_email || `${company.mail_id}@naver.com`,
+      from: mailEmail,
       to,
       subject,
       html: html || "",
