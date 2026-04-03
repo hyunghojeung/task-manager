@@ -7,9 +7,10 @@ export async function GET(_: NextRequest, { params }: { params: Promise<{ id: st
   if (!session) return unauthorized();
   const { id } = await params;
   const supabase = getSupabase();
-  const { data, error } = await supabase.from("purchase_orders").select("*, purchase_order_items(*)").eq("id", id).eq("company_id", session.company.id).single();
+  const { data, error } = await supabase.from("purchase_orders").select("*").eq("id", id).eq("company_id", session.company.id).single();
   if (error) return NextResponse.json({ error: error.message }, { status: 404 });
-  return NextResponse.json(data);
+  const { data: items } = await supabase.from("purchase_order_items").select("*").eq("po_id", id).order("sort_order");
+  return NextResponse.json({ ...data, purchase_order_items: items || [] });
 }
 
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
