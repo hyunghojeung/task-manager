@@ -20,7 +20,7 @@ interface CompanyData {
   password: string;
   status: string;
   user_count: number;
-  board_count: number;
+  order_count: number;
   memo_count: number;
   po_count: number;
   created_at: string;
@@ -310,7 +310,7 @@ export default function SuperAdminDashboard() {
               <div className="overflow-x-auto">
                 <table className="w-full border-collapse text-xs border border-gray-300">
                   <thead><tr className="bg-slate-900 text-white">
-                    <th className="border border-slate-700 px-2 py-2.5">순번</th><th className="border border-slate-700 px-2 py-2.5">업체ID</th><th className="border border-slate-700 px-2 py-2.5">업체코드</th><th className="border border-slate-700 px-2 py-2.5">업체명</th><th className="border border-slate-700 px-2 py-2.5">사업자번호</th><th className="border border-slate-700 px-2 py-2.5">대표자</th><th className="border border-slate-700 px-2 py-2.5">등록일</th><th className="border border-slate-700 px-2 py-2.5">상태</th><th className="border border-slate-700 px-2 py-2.5">사용자</th><th className="border border-slate-700 px-2 py-2.5">게시물</th><th className="border border-slate-700 px-2 py-2.5">메모</th><th className="border border-slate-700 px-2 py-2.5">발주서</th><th className="border border-slate-700 px-2 py-2.5">관리</th>
+                    <th className="border border-slate-700 px-2 py-2.5">순번</th><th className="border border-slate-700 px-2 py-2.5">업체ID</th><th className="border border-slate-700 px-2 py-2.5">업체코드</th><th className="border border-slate-700 px-2 py-2.5">업체명</th><th className="border border-slate-700 px-2 py-2.5">사업자번호</th><th className="border border-slate-700 px-2 py-2.5">대표자</th><th className="border border-slate-700 px-2 py-2.5">등록일</th><th className="border border-slate-700 px-2 py-2.5">상태</th><th className="border border-slate-700 px-2 py-2.5">사용자</th><th className="border border-slate-700 px-2 py-2.5">작업리스트</th><th className="border border-slate-700 px-2 py-2.5">메모</th><th className="border border-slate-700 px-2 py-2.5">발주서</th><th className="border border-slate-700 px-2 py-2.5">관리</th>
                   </tr></thead>
                   <tbody>
                     {companies.map((c, i) => (
@@ -324,7 +324,7 @@ export default function SuperAdminDashboard() {
                         <td className="border border-gray-200 px-2 py-2 text-center">{c.created_at?.slice(0, 10)}</td>
                         <td className="border border-gray-200 px-2 py-2 text-center">{statusBadge(c.status)}</td>
                         <td className="border border-gray-200 px-2 py-2 text-center">{c.user_count}명</td>
-                        <td className="border border-gray-200 px-2 py-2 text-center"><a href={`/dashboard/board?company=${c.company_id}`} target="_blank" className="text-blue-600 hover:underline font-bold">{c.board_count || 0}</a></td>
+                        <td className="border border-gray-200 px-2 py-2 text-center"><a href={`/dashboard?company=${c.company_id}`} target="_blank" className="text-blue-600 hover:underline font-bold">{c.order_count || 0}</a></td>
                         <td className="border border-gray-200 px-2 py-2 text-center"><a href={`/dashboard/memo?company=${c.company_id}`} target="_blank" className="text-blue-600 hover:underline font-bold">{c.memo_count || 0}</a></td>
                         <td className="border border-gray-200 px-2 py-2 text-center"><a href={`/dashboard/orders?company=${c.company_id}`} target="_blank" className="text-blue-600 hover:underline font-bold">{c.po_count || 0}</a></td>
                         <td className="border border-gray-200 px-2 py-2 text-center whitespace-nowrap">

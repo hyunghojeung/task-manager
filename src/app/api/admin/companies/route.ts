@@ -21,13 +21,13 @@ export async function GET() {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  const { count: totalBoardCount } = await supabase.from("board_posts").select("*", { count: "exact", head: true });
   const result = [];
   for (const company of companies || []) {
     const { count: userCount } = await supabase.from("users").select("*", { count: "exact", head: true }).eq("company_id", company.id);
+    const { count: orderCount } = await supabase.from("orders").select("*", { count: "exact", head: true }).eq("company_id", company.id);
     const { count: memoCount } = await supabase.from("memos").select("*", { count: "exact", head: true }).eq("company_id", company.id);
     const { count: poCount } = await supabase.from("purchase_orders").select("*", { count: "exact", head: true }).eq("company_id", company.id);
-    result.push({ ...company, user_count: userCount || 0, board_count: totalBoardCount || 0, memo_count: memoCount || 0, po_count: poCount || 0 });
+    result.push({ ...company, user_count: userCount || 0, order_count: orderCount || 0, memo_count: memoCount || 0, po_count: poCount || 0 });
   }
 
   return NextResponse.json(result);
