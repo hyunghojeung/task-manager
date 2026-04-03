@@ -1,13 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
-
-function getSupabase() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL || "",
-    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "",
-    { auth: { autoRefreshToken: false, persistSession: false } }
-  );
-}
+import { getSupabase } from "@/lib/supabase-admin";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -21,14 +13,38 @@ export async function GET() {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  const result = [];
-  for (const company of companies || []) {
-    const { count: userCount } = await supabase.from("users").select("*", { count: "exact", head: true }).eq("company_id", company.id);
-    const { count: orderCount } = await supabase.from("orders").select("*", { count: "exact", head: true }).eq("company_id", company.id);
-    const { count: memoCount } = await supabase.from("memos").select("*", { count: "exact", head: true }).eq("company_id", company.id);
-    const { count: poCount } = await supabase.from("purchase_orders").select("*", { count: "exact", head: true }).eq("company_id", company.id);
-    result.push({ ...company, user_count: userCount || 0, order_count: orderCount || 0, memo_count: memoCount || 0, po_count: poCount || 0 });
+  const companyIds = (companies || []).map(c => c.id);
+  if (companyIds.length === 0) return NextResponse.json([]);
+
+  // 모든 카운트를 병렬로 한 번에 조회
+  const [usersRes, ordersRes, memosRes, posRes] = await Promise.all([
+    supabase.from("users").select("company_id", { count: "exact" }).in("company_id", companyIds),
+    supabase.from("orders").select("company_id", { count: "exact" }).in("company_id", companyIds),
+    supabase.from("memos").select("company_id", { count: "exact" }).in("company_id", companyIds),
+    supabase.from("purchase_orders").select("company_id", { count: "exact" }).in("company_id", companyIds),
+  ]);
+
+  // company_id별 카운트 맵 생성
+  function countByCompany(rows: { company_id: string }[] | null) {
+    const map: Record<string, number> = {};
+    for (const r of rows || []) {
+      map[r.company_id] = (map[r.company_id] || 0) + 1;
+    }
+    return map;
   }
+
+  const userMap = countByCompany(usersRes.data as { company_id: string }[] | null);
+  const orderMap = countByCompany(ordersRes.data as { company_id: string }[] | null);
+  const memoMap = countByCompany(memosRes.data as { company_id: string }[] | null);
+  const poMap = countByCompany(posRes.data as { company_id: string }[] | null);
+
+  const result = (companies || []).map(c => ({
+    ...c,
+    user_count: userMap[c.id] || 0,
+    order_count: orderMap[c.id] || 0,
+    memo_count: memoMap[c.id] || 0,
+    po_count: poMap[c.id] || 0,
+  }));
 
   return NextResponse.json(result);
 }
