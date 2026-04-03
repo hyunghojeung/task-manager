@@ -32,8 +32,8 @@ export async function POST(request: NextRequest) {
   }
 
   const smtpConfig = {
-    naver: { host: "smtp.naver.com", port: 465, secure: true },
-    daum: { host: "smtp.daum.net", port: 465, secure: true },
+    naver: { host: "smtp.naver.com", port: 587, secure: false },
+    daum: { host: "smtp.daum.net", port: 587, secure: false },
   };
 
   const config = smtpConfig[mailService as keyof typeof smtpConfig] || smtpConfig.naver;
@@ -43,6 +43,10 @@ export async function POST(request: NextRequest) {
       host: config.host,
       port: config.port,
       secure: config.secure,
+      requireTLS: true,
+      connectionTimeout: 10000,
+      greetingTimeout: 10000,
+      socketTimeout: 10000,
       auth: {
         user: mailId,
         pass: mailPassword,
