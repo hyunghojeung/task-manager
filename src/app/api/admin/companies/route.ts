@@ -6,44 +6,21 @@ export const revalidate = 0;
 
 export async function GET() {
   const supabase = getSupabase();
-  const { data: companies, error } = await supabase
-    .from("companies")
-    .select("*")
-    .order("created_at", { ascending: false });
-
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-
-  const companyIds = (companies || []).map(c => c.id);
-  if (companyIds.length === 0) return NextResponse.json([]);
-
-  // 모든 카운트를 병렬로 한 번에 조회
-  const [usersRes, ordersRes, memosRes, posRes] = await Promise.all([
-    supabase.from("users").select("company_id", { count: "exact" }).in("company_id", companyIds),
-    supabase.from("orders").select("company_id", { count: "exact" }).in("company_id", companyIds),
-    supabase.from("memos").select("company_id", { count: "exact" }).in("company_id", companyIds),
-    supabase.from("purchase_orders").select("company_id", { count: "exact" }).in("company_id", companyIds),
+  const [companiesRes, countsRes] = await Promise.all([
+    supabase.from("companies").select("*").order("created_at", { ascending: false }),
+    supabase.rpc("get_company_counts"),
   ]);
 
-  // company_id별 카운트 맵 생성
-  function countByCompany(rows: { company_id: string }[] | null) {
-    const map: Record<string, number> = {};
-    for (const r of rows || []) {
-      map[r.company_id] = (map[r.company_id] || 0) + 1;
-    }
-    return map;
+  if (companiesRes.error) return NextResponse.json({ error: companiesRes.error.message }, { status: 500 });
+
+  const countMap: Record<string, { user_count: number; order_count: number; memo_count: number; po_count: number }> = {};
+  for (const r of countsRes.data || []) {
+    countMap[r.company_id] = { user_count: r.user_count || 0, order_count: r.order_count || 0, memo_count: r.memo_count || 0, po_count: r.po_count || 0 };
   }
 
-  const userMap = countByCompany(usersRes.data as { company_id: string }[] | null);
-  const orderMap = countByCompany(ordersRes.data as { company_id: string }[] | null);
-  const memoMap = countByCompany(memosRes.data as { company_id: string }[] | null);
-  const poMap = countByCompany(posRes.data as { company_id: string }[] | null);
-
-  const result = (companies || []).map(c => ({
+  const result = (companiesRes.data || []).map(c => ({
     ...c,
-    user_count: userMap[c.id] || 0,
-    order_count: orderMap[c.id] || 0,
-    memo_count: memoMap[c.id] || 0,
-    po_count: poMap[c.id] || 0,
+    ...(countMap[c.id] || { user_count: 0, order_count: 0, memo_count: 0, po_count: 0 }),
   }));
 
   return NextResponse.json(result);
