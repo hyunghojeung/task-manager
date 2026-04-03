@@ -57,8 +57,8 @@ function EstimateContent() {
         body: JSON.stringify({ to: emailTo, subject: "견적서", html: `<div style="font-family:sans-serif;">${pageHtml}</div>` }),
       });
       if (res.ok) alert("이메일이 발송되었습니다.");
-      else { const d = await res.json(); alert(d.error || "발송 실패"); }
-    } catch { alert("발송 실패"); }
+      else { const d = await res.json().catch(() => ({})); alert("발송 실패: " + (d.error || res.status)); }
+    } catch (e) { alert("발송 실패: " + (e instanceof Error ? e.message : "네트워크 오류")); }
     finally { setSending(false); }
   }
 
