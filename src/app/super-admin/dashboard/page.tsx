@@ -20,6 +20,9 @@ interface CompanyData {
   password: string;
   status: string;
   user_count: number;
+  board_count: number;
+  memo_count: number;
+  po_count: number;
   created_at: string;
 }
 
@@ -307,7 +310,7 @@ export default function SuperAdminDashboard() {
               <div className="overflow-x-auto">
                 <table className="w-full border-collapse text-xs border border-gray-300">
                   <thead><tr className="bg-slate-900 text-white">
-                    <th className="border border-slate-700 px-2 py-2.5">순번</th><th className="border border-slate-700 px-2 py-2.5">업체ID</th><th className="border border-slate-700 px-2 py-2.5">업체코드</th><th className="border border-slate-700 px-2 py-2.5">업체명</th><th className="border border-slate-700 px-2 py-2.5">사업자번호</th><th className="border border-slate-700 px-2 py-2.5">대표자</th><th className="border border-slate-700 px-2 py-2.5">등록일</th><th className="border border-slate-700 px-2 py-2.5">상태</th><th className="border border-slate-700 px-2 py-2.5">사용자</th><th className="border border-slate-700 px-2 py-2.5">관리</th>
+                    <th className="border border-slate-700 px-2 py-2.5">순번</th><th className="border border-slate-700 px-2 py-2.5">업체ID</th><th className="border border-slate-700 px-2 py-2.5">업체코드</th><th className="border border-slate-700 px-2 py-2.5">업체명</th><th className="border border-slate-700 px-2 py-2.5">사업자번호</th><th className="border border-slate-700 px-2 py-2.5">대표자</th><th className="border border-slate-700 px-2 py-2.5">등록일</th><th className="border border-slate-700 px-2 py-2.5">상태</th><th className="border border-slate-700 px-2 py-2.5">사용자</th><th className="border border-slate-700 px-2 py-2.5">게시물</th><th className="border border-slate-700 px-2 py-2.5">메모</th><th className="border border-slate-700 px-2 py-2.5">발주서</th><th className="border border-slate-700 px-2 py-2.5">관리</th>
                   </tr></thead>
                   <tbody>
                     {companies.map((c, i) => (
@@ -321,6 +324,9 @@ export default function SuperAdminDashboard() {
                         <td className="border border-gray-200 px-2 py-2 text-center">{c.created_at?.slice(0, 10)}</td>
                         <td className="border border-gray-200 px-2 py-2 text-center">{statusBadge(c.status)}</td>
                         <td className="border border-gray-200 px-2 py-2 text-center">{c.user_count}명</td>
+                        <td className="border border-gray-200 px-2 py-2 text-center"><a href={`/dashboard/board?company=${c.company_id}`} target="_blank" className="text-blue-600 hover:underline font-bold">{c.board_count || 0}</a></td>
+                        <td className="border border-gray-200 px-2 py-2 text-center"><a href={`/dashboard/memo?company=${c.company_id}`} target="_blank" className="text-blue-600 hover:underline font-bold">{c.memo_count || 0}</a></td>
+                        <td className="border border-gray-200 px-2 py-2 text-center"><a href={`/dashboard/orders?company=${c.company_id}`} target="_blank" className="text-blue-600 hover:underline font-bold">{c.po_count || 0}</a></td>
                         <td className="border border-gray-200 px-2 py-2 text-center whitespace-nowrap">
                           <button onClick={()=>openEdit(c)} className="text-blue-600 border border-blue-600 px-2 py-0.5 rounded text-xs mr-1">수정</button>
                           <button onClick={()=>handleStatusChange(c.id, c.status==="active"?"inactive":"active")} className={`px-2 py-0.5 rounded text-xs mr-1 border ${c.status==="active"?"text-red-600 border-red-600":"text-emerald-600 border-emerald-600"}`}>{c.status==="active"?"정지":"활성"}</button>
