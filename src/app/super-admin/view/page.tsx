@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 
 interface CompanyInfo { id: string; company_id: string; company_name: string }
 
-export default function SuperAdminViewPage() {
+function ViewContent() {
   const searchParams = useSearchParams();
   const companyId = searchParams.get("company");
   const type = searchParams.get("type") || "orders";
@@ -137,4 +137,8 @@ export default function SuperAdminViewPage() {
       </div>
     </div>
   );
+}
+
+export default function SuperAdminViewPage() {
+  return <Suspense fallback={<div className="p-10 text-center text-gray-400">로딩중...</div>}><ViewContent /></Suspense>;
 }
