@@ -483,7 +483,7 @@ export default function WritePage() {
           <div className="flex items-start gap-2 md:col-span-2">
             <label className="w-16 text-xs font-bold text-[#3b4b5b] shrink-0 pt-1">후가공</label>
             <div className="flex-1 flex flex-wrap gap-x-3 gap-y-1 px-2 py-1.5 border border-gray-300 rounded">
-              {["하드커버","금박","에폭시","스코딕스"].map(opt => {
+              {["금박","에폭시","스코딕스"].map(opt => {
                 const selected = (formData.cover_finishing || "").split(",").filter(Boolean);
                 const checked = selected.includes(opt);
                 return (
@@ -531,7 +531,7 @@ export default function WritePage() {
           {[
             ["색상", "color", ["칼라","흑백"]],
             ["인쇄면", "print_side", ["양면","단면"]],
-            ["제본방식", "binding", ["무선제본","중철","스프링","인쇄만"]],
+            ["제본방식", "binding", ["무선제본","하드커버제본","중철제본","스프링제본","반접제본","인쇄만"]],
             ["코팅", "coating", ["무광","유광"]],
           ].map(([label, key, options]) => (
             <div key={key as string} className="flex items-center gap-2">
