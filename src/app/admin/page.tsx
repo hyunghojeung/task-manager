@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 
-type Tab = "notice" | "users" | "category" | "client" | "supplier" | "template" | "company";
+type Tab = "notice" | "users" | "category" | "client" | "supplier" | "template" | "company" | "import";
 
 export default function AdminPage() {
   const [tab, setTab] = useState<Tab>("notice");
@@ -10,7 +10,7 @@ export default function AdminPage() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const t = params.get("tab") as Tab;
-    if (t && ["notice","users","category","client","supplier","template","company"].includes(t)) {
+    if (t && ["notice","users","category","client","supplier","template","company","import"].includes(t)) {
       setTab(t);
     }
   }, []);
@@ -18,7 +18,7 @@ export default function AdminPage() {
     { key: "notice", label: "작업전달" }, { key: "users", label: "사용자관리" },
     { key: "category", label: "카테고리관리" }, { key: "client", label: "거래처관리" },
     { key: "supplier", label: "발주처관리" }, { key: "template", label: "양식폼관리" },
-    { key: "company", label: "업체정보설정" },
+    { key: "company", label: "업체정보설정" }, { key: "import", label: "CSV가져오기" },
   ];
 
   return (
@@ -39,7 +39,124 @@ export default function AdminPage() {
         {tab === "supplier" && <CrudTab endpoint="suppliers" title="발주처 관리" subtitle="발주처는 거래처와 별도로 관리됩니다. 발주서 작성 시 이 목록에서 선택합니다." fields={[{k:"name",l:"발주처명"},{k:"contact_person",l:"담당자"},{k:"phone",l:"전화"},{k:"fax",l:"팩스"},{k:"email",l:"이메일"}]} />}
         {tab === "template" && <TemplateTab />}
         {tab === "company" && <CompanyTab />}
+        {tab === "import" && <ImportTab />}
       </div>
+    </div>
+  );
+}
+
+// ===== CSV 가져오기 =====
+function ImportTab() {
+  const [rows, setRows] = useState<Record<string,string>[]>([]);
+  const [headers, setHeaders] = useState<string[]>([]);
+  const [importing, setImporting] = useState(false);
+  const [result, setResult] = useState<{success:number;skip:number;errors:string[]}|null>(null);
+
+  function parseCsv(text: string): { headers: string[]; rows: Record<string,string>[] } {
+    const lines: string[][] = [];
+    let cur: string[] = [];
+    let field = "";
+    let inQuote = false;
+    for (let i = 0; i < text.length; i++) {
+      const c = text[i];
+      if (inQuote) {
+        if (c === '"') {
+          if (text[i+1] === '"') { field += '"'; i++; }
+          else inQuote = false;
+        } else field += c;
+      } else {
+        if (c === '"') inQuote = true;
+        else if (c === ",") { cur.push(field); field = ""; }
+        else if (c === "\n") { cur.push(field); lines.push(cur); cur = []; field = ""; }
+        else if (c === "\r") continue;
+        else field += c;
+      }
+    }
+    if (field || cur.length) { cur.push(field); lines.push(cur); }
+    const h = lines[0] || [];
+    const rs = lines.slice(1).filter(l => l.some(v => v.trim())).map(l => {
+      const o: Record<string,string> = {};
+      h.forEach((k, i) => o[k] = (l[i] || "").trim());
+      return o;
+    });
+    return { headers: h, rows: rs };
+  }
+
+  function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const text = reader.result as string;
+      const { headers, rows } = parseCsv(text);
+      setHeaders(headers);
+      setRows(rows);
+      setResult(null);
+    };
+    reader.readAsText(file, "UTF-8");
+  }
+
+  async function handleImport() {
+    if (rows.length === 0) { alert("파일을 먼저 업로드해주세요."); return; }
+    if (!confirm(`${rows.length}개 행을 가져오시겠습니까?`)) return;
+    setImporting(true);
+    setResult(null);
+    const res = await fetch("/api/admin/import-orders", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ rows }) });
+    const d = await res.json();
+    setResult(d);
+    setImporting(false);
+  }
+
+  return (
+    <div className="bg-white rounded-lg shadow p-6">
+      <h3 className="text-base font-bold text-gray-800 mb-4 pb-2 border-b-2 border-gray-200">이카운트 CSV 가져오기</h3>
+      <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded text-xs text-blue-800">
+        <p className="font-semibold mb-1">필수 컬럼:</p>
+        <p>작성일, 순번, 주문자, 연락처, 거래처명, 제품형태, 제목, 거래유형, 세부사양/후가공, 품목명, 규격, 수량, 페이지수, 단가, 공급가액, 부가세, 합계금액</p>
+        <p className="mt-2">※ 같은 작성일+순번은 하나의 주문으로 그룹됩니다. 같은 주문번호가 이미 있으면 건너뜁니다.</p>
+      </div>
+      <div className="mb-4">
+        <input type="file" accept=".csv" onChange={handleFile} className="text-sm" />
+      </div>
+
+      {rows.length > 0 && (
+        <div className="mb-4">
+          <p className="text-sm font-semibold text-gray-700 mb-2">미리보기: 총 {rows.length}행</p>
+          <div className="overflow-x-auto border border-gray-300 rounded">
+            <table className="text-xs">
+              <thead className="bg-gray-100">
+                <tr>{headers.map(h => <th key={h} className="border border-gray-200 px-2 py-1 whitespace-nowrap">{h}</th>)}</tr>
+              </thead>
+              <tbody>
+                {rows.slice(0, 3).map((r, i) => (
+                  <tr key={i}>{headers.map(h => <td key={h} className="border border-gray-200 px-2 py-1 whitespace-nowrap max-w-[200px] truncate">{r[h]}</td>)}</tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {rows.length > 0 && (
+        <button onClick={handleImport} disabled={importing} className="px-6 py-2 bg-blue-600 text-white rounded text-sm disabled:opacity-50">
+          {importing ? "가져오는 중..." : "가져오기 실행"}
+        </button>
+      )}
+
+      {result && (
+        <div className="mt-4 p-3 border rounded text-sm">
+          <p className="text-green-700 font-semibold">성공: {result.success}건</p>
+          <p className="text-amber-700">건너뜀: {result.skip}건 (중복)</p>
+          {result.errors.length > 0 && (
+            <div className="mt-2">
+              <p className="text-red-700 font-semibold">오류 {result.errors.length}건:</p>
+              <ul className="text-xs text-red-600 mt-1 max-h-40 overflow-y-auto">
+                {result.errors.map((e, i) => <li key={i}>{e}</li>)}
+              </ul>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
