@@ -23,7 +23,7 @@ export default function Header({ companyName, userName, userId, userRole, banner
   }
 
   return (
-    <div className="sticky top-0 z-50">
+    <div className="sticky top-0 z-50 print:hidden">
       {impersonated && (
         <div className="bg-red-600 text-white px-4 py-1.5 text-center text-xs font-bold flex items-center justify-center gap-3">
           <span>⚠️ 수퍼관리자 모드: {companyName} 업체로 접속 중</span>

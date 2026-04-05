@@ -34,7 +34,7 @@ export default function NoticeBar({ notices, onComplete }: NoticeBarProps) {
 
   return (
     <>
-      <div className="bg-white border-b border-gray-200">
+      <div className="bg-white border-b border-gray-200 print:hidden">
         {visibleNotices.map((notice) => (
           <div
             key={notice.id}

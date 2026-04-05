@@ -354,7 +354,7 @@ export default function WritePage() {
               </select>
             </td>
           </tr>
-          <tr>
+          <tr className="print:hidden">
             <td className="text-[#3b4b5b] font-bold text-xs py-2 px-2 border border-gray-200 align-top">첨부</td>
             <td colSpan={3} className="py-1.5 px-2 border border-gray-200">
               <label
@@ -392,7 +392,7 @@ export default function WritePage() {
       <div className="bg-white border border-gray-300 rounded p-4 mb-3">
         <div className="flex items-center justify-between mb-3 pb-2 border-b-2 border-[#3b4b5b]">
           <p className="font-bold text-sm text-gray-800">세부내역</p>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 print:hidden">
             <label className="flex items-center gap-1 text-xs text-gray-600 cursor-pointer">
               <input type="checkbox" checked={alwaysCollapse} onChange={toggleAlwaysCollapse} />
               항상 접기
@@ -592,13 +592,13 @@ export default function WritePage() {
         <div className="flex justify-between items-center mb-2">
           <div className="flex items-center gap-2">
             <span className="text-sm font-bold text-[#3b4b5b] border-l-4 border-[#3b4b5b] pl-2">표양식</span>
-            <select value={selectedTemplate} onChange={e => handleTemplateChange(e.target.value)} className="px-2 py-1 border border-gray-300 rounded text-xs">
+            <select value={selectedTemplate} onChange={e => handleTemplateChange(e.target.value)} className="px-2 py-1 border border-gray-300 rounded text-xs print:hidden">
               {templateList.length === 0 && <option>기본</option>}
               {templateList.map(t => <option key={t.id} value={t.name}>{t.name}</option>)}
             </select>
-            <a href="/admin?tab=template" className="px-2 py-1 bg-gray-600 text-white rounded text-xs no-underline hover:bg-gray-700">양식등록</a>
+            <a href="/admin?tab=template" className="px-2 py-1 bg-gray-600 text-white rounded text-xs no-underline hover:bg-gray-700 print:hidden">양식등록</a>
           </div>
-          <button onClick={() => { setItemRows(r => r + 1); setItemData(p => [...p, {}]); }} className="px-3 py-1 border border-gray-300 rounded text-xs text-gray-500 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-500 transition">+ 행 추가</button>
+          <button onClick={() => { setItemRows(r => r + 1); setItemData(p => [...p, {}]); }} className="px-3 py-1 border border-gray-300 rounded text-xs text-gray-500 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-500 transition print:hidden">+ 행 추가</button>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full border-collapse border border-gray-300 text-xs">
