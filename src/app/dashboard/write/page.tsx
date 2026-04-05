@@ -36,6 +36,16 @@ export default function WritePage() {
   ]);
   const [templateFormulas, setTemplateFormulas] = useState<Array<{target:string;expression:string}>>([]);
   const [itemData, setItemData] = useState<Array<Record<string,string>>>(Array.from({length:5}, () => ({})));
+  const [showDetail, setShowDetail] = useState(true);
+  useEffect(() => {
+    const v = localStorage.getItem("writeShowDetail");
+    if (v !== null) setShowDetail(v === "1");
+  }, []);
+  function toggleDetail() {
+    const next = !showDetail;
+    setShowDetail(next);
+    localStorage.setItem("writeShowDetail", next ? "1" : "0");
+  }
 
   function calcFormulas(rowData: Record<string,string>, formulas: Array<{target:string;expression:string}>): Record<string,string> {
     const result = {...rowData};
@@ -294,8 +304,14 @@ export default function WritePage() {
 
       {/* 세부내역 */}
       <div className="bg-white border border-gray-300 rounded p-4 mb-3">
-        <p className="font-bold text-sm text-gray-800 mb-3 pb-2 border-b-2 border-[#3b4b5b]">세부내역</p>
-        <p className="font-bold text-xs text-[#3b4b5b] mb-2 px-2 py-1 bg-gray-100 border-l-4 border-[#3b4b5b]">표지</p>
+        <div className="flex items-center justify-between mb-3 pb-2 border-b-2 border-[#3b4b5b]">
+          <p className="font-bold text-sm text-gray-800">세부내역</p>
+          <button type="button" onClick={toggleDetail} className="flex items-center gap-1 px-3 py-1 text-xs font-semibold text-[#3b4b5b] border border-[#3b4b5b] rounded hover:bg-[#3b4b5b] hover:text-white transition">
+            {showDetail ? "▼ 접기" : "▶ 펼치기"}
+          </button>
+        </div>
+        {showDetail && <>
+        <div className="font-bold text-sm text-white mb-3 px-3 py-2 bg-[#3b4b5b] rounded">📘 표지</div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2 text-sm">
           <div className="flex items-center gap-2">
             <label className="w-16 text-xs font-bold text-[#3b4b5b] shrink-0">사이즈</label>
@@ -358,8 +374,8 @@ export default function WritePage() {
           </div>
         </div>
 
-        <hr className="my-4 border-t border-gray-300" />
-        <p className="font-bold text-xs text-[#3b4b5b] mb-2 px-2 py-1 bg-gray-100 border-l-4 border-[#3b4b5b]">작업내용2</p>
+        <hr className="my-4 border-t-2 border-gray-300" />
+        <div className="font-bold text-sm text-white mb-3 px-3 py-2 bg-emerald-700 rounded">📗 작업내용2</div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2 text-sm">
           {[
             ["용지", "paper_type", ["모조","스노우","아트지","아르떼","펄지","CCP"]],
@@ -422,6 +438,7 @@ export default function WritePage() {
             })()}
           </div>
         </div>
+        </>}
       </div>
 
       {/* 표양식 (품목 테이블) - 동적 컬럼 */}
