@@ -6,7 +6,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 export default function WritePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const editId = searchParams.get("id");
+  const urlId = searchParams.get("id");
+  const [editId, setEditId] = useState<string | null>(urlId);
   const [saving, setSaving] = useState(false);
   const [showClientModal, setShowClientModal] = useState(false);
   const [clients, setClients] = useState<Array<{id:string;name:string;contact_person:string;phone:string;mobile:string;email:string}>>([]);
@@ -156,21 +157,30 @@ export default function WritePage() {
   }, [editId]);
 
   async function uploadFiles(files: FileList | File[]) {
-    if (!editId) {
-      alert("작업을 먼저 저장한 후 파일을 첨부해주세요.");
-      return;
-    }
     setUploading(true);
     try {
+      let orderId = editId;
+      // editId가 없으면 임시 저장 후 orderId 획득
+      if (!orderId) {
+        const draftBody = { ...formData, title: formData.title || "임시저장", total_supply: 0, total_vat: 0, total_amount: 0, discount: 0 };
+        const res = await fetch("/api/orders", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(draftBody) });
+        const saved = await res.json();
+        if (!res.ok || !saved?.id) { alert("임시저장 실패"); return; }
+        orderId = saved.id;
+        setEditId(saved.id);
+        setOrderNo(saved.order_no || "");
+        // URL을 새 주문 ID로 업데이트 (페이지 리로드 없이)
+        window.history.replaceState(null, "", `/dashboard/write?id=${orderId}`);
+      }
       for (const file of Array.from(files)) {
         const fd = new FormData();
         fd.append("file", file);
-        fd.append("orderId", editId);
+        fd.append("orderId", orderId as string);
         const res = await fetch("/api/upload", { method: "POST", body: fd });
         const d = await res.json();
         if (!res.ok) { alert("업로드 실패: " + (d.error || "")); continue; }
       }
-      const r = await fetch(`/api/orders/${editId}?_=${Date.now()}`);
+      const r = await fetch(`/api/orders/${orderId}?_=${Date.now()}`);
       const data = await r.json();
       setAttachments(data.attachments || []);
     } finally {
