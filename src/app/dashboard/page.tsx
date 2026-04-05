@@ -16,6 +16,7 @@ export default function DashboardPage() {
   const [keyword, setKeyword] = useState("");
   const [loading, setLoading] = useState(true);
   const [fontSize, setFontSize] = useState("text-base");
+  const [year, setYear] = useState("전체");
 
   useEffect(() => {
     const saved = typeof window !== "undefined" ? localStorage.getItem("listFontSize") : null;
@@ -31,10 +32,14 @@ export default function DashboardPage() {
     setLoading(true);
     const params = new URLSearchParams({ page: String(page), limit: "40" });
     if (keyword) { params.set("keyword", keyword); params.set("searchField", searchField); }
+    if (year !== "전체") {
+      params.set("startDate", `${year}-01-01`);
+      params.set("endDate", `${year}-12-31`);
+    }
     const res = await fetch(`/api/orders?${params}`);
     if (res.ok) { const data = await res.json(); setOrders(data.data || []); setTotal(data.total || 0); }
     setLoading(false);
-  }, [page, keyword, searchField]);
+  }, [page, keyword, searchField, year]);
 
   useEffect(() => { fetchOrders(); }, [fetchOrders]);
 
@@ -59,6 +64,12 @@ export default function DashboardPage() {
             <option value="text-base">글자: 크게</option>
             <option value="text-lg">글자: 아주 크게</option>
           </select>
+          <select value={year} onChange={e => { setYear(e.target.value); setPage(1); }} className="px-2 py-1.5 border border-gray-300 rounded text-xs" title="연도">
+            <option value="전체">연도: 전체</option>
+            {Array.from({length: 7}, (_, i) => 2026 - i).map(y => (
+              <option key={y} value={String(y)}>{y}년</option>
+            ))}
+          </select>
           <select value={searchField} onChange={e => setSearchField(e.target.value)} className="px-2 py-1.5 border border-gray-300 rounded text-xs">
             <option>전체</option><option>거래처</option><option>주문자</option><option>연락처</option><option>제목</option>
           </select>
@@ -80,7 +91,7 @@ export default function DashboardPage() {
                 <td className="border border-gray-200 px-1.5 py-[7px] text-left"><a href={`/dashboard/write?id=${o.id}`} className="hover:text-blue-600 hover:underline">{o.client_name}</a></td>
                 <td className="border border-gray-200 px-1.5 py-[7px] text-left">{o.orderer}</td>
                 <td className="border border-gray-200 px-1.5 py-[7px] text-left">{o.contact}</td>
-                <td className="border border-gray-200 px-1.5 py-[7px] text-left"><a href={`/dashboard/write?id=${o.id}`} className="hover:text-blue-600 hover:underline">{o.title}</a></td>
+                <td className="border border-gray-200 px-1.5 py-[7px] text-left max-w-[400px]"><a href={`/dashboard/write?id=${o.id}`} title={o.title} className="hover:text-blue-600 hover:underline block truncate">{o.title}</a></td>
                 <td className="border border-gray-200 px-1.5 py-[7px] text-right">{(o.total_amount||0).toLocaleString()}</td>
                 <td className="border border-gray-200 px-1.5 py-[7px] text-center">{o.product_type}</td>
                 <td className="border border-gray-200 px-1.5 py-[7px] text-center">{o.payment}</td>
