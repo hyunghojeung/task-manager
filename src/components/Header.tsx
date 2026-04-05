@@ -25,11 +25,10 @@ export default function Header({ companyName, userName, userId, userRole, banner
     <div className="sticky top-0 z-50">
       {/* 메인 헤더 */}
       <div className="bg-slate-800 text-white px-4 md:px-6 py-3 flex justify-between items-center">
-        <h1 className="text-base md:text-lg font-bold flex items-center gap-2">
-          <a href="/dashboard" className="text-white no-underline">Blackcopy.kr</a>
-          <span className="text-xs md:text-sm font-normal text-slate-400">{systemName || "인쇄전용 ERP Bcount"}</span>
+        <h1 className="text-lg md:text-xl font-bold flex items-center gap-3">
+          <a href="/dashboard" className="text-white no-underline">{systemName || "Bcount ERP"}</a>
           {companyName && (
-            <span className="text-xs md:text-sm text-blue-400 ml-2">{companyName}</span>
+            <span className="text-xs md:text-sm text-blue-400">{companyName}</span>
           )}
         </h1>
         <div className="flex items-center gap-2 md:gap-3 text-xs md:text-sm">
