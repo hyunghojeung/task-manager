@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
           mode: "add",
           autorename: true,
           mute: false,
-        }),
+        }).replace(/[\u0080-\uffff]/g, c => "\\u" + ("0000" + c.charCodeAt(0).toString(16)).slice(-4)),
         "Content-Type": "application/octet-stream",
       },
       body: fileBuffer,
