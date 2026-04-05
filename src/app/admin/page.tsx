@@ -495,7 +495,14 @@ function TemplateTab() {
               {cols.map((c, i) => (
                 <div key={i} className={`flex items-center gap-2 px-3 py-1.5 rounded border text-xs ${c.type === "자동계산" ? "bg-amber-50 border-amber-300" : c.type === "auto" ? "bg-gray-100 border-gray-300" : "bg-white border-gray-200"}`}>
                   <span className="text-gray-400 cursor-grab">☰</span>
-                  <input type="text" value={c.name} onChange={e => updateCol(i, "name", e.target.value)} readOnly={c.type === "auto"} className="w-24 px-1 py-0.5 border border-gray-300 rounded text-xs" style={c.type === "auto" ? {background:"#eee"} : {}} />
+                  {c.type === "auto" ? (
+                    <input type="text" value={c.name} readOnly className="w-24 px-1 py-0.5 border border-gray-300 rounded text-xs" style={{background:"#eee"}} />
+                  ) : (
+                    <select value={c.name} onChange={e => updateCol(i, "name", e.target.value)} className="w-24 px-1 py-0.5 border border-gray-300 rounded text-xs">
+                      <option value="">선택</option>
+                      {["품목명","규격","종류","수량","페이지수","단가","공급가액","부가세","합계금액"].map(n => <option key={n} value={n}>{n}</option>)}
+                    </select>
+                  )}
                   <select value={c.type} onChange={e => updateCol(i, "type", e.target.value)} className="text-xs px-1 py-0.5 border border-gray-300 rounded">
                     {c.type === "auto" ? <option>자동순번</option> : <><option>텍스트</option><option>숫자</option><option>자동계산</option></>}
                   </select>
