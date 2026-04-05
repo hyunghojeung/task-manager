@@ -248,22 +248,16 @@ export default function WritePage() {
     try {
       const url = editId ? `/api/orders/${editId}` : "/api/orders";
       const method = editId ? "PUT" : "POST";
-      // 합계 계산 - 자동계산 컬럼에서 공급가/부가세/합계를 찾아 합산
-      const calcCols = templateCols.filter(c => c.type === "자동계산");
+      // 합계 계산 - 자동계산 또는 숫자 타입 컬럼 모두 고려
+      const supplyCol = templateCols.find(c => c.name.includes("공급") && (c.type === "자동계산" || c.type === "숫자"));
+      const vatCol = templateCols.find(c => c.name.includes("부가") && (c.type === "자동계산" || c.type === "숫자"));
       let totalSupply = 0;
       let totalVat = 0;
-      let totalAmount = 0;
-
-      if (calcCols.length > 0) {
-        const supplyCol = calcCols.find(c => c.name.includes("공급"));
-        const vatCol = calcCols.find(c => c.name.includes("부가"));
-
-        itemData.forEach(row => {
-          if (supplyCol) totalSupply += parseInt(row[supplyCol.name]) || 0;
-          if (vatCol) totalVat += parseInt(row[vatCol.name]) || 0;
-        });
-        totalAmount = totalSupply + totalVat;
-      }
+      itemData.forEach(row => {
+        if (supplyCol) totalSupply += parseInt(row[supplyCol.name]) || 0;
+        if (vatCol) totalVat += parseInt(row[vatCol.name]) || 0;
+      });
+      const totalAmount = totalSupply + totalVat;
 
       const discountAmount = parseInt(formData.discount) || 0;
       const finalAmount = totalAmount - discountAmount;
@@ -628,11 +622,21 @@ export default function WritePage() {
                 </tr>
               ))}
               {(() => {
-                const calcCols = templateCols.filter(tc => tc.type === "자동계산");
-                const nonCalcCount = templateCols.length - calcCols.length;
+                // 합계 집계용 컬럼: 자동계산 OR 공급가/부가세/합계 이름 포함 숫자 컬럼
+                const sumCols = templateCols.filter(tc => tc.type === "자동계산" || (tc.type === "숫자" && (tc.name.includes("공급") || tc.name.includes("부가") || tc.name.includes("합계") || tc.name.includes("총액"))));
+                const nonCalcCount = templateCols.length - sumCols.length;
                 const sums: Record<string, number> = {};
-                calcCols.forEach(c => { sums[c.name] = itemData.reduce((acc, row) => acc + (parseInt(row[c.name]) || 0), 0); });
-                const grandTotal = Object.values(sums).reduce((a, b) => a + b, 0);
+                sumCols.forEach(c => { sums[c.name] = itemData.reduce((acc, row) => acc + (parseInt(row[c.name]) || 0), 0); });
+                // 총액 = 합계/합계금액/총액 컬럼 우선, 없으면 공급가+부가세
+                const totalCol = templateCols.find(c => c.name === "합계" || c.name === "합계금액" || c.name === "총액");
+                let grandTotal = 0;
+                if (totalCol && sums[totalCol.name] != null) grandTotal = sums[totalCol.name];
+                else {
+                  const supplyCol = templateCols.find(c => c.name.includes("공급"));
+                  const vatCol = templateCols.find(c => c.name.includes("부가"));
+                  grandTotal = (supplyCol ? sums[supplyCol.name] || 0 : 0) + (vatCol ? sums[vatCol.name] || 0 : 0);
+                }
+                const calcCols = sumCols;
                 return (
                   <>
                     <tr className="bg-gray-50 font-bold">
