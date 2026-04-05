@@ -403,8 +403,13 @@ function CompanyTab() {
       </div>
       <div className="bg-white rounded-lg shadow p-6 mb-5">
         <h3 className="text-base font-bold text-gray-800 mb-4 pb-2 border-b-2 border-gray-200">Dropbox API 설정</h3>
+        {company.company_id !== "pwindow" && (
+          <div className="mb-3 px-3 py-2 bg-amber-50 border border-amber-200 rounded text-xs text-amber-800">
+            이 기능은 추후 서비스될 예정입니다.
+          </div>
+        )}
         <div className="grid grid-cols-1 gap-3 text-sm max-w-2xl">
-          {dropboxFields.map(([k,l])=>(<div key={k} className="flex items-center gap-2"><label className="w-24 text-xs font-semibold text-gray-600 shrink-0">{l}</label><input type={k.includes("secret")||k.includes("token")?"password":"text"} value={company[k]||""} onChange={e=>set(k,e.target.value)} className="flex-1 px-2 py-1.5 border border-gray-300 rounded text-sm" /></div>))}
+          {dropboxFields.map(([k,l])=>(<div key={k} className="flex items-center gap-2"><label className="w-24 text-xs font-semibold text-gray-600 shrink-0">{l}</label><input type={k.includes("secret")||k.includes("token")?"password":"text"} value={company[k]||""} onChange={e=>set(k,e.target.value)} disabled={company.company_id !== "pwindow"} className="flex-1 px-2 py-1.5 border border-gray-300 rounded text-sm disabled:bg-gray-100 disabled:text-gray-400" /></div>))}
         </div>
       </div>
       <div className="flex justify-center py-3"><button onClick={save} disabled={saving} className="px-10 py-2.5 bg-blue-600 text-white rounded text-sm font-medium disabled:opacity-50">{saving?"저장중...":"저장"}</button></div>
