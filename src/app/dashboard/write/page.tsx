@@ -294,9 +294,9 @@ export default function WritePage() {
             </td>
           </tr>
           <tr>
-            <td className="bg-[#3b4b5b] text-white font-semibold text-xs py-2 px-2 border border-[#2d3a47] align-top">작업내용1<br/>(작업 및 memo)</td>
+            <td className="bg-[#3b4b5b] text-white font-semibold text-xs py-2 px-2 border border-[#2d3a47] align-top">작업내용1</td>
             <td colSpan={3} className="py-1.5 px-2 border border-gray-200">
-              <textarea placeholder="세부사양 및 후가공 내용" value={formData.detail_spec} onChange={e => handleChange("detail_spec", e.target.value)} className="w-full px-2 py-2 border border-gray-300 rounded text-sm min-h-[120px] resize-y" />
+              <textarea placeholder="세부사양 및 후가공, 고객 상담 메모 등을 입력해주세요" value={formData.detail_spec} onChange={e => handleChange("detail_spec", e.target.value)} className="w-full px-2 py-2 border border-gray-300 rounded text-sm min-h-[120px] resize-y" />
             </td>
           </tr>
         </tbody></table>
@@ -311,7 +311,7 @@ export default function WritePage() {
           </button>
         </div>
         {showDetail && <>
-        <div className="font-bold text-sm text-white mb-3 px-3 py-2 bg-[#3b4b5b] rounded">📘 표지</div>
+        <div className="font-bold text-sm text-[#3b4b5b] mb-3 px-3 py-2 border-l-4 border-[#3b4b5b]">📘 표지</div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2 text-sm">
           <div className="flex items-center gap-2">
             <label className="w-16 text-xs font-bold text-[#3b4b5b] shrink-0">사이즈</label>
@@ -375,7 +375,7 @@ export default function WritePage() {
         </div>
 
         <hr className="my-4 border-t-2 border-gray-300" />
-        <div className="font-bold text-sm text-white mb-3 px-3 py-2 bg-emerald-700 rounded">📗 작업내용2</div>
+        <div className="font-bold text-sm text-emerald-700 mb-3 px-3 py-2 border-l-4 border-emerald-700">📗 작업내용2</div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2 text-sm">
           {[
             ["용지", "paper_type", ["모조","스노우","아트지","아르떼","펄지","CCP"]],
