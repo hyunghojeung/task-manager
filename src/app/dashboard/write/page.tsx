@@ -38,14 +38,27 @@ export default function WritePage() {
   const [templateFormulas, setTemplateFormulas] = useState<Array<{target:string;expression:string}>>([]);
   const [itemData, setItemData] = useState<Array<Record<string,string>>>(Array.from({length:5}, () => ({})));
   const [showDetail, setShowDetail] = useState(true);
+  const [alwaysCollapse, setAlwaysCollapse] = useState(false);
   useEffect(() => {
-    const v = localStorage.getItem("writeShowDetail");
-    if (v !== null) setShowDetail(v === "1");
+    const alwaysC = localStorage.getItem("writeAlwaysCollapseDetail") === "1";
+    setAlwaysCollapse(alwaysC);
+    if (alwaysC) {
+      setShowDetail(false);
+    } else {
+      const v = localStorage.getItem("writeShowDetail");
+      if (v !== null) setShowDetail(v === "1");
+    }
   }, []);
   function toggleDetail() {
     const next = !showDetail;
     setShowDetail(next);
     localStorage.setItem("writeShowDetail", next ? "1" : "0");
+  }
+  function toggleAlwaysCollapse() {
+    const next = !alwaysCollapse;
+    setAlwaysCollapse(next);
+    localStorage.setItem("writeAlwaysCollapseDetail", next ? "1" : "0");
+    if (next) setShowDetail(false);
   }
 
   function calcFormulas(rowData: Record<string,string>, formulas: Array<{target:string;expression:string}>): Record<string,string> {
@@ -311,9 +324,15 @@ export default function WritePage() {
       <div className="bg-white border border-gray-300 rounded p-4 mb-3">
         <div className="flex items-center justify-between mb-3 pb-2 border-b-2 border-[#3b4b5b]">
           <p className="font-bold text-sm text-gray-800">세부내역</p>
-          <button type="button" onClick={toggleDetail} className="flex items-center gap-1 px-3 py-1 text-xs font-semibold text-[#3b4b5b] border border-[#3b4b5b] rounded hover:bg-[#3b4b5b] hover:text-white transition">
-            {showDetail ? "▼ 접기" : "▶ 펼치기"}
-          </button>
+          <div className="flex items-center gap-3">
+            <label className="flex items-center gap-1 text-xs text-gray-600 cursor-pointer">
+              <input type="checkbox" checked={alwaysCollapse} onChange={toggleAlwaysCollapse} />
+              항상 접기
+            </label>
+            <button type="button" onClick={toggleDetail} className="flex items-center gap-1 px-3 py-1 text-xs font-semibold text-[#3b4b5b] border border-[#3b4b5b] rounded hover:bg-[#3b4b5b] hover:text-white transition">
+              {showDetail ? "▼ 접기" : "▶ 펼치기"}
+            </button>
+          </div>
         </div>
         {showDetail && <>
         <div className="font-bold text-sm text-[#3b4b5b] mb-3 px-3 py-2 border-l-4 border-[#3b4b5b]">📘 표지</div>
