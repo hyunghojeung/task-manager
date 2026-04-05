@@ -47,6 +47,18 @@ export default function WritePage() {
   const [attachments, setAttachments] = useState<Array<{id:string;file_name:string;file_size:number;dropbox_url:string}>>([]);
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState("");
+  useEffect(() => {
+    try {
+      const cookies = document.cookie.split(";").map(c => c.trim());
+      const sessionCookie = cookies.find(c => c.startsWith("session="));
+      if (sessionCookie) {
+        const decoded = decodeURIComponent(sessionCookie.split("=").slice(1).join("="));
+        const session = JSON.parse(decoded);
+        setCurrentUserId(session.user?.user_id || "");
+      }
+    } catch { /* ignore */ }
+  }, []);
   useEffect(() => {
     const alwaysC = localStorage.getItem("writeAlwaysCollapseDetail") === "1";
     setAlwaysCollapse(alwaysC);
@@ -296,7 +308,7 @@ export default function WritePage() {
             <td className="w-[80px] text-[#3b4b5b] font-bold text-xs py-2 px-2 border border-gray-200">주문No.</td>
             <td className="py-1.5 px-2 border border-gray-200"><input type="text" readOnly className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm bg-gray-100 text-gray-400" value={orderNo} /></td>
             <td className="w-[80px] text-[#3b4b5b] font-bold text-xs py-2 px-2 border border-gray-200 text-center">작성일</td>
-            <td className="py-1.5 px-2 border border-gray-200"><input type="date" value={formData.order_date} onChange={e => handleChange("order_date", e.target.value)} className="px-2 py-1.5 border border-gray-300 rounded text-sm" /></td>
+            <td className="py-1.5 px-2 border border-gray-200"><div className="flex gap-2 items-center"><input type="date" value={formData.order_date} onChange={e => handleChange("order_date", e.target.value)} className="px-2 py-1.5 border border-gray-300 rounded text-sm" /><span className="text-xs text-gray-500">작성자: <strong className="text-[#3b4b5b]">{currentUserId || "-"}</strong></span></div></td>
           </tr>
           <tr>
             <td className="text-[#3b4b5b] font-bold text-xs py-2 px-2 border border-gray-200">주문자</td>
