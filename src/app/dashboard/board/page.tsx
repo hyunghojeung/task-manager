@@ -108,7 +108,7 @@ export default function BoardPage() {
           <h3 className="text-base font-bold text-gray-800 mb-4 pb-2 border-b-2 border-gray-200">{view === "edit" ? "글 수정" : "글쓰기"}</h3>
           <div className="grid gap-3 text-sm">
             <div className="flex gap-3">
-              <div className="flex-1"><label className="block text-xs font-semibold text-gray-600 mb-1">작성자</label><input type="text" value={formAuthor} onChange={e => setFormAuthor(e.target.value)} readOnly={view === "edit"} className="w-full px-3 py-2 border border-gray-300 rounded text-sm" /></div>
+              <div className="flex-1"><label className="block text-xs font-semibold text-gray-600 mb-1">작성자</label><input type="text" value={formAuthor} readOnly className="w-full px-3 py-2 border border-gray-200 rounded text-sm bg-gray-50 text-gray-500" /></div>
               <div className="flex-1"><label className="block text-xs font-semibold text-gray-600 mb-1">비밀번호</label><input type="password" value={formPassword} onChange={e => setFormPassword(e.target.value)} placeholder="수정/삭제 시 필요" className="w-full px-3 py-2 border border-gray-300 rounded text-sm" /></div>
             </div>
             <div><label className="block text-xs font-semibold text-gray-600 mb-1">제목</label><input type="text" value={formTitle} onChange={e => setFormTitle(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded text-sm" /></div>
