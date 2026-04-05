@@ -91,6 +91,16 @@ export default function BoardPage() {
     else { const d = await r.json(); alert(d.error); }
   }
 
+  async function editComment(commentId: string, currentContent: string) {
+    const newContent = prompt("수정할 내용을 입력하세요:", currentContent);
+    if (newContent === null || newContent === currentContent) return;
+    const pw = prompt("댓글 비밀번호를 입력하세요:");
+    if (!pw) return;
+    const r = await fetch(`/api/board/comments/${commentId}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ password: pw, content: newContent }) });
+    if (r.ok && current) loadPost(current.id);
+    else { const d = await r.json(); alert(d.error); }
+  }
+
   function resetForm() { setFormTitle(""); setFormContent(""); setFormAuthor(""); setFormPassword(""); }
   function openWrite() { resetForm(); setFormAuthor(currentUser); setCommentAuthor(currentUser); setView("write"); }
   function openEdit() { if (current) { setFormTitle(current.title); setFormContent(current.content); setFormAuthor(current.author); setFormPassword(""); setView("edit"); } }
@@ -160,6 +170,7 @@ export default function BoardPage() {
                   <div className="flex gap-2 items-center">
                     <span className="text-xs text-gray-400">{c.created_at?.slice(0, 10)}</span>
                     <button onClick={() => setReplyTo(replyTo === c.id ? null : c.id)} className="text-xs text-blue-500">답글</button>
+                    <button onClick={() => editComment(c.id, c.content)} className="text-xs text-emerald-500">수정</button>
                     <button onClick={() => deleteComment(c.id)} className="text-xs text-red-500">삭제</button>
                   </div>
                 </div>
@@ -172,6 +183,7 @@ export default function BoardPage() {
                     <span className="text-xs font-semibold text-gray-700">↳ {r.author}</span>
                     <div className="flex gap-2 items-center">
                       <span className="text-xs text-gray-400">{r.created_at?.slice(0, 10)}</span>
+                      <button onClick={() => editComment(r.id, r.content)} className="text-xs text-emerald-500">수정</button>
                       <button onClick={() => deleteComment(r.id)} className="text-xs text-red-500">삭제</button>
                     </div>
                   </div>
