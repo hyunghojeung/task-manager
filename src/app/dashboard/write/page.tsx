@@ -23,7 +23,8 @@ export default function WritePage() {
     trade_type: "vat", tax_invoice: "", payment: "",
     paper_type: "", color: "", print_side: "", copies: "",
     binding: "", paper_size: "", coating: "", finishing: "",
-    cover_paper_size: "", cover_paper_type: "", cover_print_side: "", cover_color: "",
+    cover_paper_size: "", cover_orientation: "", cover_paper_type: "", cover_paper_weight: "",
+    cover_print_side: "", cover_color: "",
     cover_coating: "", cover_copies: "", cover_finishing: "",
     discount: "",
     detail_spec: "", order_date: new Date().toISOString().slice(0, 10),
@@ -133,7 +134,8 @@ export default function WritePage() {
             copies: data.copies || "", binding: data.binding || "",
             paper_size: data.paper_size || "", coating: data.coating || "",
             finishing: data.finishing || "",
-            cover_paper_size: data.cover_paper_size || "", cover_paper_type: data.cover_paper_type || "",
+            cover_paper_size: data.cover_paper_size || "", cover_orientation: data.cover_orientation || "",
+            cover_paper_type: data.cover_paper_type || "", cover_paper_weight: data.cover_paper_weight || "",
             cover_print_side: data.cover_print_side || "", cover_color: data.cover_color || "",
             cover_coating: data.cover_coating || "", cover_copies: data.cover_copies || "",
             cover_finishing: data.cover_finishing || "",
@@ -430,8 +432,38 @@ export default function WritePage() {
               );
             })()}
           </div>
+          <div className="flex items-center gap-2">
+            <label className="w-16 text-xs font-bold text-[#3b4b5b] shrink-0">방향</label>
+            <select value={formData.cover_orientation} onChange={e => handleChange("cover_orientation", e.target.value)} className="flex-1 px-2 py-1.5 border border-gray-300 rounded text-sm">
+              <option value="">선택</option><option>가로</option><option>세로</option>
+            </select>
+          </div>
+          <div className="flex items-center gap-2">
+            <label className="w-16 text-xs font-bold text-[#3b4b5b] shrink-0">용지</label>
+            {(() => {
+              const paperWeights: Record<string, number[]> = {
+                "복사지": [80, 100],
+                "모조": [80, 100, 120, 150, 180, 230],
+                "스노우": [100, 120, 150, 180, 200, 250, 300],
+                "아트지": [100, 120, 150, 180, 200, 250, 300],
+                "아르떼": [105, 130, 160, 190, 230],
+              };
+              const weights = paperWeights[formData.cover_paper_type] || [];
+              return (
+                <div className="flex-1 flex gap-2">
+                  <select value={formData.cover_paper_type} onChange={e => { handleChange("cover_paper_type", e.target.value); handleChange("cover_paper_weight", ""); }} className="flex-1 px-2 py-1.5 border border-gray-300 rounded text-sm">
+                    <option value="">선택</option>
+                    {["복사지","모조","스노우","아트지","아르떼","펄지","CCP"].map(o => <option key={o}>{o}</option>)}
+                  </select>
+                  <select value={formData.cover_paper_weight} onChange={e => handleChange("cover_paper_weight", e.target.value)} disabled={weights.length === 0} className="w-24 px-2 py-1.5 border border-gray-300 rounded text-sm disabled:bg-gray-100 disabled:text-gray-400">
+                    <option value="">무게</option>
+                    {weights.map(w => <option key={w} value={String(w)}>{w}g</option>)}
+                  </select>
+                </div>
+              );
+            })()}
+          </div>
           {[
-            ["용지", "cover_paper_type", ["모조","스노우","아트지","아르떼","펄지","CCP"]],
             ["인쇄면", "cover_print_side", ["양면","단면"]],
             ["색상", "cover_color", ["칼라","흑백"]],
             ["코팅", "cover_coating", ["무광","유광"]],
