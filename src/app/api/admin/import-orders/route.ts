@@ -112,12 +112,12 @@ export async function POST(request: NextRequest) {
         data: {
           "품목명": r.품목명 || "",
           "규격": r.규격 || "",
-          "부수": r.수량 || "",
+          "수량": r.수량 || "",
           "페이지수": r.페이지수 || "",
           "단가": (r.단가 || "").replace(/,/g, ""),
-          "공급가": (r.공급가액 || "").replace(/,/g, ""),
+          "공급가액": (r.공급가액 || "").replace(/,/g, ""),
           "부가세": (r.부가세 || "").replace(/,/g, ""),
-          "합계": (r.합계금액 || "").replace(/,/g, ""),
+          "합계금액": (r.합계금액 || "").replace(/,/g, ""),
         },
       }));
       await supabase.from("order_items").insert(items);
