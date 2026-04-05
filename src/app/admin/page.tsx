@@ -87,20 +87,25 @@ function UsersTab() {
   useEffect(() => { load(); }, [load]);
   async function create(e:React.FormEvent) { e.preventDefault(); await fetch("/api/users",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(form)}); setShowModal(false); setForm({name:"",user_id:"",password:"",role:"user"}); load(); }
   async function remove(id:string) { if(!confirm("정말 삭제할까요?")) return; await fetch(`/api/users/${id}`,{method:"DELETE"}); load(); }
+  async function toggleRole(id:string, currentRole:string) {
+    const newRole = currentRole === "admin" ? "user" : "admin";
+    await fetch(`/api/users/${id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ role: newRole }) });
+    load();
+  }
 
   return (
     <div className="bg-white rounded-lg shadow p-6">
       <h3 className="text-base font-bold text-gray-800 mb-4 pb-2 border-b-2 border-gray-200">사용자 관리</h3>
       <table className="w-full border-collapse text-xs border border-gray-300">
-        <thead><tr className="bg-[#3b4b5b] text-white"><th className="border border-[#2d3a47] px-2 py-2.5 w-10">순번</th><th className="border border-[#2d3a47] px-2 py-2.5">사용자ID</th><th className="border border-[#2d3a47] px-2 py-2.5">이름</th><th className="border border-[#2d3a47] px-2 py-2.5 w-16">권한</th><th className="border border-[#2d3a47] px-2 py-2.5 w-24">등록일</th><th className="border border-[#2d3a47] px-2 py-2.5 w-20">관리</th></tr></thead>
+        <thead><tr className="bg-[#3b4b5b] text-white"><th className="border border-[#2d3a47] px-2 py-2.5 w-12">순번</th><th className="border border-[#2d3a47] px-2 py-2.5 w-32">사용자ID</th><th className="border border-[#2d3a47] px-2 py-2.5 w-28">이름</th><th className="border border-[#2d3a47] px-2 py-2.5 w-20">권한</th><th className="border border-[#2d3a47] px-2 py-2.5 w-28">등록일</th><th className="border border-[#2d3a47] px-2 py-2.5 w-20">관리</th></tr></thead>
         <tbody>{users.map((u,i) => (
           <tr key={u.id} className={i%2===1?"bg-gray-50":""}>
             <td className="border border-gray-200 px-2 py-2 text-center">{i+1}</td>
             <td className="border border-gray-200 px-2 py-2 text-center font-bold">{u.user_id}</td>
             <td className="border border-gray-200 px-2 py-2 text-center">{u.name}</td>
-            <td className="border border-gray-200 px-2 py-2 text-center"><span className={`px-2 py-0.5 rounded-full text-xs ${u.role==="admin"?"bg-amber-100 text-amber-800":"bg-blue-100 text-blue-800"}`}>{u.role==="admin"?"관리자":"사용자"}</span></td>
+            <td className="border border-gray-200 px-2 py-2 text-center"><button onClick={() => toggleRole(u.id, u.role)} className={`px-2 py-0.5 rounded-full text-xs cursor-pointer hover:opacity-80 ${u.role==="admin"?"bg-amber-100 text-amber-800":"bg-blue-100 text-blue-800"}`}>{u.role==="admin"?"관리자":"사용자"}</button></td>
             <td className="border border-gray-200 px-2 py-2 text-center">{u.created_at?.slice(0,10)}</td>
-            <td className="border border-gray-200 px-2 py-2 text-center">{u.role!=="admin"&&<button onClick={()=>remove(u.id)} className="text-red-600 border border-red-600 px-2 py-0.5 rounded text-xs">삭제</button>}</td>
+            <td className="border border-gray-200 px-2 py-2 text-center"><button onClick={()=>remove(u.id)} className="text-red-600 border border-red-600 px-2 py-0.5 rounded text-xs">삭제</button></td>
           </tr>
         ))}</tbody>
       </table>
