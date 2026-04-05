@@ -359,7 +359,7 @@ function CrudTab({endpoint, title, fields, subtitle}:{endpoint:string; title:str
 
 // ===== 양식폼관리 =====
 function TemplateTab() {
-  interface Tmpl { id: string; name: string; columns: Array<{name:string;type:string}>; formulas: Array<{target:string;expression:string}> }
+  interface Tmpl { id: string; name: string; columns: Array<{name:string;type:string}>; formulas: Array<{target:string;expression:string}>; is_default?: boolean }
   const [templates, setTemplates] = useState<Tmpl[]>([]);
   const [newName, setNewName] = useState("");
   const [editTmpl, setEditTmpl] = useState<Tmpl | null>(null);
@@ -399,6 +399,10 @@ function TemplateTab() {
   function addFormula() { setFormulas(p => [...p, {target:"",expression:""}]); }
   function removeFormula(i: number) { setFormulas(p => p.filter((_,idx) => idx !== i)); }
   function updateFormula(i: number, field: string, val: string) { setFormulas(p => p.map((f,idx) => idx === i ? {...f,[field]:val} : f)); }
+  async function setDefault(id: string) {
+    await fetch("/api/templates/default", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }) });
+    load();
+  }
 
   return (
     <div className="bg-white rounded-lg shadow p-6">
@@ -408,10 +412,15 @@ function TemplateTab() {
       {/* 양식 목록 */}
       <div className="mb-4">
         {templates.map(t => (
-          <div key={t.id} className={`flex justify-between items-center p-3 border rounded mb-2 cursor-pointer ${editTmpl?.id === t.id ? "border-blue-500 bg-blue-50" : "border-gray-200 hover:bg-gray-50"}`}>
-            <div>
+          <div key={t.id} className={`flex justify-between items-center p-3 border rounded mb-2 ${editTmpl?.id === t.id ? "border-blue-500 bg-blue-50" : "border-gray-200 hover:bg-gray-50"}`}>
+            <div className="flex items-center gap-3">
+              <label className="flex items-center gap-1 text-xs text-gray-600 cursor-pointer whitespace-nowrap">
+                <input type="radio" name="defaultTmpl" checked={!!t.is_default} onChange={() => setDefault(t.id)} />
+                기본값
+              </label>
               <span className="font-semibold text-sm text-gray-800">{t.name}</span>
-              <span className="text-xs text-gray-400 ml-2">{t.columns?.length ? t.columns.map(c=>c.name).join(", ") : "(미설정)"}</span>
+              {t.is_default && <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded">DEFAULT</span>}
+              <span className="text-xs text-gray-400">{t.columns?.length ? t.columns.map(c=>c.name).join(", ") : "(미설정)"}</span>
             </div>
             <div className="flex gap-1">
               <button onClick={() => startEdit(t)} className="text-blue-600 border border-blue-600 px-2 py-0.5 rounded text-xs">편집</button>

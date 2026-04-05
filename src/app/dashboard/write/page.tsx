@@ -105,9 +105,11 @@ export default function WritePage() {
     fetch(`/api/templates?_=${Date.now()}`).then(r => r.json()).then(d => {
       if (Array.isArray(d) && d.length > 0) {
         setTemplateList(d);
-        setSelectedTemplate(d[0].name);
-        if (d[0].columns?.length > 0) setTemplateCols(d[0].columns);
-        if (d[0].formulas?.length > 0) setTemplateFormulas(d[0].formulas);
+        // 기본 양식 찾기 (is_default=true), 없으면 첫 번째
+        const defaultTmpl = d.find((t: {is_default?: boolean}) => t.is_default) || d[0];
+        setSelectedTemplate(defaultTmpl.name);
+        if (defaultTmpl.columns?.length > 0) setTemplateCols(defaultTmpl.columns);
+        if (defaultTmpl.formulas?.length > 0) setTemplateFormulas(defaultTmpl.formulas);
       }
     });
   }, []);
