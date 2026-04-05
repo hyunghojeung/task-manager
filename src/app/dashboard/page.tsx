@@ -15,6 +15,17 @@ export default function DashboardPage() {
   const [searchField, setSearchField] = useState("전체");
   const [keyword, setKeyword] = useState("");
   const [loading, setLoading] = useState(true);
+  const [fontSize, setFontSize] = useState("text-base");
+
+  useEffect(() => {
+    const saved = typeof window !== "undefined" ? localStorage.getItem("listFontSize") : null;
+    if (saved) setFontSize(saved);
+  }, []);
+
+  function changeFontSize(size: string) {
+    setFontSize(size);
+    if (typeof window !== "undefined") localStorage.setItem("listFontSize", size);
+  }
 
   const fetchOrders = useCallback(async () => {
     setLoading(true);
@@ -42,6 +53,12 @@ export default function DashboardPage() {
           <option>전체</option><option>블랙카피</option><option>출력실</option><option>디자인실</option>
         </select>
         <div className="flex flex-wrap gap-2 items-center">
+          <select value={fontSize} onChange={e => changeFontSize(e.target.value)} className="px-2 py-1.5 border border-gray-300 rounded text-xs" title="글자 크기">
+            <option value="text-xs">글자: 작게</option>
+            <option value="text-sm">글자: 보통</option>
+            <option value="text-base">글자: 크게</option>
+            <option value="text-lg">글자: 아주 크게</option>
+          </select>
           <select value={searchField} onChange={e => setSearchField(e.target.value)} className="px-2 py-1.5 border border-gray-300 rounded text-xs">
             <option>전체</option><option>거래처</option><option>주문자</option><option>연락처</option><option>제목</option>
           </select>
@@ -50,7 +67,7 @@ export default function DashboardPage() {
         </div>
       </div>
       <div className="overflow-x-auto">
-        <table className="w-full border-collapse border border-gray-300 text-base">
+        <table className={`w-full border-collapse border border-gray-300 ${fontSize}`}>
           <thead><tr className="bg-[#3b4b5b] text-white">
             <th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap">순번</th><th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap">거래처</th><th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap">주문자</th><th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap">연락처</th><th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap">제목</th><th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap">금액</th><th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap">제품형태</th><th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap">결제</th><th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap">진행상태</th><th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap">거래명세서</th><th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap">견적서</th><th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap">작성자</th>
           </tr></thead>
