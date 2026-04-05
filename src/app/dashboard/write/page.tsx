@@ -21,6 +21,8 @@ export default function WritePage() {
     trade_type: "vat", tax_invoice: "", payment: "",
     paper_type: "", color: "", print_side: "", copies: "",
     binding: "", paper_size: "", coating: "", finishing: "",
+    cover_paper_size: "", cover_paper_type: "", cover_print_side: "", cover_color: "",
+    cover_coating: "", cover_copies: "", cover_finishing: "",
     detail_spec: "", order_date: new Date().toISOString().slice(0, 10),
   });
   const [orderNo, setOrderNo] = useState("자동생성");
@@ -96,7 +98,12 @@ export default function WritePage() {
             color: data.color || "", print_side: data.print_side || "",
             copies: data.copies || "", binding: data.binding || "",
             paper_size: data.paper_size || "", coating: data.coating || "",
-            finishing: data.finishing || "", detail_spec: data.detail_spec || "",
+            finishing: data.finishing || "",
+            cover_paper_size: data.cover_paper_size || "", cover_paper_type: data.cover_paper_type || "",
+            cover_print_side: data.cover_print_side || "", cover_color: data.cover_color || "",
+            cover_coating: data.cover_coating || "", cover_copies: data.cover_copies || "",
+            cover_finishing: data.cover_finishing || "",
+            detail_spec: data.detail_spec || "",
             order_date: data.order_date || new Date().toISOString().slice(0, 10),
           });
           setOrderNo(data.order_no || "");
@@ -285,7 +292,73 @@ export default function WritePage() {
         </tbody></table>
       </div>
 
-      {/* 작업내용 */}
+      {/* 표지 */}
+      <div className="bg-white border border-gray-300 rounded p-4 mb-3">
+        <p className="font-bold text-sm text-gray-800 mb-3 pb-2 border-b border-gray-200">표지</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2 text-sm">
+          <div className="flex items-center gap-2">
+            <label className="w-16 text-xs font-semibold text-gray-600 shrink-0">사이즈</label>
+            {(() => {
+              const sizeOptions = ["A4","A3","A2","190x260","465x315","A5","B4"];
+              const isCustom = formData.cover_paper_size !== "" && !sizeOptions.includes(formData.cover_paper_size);
+              const selectValue = isCustom ? "__custom__" : formData.cover_paper_size;
+              return (
+                <div className="flex-1 flex gap-2">
+                  <select value={selectValue} onChange={e => {
+                    if (e.target.value === "__custom__") handleChange("cover_paper_size", " ");
+                    else handleChange("cover_paper_size", e.target.value);
+                  }} className="flex-1 px-2 py-1.5 border border-gray-300 rounded text-sm">
+                    <option value="">선택</option>
+                    {sizeOptions.map(s => <option key={s}>{s}</option>)}
+                    <option value="__custom__">직접입력</option>
+                  </select>
+                  {(isCustom || formData.cover_paper_size === " ") && (
+                    <input type="text" placeholder="사이즈 입력" value={formData.cover_paper_size.trim()} onChange={e => handleChange("cover_paper_size", e.target.value || " ")} className="flex-1 px-2 py-1.5 border border-gray-300 rounded text-sm" autoFocus />
+                  )}
+                </div>
+              );
+            })()}
+          </div>
+          {[
+            ["용지", "cover_paper_type", ["모조","스노우","아트지","아르떼","펄지","CCP"]],
+            ["인쇄면", "cover_print_side", ["양면","단면"]],
+            ["색상", "cover_color", ["칼라","흑백"]],
+            ["코팅", "cover_coating", ["무광","유광"]],
+          ].map(([label, key, options]) => (
+            <div key={key as string} className="flex items-center gap-2">
+              <label className="w-16 text-xs font-semibold text-gray-600 shrink-0">{label as string}</label>
+              <select value={formData[key as keyof typeof formData]} onChange={e => handleChange(key as string, e.target.value)} className="flex-1 px-2 py-1.5 border border-gray-300 rounded text-sm">
+                <option value="">선택</option>
+                {(options as string[]).map(o => <option key={o}>{o}</option>)}
+              </select>
+            </div>
+          ))}
+          <div className="flex items-center gap-2">
+            <label className="w-16 text-xs font-semibold text-gray-600 shrink-0">부수</label>
+            <input type="text" placeholder="부수 입력" value={formData.cover_copies} onChange={e => handleChange("cover_copies", e.target.value)} className="flex-1 px-2 py-1.5 border border-gray-300 rounded text-sm" />
+          </div>
+          <div className="flex items-start gap-2 md:col-span-2">
+            <label className="w-16 text-xs font-semibold text-gray-600 shrink-0 pt-1">후가공</label>
+            <div className="flex-1 flex flex-wrap gap-x-3 gap-y-1 px-2 py-1.5 border border-gray-300 rounded">
+              {["재단","1줄오시","2줄오시","3줄오시","기타오시","접지","금박","에폭시","스코딕스"].map(opt => {
+                const selected = (formData.cover_finishing || "").split(",").filter(Boolean);
+                const checked = selected.includes(opt);
+                return (
+                  <label key={opt} className="inline-flex items-center gap-1 text-xs cursor-pointer">
+                    <input type="checkbox" checked={checked} onChange={e => {
+                      const next = e.target.checked ? [...selected, opt] : selected.filter(v => v !== opt);
+                      handleChange("cover_finishing", next.join(","));
+                    }} />
+                    {opt}
+                  </label>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 작업내용2 */}
       <div className="bg-white border border-gray-300 rounded p-4 mb-3">
         <p className="font-bold text-sm text-gray-800 mb-3 pb-2 border-b border-gray-200">작업내용2</p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2 text-sm">
