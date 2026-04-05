@@ -192,4 +192,5 @@ export interface Advertisement {
 export interface SessionData {
   company: Company
   user: User
+  impersonated?: boolean
 }

@@ -155,6 +155,12 @@ export default function SuperAdminDashboard() {
     finally { setSubmitting(false); }
   }
 
+  async function impersonate(companyId: string, target: string) {
+    const res = await fetch("/api/admin/impersonate", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ companyId }) });
+    if (res.ok) window.open(target, "_blank");
+    else alert("업체 접속 실패");
+  }
+
   async function handleDelete(id: string) {
     if (!confirm("정말 삭제할까요? 업체의 모든 데이터가 삭제됩니다.")) return;
     await fetch(`/api/admin/companies/${id}`, { method: "DELETE" });
@@ -364,9 +370,9 @@ export default function SuperAdminDashboard() {
                         <td className="border border-gray-200 px-2 py-2 text-center">{c.created_at?.slice(0, 10)}</td>
                         <td className="border border-gray-200 px-2 py-2 text-center">{statusBadge(c.status)}</td>
                         <td className="border border-gray-200 px-2 py-2 text-center">{c.user_count}명</td>
-                        <td className="border border-gray-200 px-2 py-2 text-center"><a href={`/super-admin/view?company=${c.company_id}&type=orders`} target="_blank" className="text-blue-600 hover:underline font-bold">{c.order_count || 0}</a></td>
-                        <td className="border border-gray-200 px-2 py-2 text-center"><a href={`/super-admin/view?company=${c.company_id}&type=memos`} target="_blank" className="text-blue-600 hover:underline font-bold">{c.memo_count || 0}</a></td>
-                        <td className="border border-gray-200 px-2 py-2 text-center"><a href={`/super-admin/view?company=${c.company_id}&type=purchase-orders`} target="_blank" className="text-blue-600 hover:underline font-bold">{c.po_count || 0}</a></td>
+                        <td className="border border-gray-200 px-2 py-2 text-center"><button onClick={() => impersonate(c.company_id, "/dashboard")} className="text-blue-600 hover:underline font-bold">{c.order_count || 0}</button></td>
+                        <td className="border border-gray-200 px-2 py-2 text-center"><button onClick={() => impersonate(c.company_id, "/dashboard/memo")} className="text-blue-600 hover:underline font-bold">{c.memo_count || 0}</button></td>
+                        <td className="border border-gray-200 px-2 py-2 text-center"><button onClick={() => impersonate(c.company_id, "/dashboard/orders")} className="text-blue-600 hover:underline font-bold">{c.po_count || 0}</button></td>
                         <td className="border border-gray-200 px-2 py-2 text-center whitespace-nowrap">
                           <button onClick={()=>openEdit(c)} className="text-blue-600 border border-blue-600 px-2 py-0.5 rounded text-xs mr-1">수정</button>
                           <button onClick={()=>handleStatusChange(c.id, c.status==="active"?"inactive":"active")} className={`px-2 py-0.5 rounded text-xs mr-1 border ${c.status==="active"?"text-red-600 border-red-600":"text-emerald-600 border-emerald-600"}`}>{c.status==="active"?"정지":"활성"}</button>

@@ -55,6 +55,7 @@ export default async function DashboardLayout({
         bannerLink={bannerData?.link_url}
         bannerButton={bannerData?.button_text}
         systemName={settingsData?.system_name}
+        impersonated={session.impersonated}
       />
       <NoticeBar notices={notices || []} />
       <NavBar />

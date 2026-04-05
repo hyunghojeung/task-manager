@@ -11,9 +11,10 @@ interface HeaderProps {
   bannerLink?: string;
   bannerButton?: string;
   systemName?: string;
+  impersonated?: boolean;
 }
 
-export default function Header({ companyName, userName, userId, userRole, bannerText, bannerLink, bannerButton, systemName }: HeaderProps) {
+export default function Header({ companyName, userName, userId, userRole, bannerText, bannerLink, bannerButton, systemName, impersonated }: HeaderProps) {
   const router = useRouter();
 
   async function handleLogout() {
@@ -23,6 +24,12 @@ export default function Header({ companyName, userName, userId, userRole, banner
 
   return (
     <div className="sticky top-0 z-50">
+      {impersonated && (
+        <div className="bg-red-600 text-white px-4 py-1.5 text-center text-xs font-bold flex items-center justify-center gap-3">
+          <span>⚠️ 수퍼관리자 모드: {companyName} 업체로 접속 중</span>
+          <a href="/super-admin/dashboard" className="underline hover:text-red-100">수퍼관리자로 돌아가기</a>
+        </div>
+      )}
       {/* 메인 헤더 */}
       <div className="bg-slate-800 text-white px-4 md:px-6 py-3 flex justify-between items-center">
         <h1 className="text-lg md:text-xl font-bold flex items-center gap-3">

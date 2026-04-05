@@ -34,6 +34,7 @@ export default async function AdminLayout({
         userId={session.user.user_id}
         userRole={session.user.role}
         systemName={settingsData?.system_name}
+        impersonated={session.impersonated}
       />
       <NavBar />
       <main className="p-4 md:p-6">{children}</main>
