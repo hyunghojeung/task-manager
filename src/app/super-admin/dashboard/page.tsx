@@ -161,6 +161,46 @@ export default function SuperAdminDashboard() {
     refreshList();
   }
 
+  function SettingsTab() {
+    const [settings, setSettings] = useState({ system_name: "Blackcopy.kr", admin_id: "blackcopy2" });
+    const [settingsLoading, setSettingsLoading] = useState(true);
+    const [settingsSaving, setSettingsSaving] = useState(false);
+
+    useEffect(() => {
+      fetch(`/api/admin/settings?_=${Date.now()}`).then(r => r.json()).then(d => {
+        setSettings({ system_name: d.system_name || "Blackcopy.kr", admin_id: d.admin_id || "blackcopy2" });
+        setSettingsLoading(false);
+      }).catch(() => setSettingsLoading(false));
+    }, []);
+
+    async function saveSettings() {
+      setSettingsSaving(true);
+      const res = await fetch("/api/admin/settings", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(settings) });
+      if (res.ok) alert("저장되었습니다.");
+      else alert("저장 실패");
+      setSettingsSaving(false);
+    }
+
+    if (settingsLoading) return <div className="bg-white rounded-lg shadow p-6"><p className="text-sm text-gray-400">로딩중...</p></div>;
+
+    return (
+      <div className="bg-white rounded-lg shadow p-6">
+        <h3 className="text-base font-bold text-gray-800 mb-4 pb-2 border-b-2 border-gray-200">시스템 설정</h3>
+        <div className="grid grid-cols-1 gap-3 text-sm max-w-lg">
+          <div className="flex items-center gap-3">
+            <label className="w-32 text-xs font-semibold text-gray-600">시스템명</label>
+            <input type="text" value={settings.system_name} onChange={e => setSettings(p => ({ ...p, system_name: e.target.value }))} className="flex-1 px-3 py-2 border border-gray-300 rounded text-sm" />
+          </div>
+          <div className="flex items-center gap-3">
+            <label className="w-32 text-xs font-semibold text-gray-600">관리자 ID</label>
+            <input type="text" value={settings.admin_id} onChange={e => setSettings(p => ({ ...p, admin_id: e.target.value }))} className="flex-1 px-3 py-2 border border-gray-300 rounded text-sm" />
+          </div>
+        </div>
+        <button onClick={saveSettings} disabled={settingsSaving} className="mt-4 px-5 py-2 bg-blue-600 text-white rounded text-sm disabled:opacity-50">{settingsSaving ? "저장중..." : "설정 저장"}</button>
+      </div>
+    );
+  }
+
   function AdsTab() {
     const [ad, setAd] = useState({ content: "", link_url: "", button_text: "FREE" });
     const [adLoading, setAdLoading] = useState(true);
@@ -343,16 +383,7 @@ export default function SuperAdminDashboard() {
 
         {tab === "ads" && <AdsTab />}
 
-        {tab === "settings" && (
-          <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-base font-bold text-gray-800 mb-4 pb-2 border-b-2 border-gray-200">시스템 설정</h3>
-            <div className="grid grid-cols-1 gap-3 text-sm max-w-lg">
-              <div className="flex items-center gap-3"><label className="w-32 text-xs font-semibold text-gray-600">시스템명</label><input type="text" defaultValue="Blackcopy.kr" className="flex-1 px-3 py-2 border border-gray-300 rounded text-sm" /></div>
-              <div className="flex items-center gap-3"><label className="w-32 text-xs font-semibold text-gray-600">관리자 ID</label><input type="text" defaultValue="blackcopy2" className="flex-1 px-3 py-2 border border-gray-300 rounded text-sm" /></div>
-            </div>
-            <button className="mt-4 px-5 py-2 bg-blue-600 text-white rounded text-sm">설정 저장</button>
-          </div>
-        )}
+        {tab === "settings" && <SettingsTab />}
       </div>
 
       {/* 업체 등록 모달 */}
