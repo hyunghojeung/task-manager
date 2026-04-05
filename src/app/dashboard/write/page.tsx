@@ -23,6 +23,7 @@ export default function WritePage() {
     binding: "", paper_size: "", coating: "", finishing: "",
     cover_paper_size: "", cover_paper_type: "", cover_print_side: "", cover_color: "",
     cover_coating: "", cover_copies: "", cover_finishing: "",
+    discount: "",
     detail_spec: "", order_date: new Date().toISOString().slice(0, 10),
   });
   const [orderNo, setOrderNo] = useState("자동생성");
@@ -113,6 +114,7 @@ export default function WritePage() {
             cover_print_side: data.cover_print_side || "", cover_color: data.cover_color || "",
             cover_coating: data.cover_coating || "", cover_copies: data.cover_copies || "",
             cover_finishing: data.cover_finishing || "",
+            discount: data.discount != null ? String(data.discount) : "",
             detail_spec: data.detail_spec || "",
             order_date: data.order_date || new Date().toISOString().slice(0, 10),
           });
@@ -194,7 +196,10 @@ export default function WritePage() {
         totalAmount = totalSupply + totalVat;
       }
 
-      const res = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...formData, total_supply: totalSupply, total_vat: totalVat, total_amount: totalAmount }) });
+      const discountAmount = parseInt(formData.discount) || 0;
+      const finalAmount = totalAmount - discountAmount;
+
+      const res = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...formData, discount: discountAmount, total_supply: totalSupply, total_vat: totalVat, total_amount: finalAmount }) });
       if (res.ok) {
         const savedOrder = await res.json();
         const orderId = editId || savedOrder?.id;
@@ -493,6 +498,16 @@ export default function WritePage() {
                     <tr className="bg-blue-50 font-bold">
                       <td colSpan={nonCalcCount} className="border border-gray-200 px-2 py-2 text-right text-blue-700">총 액</td>
                       <td colSpan={calcCols.length} className="border border-gray-200 px-2 py-2 text-right text-blue-700 text-sm">{grandTotal.toLocaleString()}</td>
+                    </tr>
+                    <tr className="bg-red-50 font-bold">
+                      <td colSpan={nonCalcCount} className="border border-gray-200 px-2 py-2 text-right text-red-700">할 인</td>
+                      <td colSpan={calcCols.length} className="border border-gray-200 px-1 py-1 text-right">
+                        <input type="text" value={formData.discount} onChange={e => handleChange("discount", e.target.value.replace(/[^0-9]/g, ""))} placeholder="0" className="w-full px-2 py-1 border border-gray-300 rounded text-xs text-right" />
+                      </td>
+                    </tr>
+                    <tr className="bg-emerald-50 font-bold">
+                      <td colSpan={nonCalcCount} className="border border-gray-200 px-2 py-2 text-right text-emerald-700">할인 후 총액</td>
+                      <td colSpan={calcCols.length} className="border border-gray-200 px-2 py-2 text-right text-emerald-700 text-sm">{(grandTotal - (parseInt(formData.discount) || 0)).toLocaleString()}</td>
                     </tr>
                   </>
                 );
