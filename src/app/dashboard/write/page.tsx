@@ -453,7 +453,7 @@ export default function WritePage() {
                 <div className="flex-1 flex gap-2">
                   <select value={formData.cover_paper_type} onChange={e => { handleChange("cover_paper_type", e.target.value); handleChange("cover_paper_weight", ""); }} className="flex-1 px-2 py-1.5 border border-gray-300 rounded text-sm">
                     <option value="">선택</option>
-                    {["복사지","모조","스노우","아트지","아르떼","펄지","CCP"].map(o => <option key={o}>{o}</option>)}
+                    {["복사지","모조","스노우","아트지","아르떼"].map(o => <option key={o}>{o}</option>)}
                   </select>
                   <select value={formData.cover_paper_weight} onChange={e => handleChange("cover_paper_weight", e.target.value)} disabled={weights.length === 0} className="w-24 px-2 py-1.5 border border-gray-300 rounded text-sm disabled:bg-gray-100 disabled:text-gray-400">
                     <option value="">무게</option>
@@ -518,7 +518,7 @@ export default function WritePage() {
                 <div className="flex-1 flex gap-2">
                   <select value={formData.paper_type} onChange={e => { handleChange("paper_type", e.target.value); handleChange("paper_weight", ""); }} className="flex-1 px-2 py-1.5 border border-gray-300 rounded text-sm">
                     <option value="">선택</option>
-                    {["복사지","모조","스노우","아트지","아르떼","펄지","CCP"].map(o => <option key={o}>{o}</option>)}
+                    {["복사지","모조","스노우","아트지","아르떼"].map(o => <option key={o}>{o}</option>)}
                   </select>
                   <select value={formData.paper_weight} onChange={e => handleChange("paper_weight", e.target.value)} disabled={weights.length === 0} className="w-24 px-2 py-1.5 border border-gray-300 rounded text-sm disabled:bg-gray-100 disabled:text-gray-400">
                     <option value="">무게</option>
