@@ -40,6 +40,9 @@ export default function WritePage() {
   const [itemData, setItemData] = useState<Array<Record<string,string>>>(Array.from({length:5}, () => ({})));
   const [showDetail, setShowDetail] = useState(true);
   const [alwaysCollapse, setAlwaysCollapse] = useState(false);
+  const [attachments, setAttachments] = useState<Array<{id:string;file_name:string;file_size:number;dropbox_url:string}>>([]);
+  const [uploading, setUploading] = useState(false);
+  const [dragOver, setDragOver] = useState(false);
   useEffect(() => {
     const alwaysC = localStorage.getItem("writeAlwaysCollapseDetail") === "1";
     setAlwaysCollapse(alwaysC);
@@ -144,10 +147,43 @@ export default function WritePage() {
             setItemData(restored.length >= 5 ? restored : [...restored, ...Array.from({length: 5 - restored.length}, () => ({}))]);
             setItemRows(Math.max(restored.length, 5));
           }
+          if (data.attachments && Array.isArray(data.attachments)) {
+            setAttachments(data.attachments);
+          }
         }
       });
     }
   }, [editId]);
+
+  async function uploadFiles(files: FileList | File[]) {
+    if (!editId) {
+      alert("작업을 먼저 저장한 후 파일을 첨부해주세요.");
+      return;
+    }
+    setUploading(true);
+    try {
+      for (const file of Array.from(files)) {
+        const fd = new FormData();
+        fd.append("file", file);
+        fd.append("orderId", editId);
+        const res = await fetch("/api/upload", { method: "POST", body: fd });
+        const d = await res.json();
+        if (!res.ok) { alert("업로드 실패: " + (d.error || "")); continue; }
+      }
+      const r = await fetch(`/api/orders/${editId}?_=${Date.now()}`);
+      const data = await r.json();
+      setAttachments(data.attachments || []);
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  async function deleteAttachment(attId: string) {
+    if (!confirm("첨부파일을 삭제할까요?")) return;
+    const res = await fetch(`/api/upload/${attId}`, { method: "DELETE" });
+    if (res.ok) setAttachments(prev => prev.filter(a => a.id !== attId));
+    else alert("삭제 실패");
+  }
 
   function openClientModal() {
     fetch(`/api/clients?_=${Date.now()}`).then(r => r.json()).then(d => setClients(d || []));
@@ -309,11 +345,28 @@ export default function WritePage() {
             </td>
           </tr>
           <tr>
-            <td className="text-[#3b4b5b] font-bold text-xs py-2 px-2 border border-gray-200">첨부</td>
+            <td className="text-[#3b4b5b] font-bold text-xs py-2 px-2 border border-gray-200 align-top">첨부</td>
             <td colSpan={3} className="py-1.5 px-2 border border-gray-200">
-              <div className="border-2 border-dashed border-gray-300 rounded p-3 text-center text-gray-400 text-xs cursor-pointer hover:border-blue-500 transition">
-                + 파일을 드래그하여 놓거나 클릭하여 첨부 (최대 1GB, Dropbox)
-              </div>
+              <label
+                onDragOver={e => { e.preventDefault(); setDragOver(true); }}
+                onDragLeave={() => setDragOver(false)}
+                onDrop={e => { e.preventDefault(); setDragOver(false); if (e.dataTransfer.files.length > 0) uploadFiles(e.dataTransfer.files); }}
+                className={`block border-2 border-dashed rounded p-3 text-center text-xs cursor-pointer transition ${dragOver ? "border-blue-500 bg-blue-50" : "border-gray-300 text-gray-400 hover:border-blue-500"}`}
+              >
+                <input type="file" multiple className="hidden" onChange={e => { if (e.target.files) uploadFiles(e.target.files); e.target.value = ""; }} />
+                {uploading ? "업로드 중..." : editId ? "+ 파일을 드래그하여 놓거나 클릭하여 첨부 (Dropbox)" : "작업 저장 후 첨부 가능합니다"}
+              </label>
+              {attachments.length > 0 && (
+                <ul className="mt-2 space-y-1">
+                  {attachments.map(a => (
+                    <li key={a.id} className="flex items-center justify-between text-xs bg-gray-50 px-2 py-1 rounded">
+                      <a href={a.dropbox_url} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline truncate flex-1">{a.file_name}</a>
+                      <span className="text-gray-400 ml-2">{(a.file_size / 1024).toFixed(1)} KB</span>
+                      <button type="button" onClick={() => deleteAttachment(a.id)} className="ml-2 text-red-500 hover:text-red-700">삭제</button>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </td>
           </tr>
           <tr>
