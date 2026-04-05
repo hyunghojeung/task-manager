@@ -466,7 +466,7 @@ export default function WritePage() {
           {[
             ["인쇄면", "cover_print_side", ["양면","단면"]],
             ["색상", "cover_color", ["칼라","흑백"]],
-            ["코팅", "cover_coating", ["무광","유광"]],
+            ["코팅", "cover_coating", ["무광","유광","엠보","실크"]],
           ].map(([label, key, options]) => (
             <div key={key as string} className="flex items-center gap-2">
               <label className="w-16 text-xs font-bold text-[#3b4b5b] shrink-0">{label as string}</label>
