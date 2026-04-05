@@ -99,11 +99,11 @@ function EstimateContent() {
           </div>
           <table className="border-collapse text-xs">
             <tbody>
-              <tr><th className="border border-gray-800 bg-gray-50 px-2 py-1 w-[70px]">등록번호</th><td className="border border-gray-800 px-2 py-1" colSpan={3}>{company.business_number || "-"}</td></tr>
-              <tr><th className="border border-gray-800 bg-gray-50 px-2 py-1">상호(법인명)</th><td className="border border-gray-800 px-2 py-1">{company.company_name}</td><th className="border border-gray-800 bg-gray-50 px-2 py-1">성명</th><td className="border border-gray-800 px-2 py-1 relative"><span className="relative inline-block">{company.representative || "[직인]"}{company.seal_image && <img src={company.seal_image} alt="도장" className="absolute left-full top-1/2 -translate-y-1/2 ml-2 w-12 h-12 object-contain pointer-events-none" style={{opacity:0.85}} />}</span></td></tr>
-              <tr><th className="border border-gray-800 bg-gray-50 px-2 py-1">주소</th><td className="border border-gray-800 px-2 py-1" colSpan={3}>{company.address || "-"}</td></tr>
-              <tr><th className="border border-gray-800 bg-gray-50 px-2 py-1">업태</th><td className="border border-gray-800 px-2 py-1">{company.business_type || "-"}</td><th className="border border-gray-800 bg-gray-50 px-2 py-1">종목</th><td className="border border-gray-800 px-2 py-1">{company.business_category || "-"}</td></tr>
-              <tr><th className="border border-gray-800 bg-gray-50 px-2 py-1">TEL / E-mail</th><td className="border border-gray-800 px-2 py-1" colSpan={3}>{company.phone || "-"} / {company.email || "-"}</td></tr>
+              <tr><th className="border border-gray-800 bg-gray-50 px-2 py-1 w-[85px] whitespace-nowrap">등록번호</th><td className="border border-gray-800 px-2 py-1" colSpan={3}>{company.business_number || "-"}</td></tr>
+              <tr><th className="border border-gray-800 bg-gray-50 px-2 py-1 whitespace-nowrap">상호(법인명)</th><td className="border border-gray-800 px-2 py-1">{company.company_name}</td><th className="border border-gray-800 bg-gray-50 px-2 py-1 whitespace-nowrap">성명</th><td className="border border-gray-800 px-2 py-1 relative"><span className="relative inline-block">{company.representative || "[직인]"}{company.seal_image && <img src={company.seal_image} alt="도장" className="absolute left-full top-1/2 -translate-y-1/2 ml-2 w-12 h-12 object-contain pointer-events-none" style={{opacity:0.85}} />}</span></td></tr>
+              <tr><th className="border border-gray-800 bg-gray-50 px-2 py-1 whitespace-nowrap">주소</th><td className="border border-gray-800 px-2 py-1" colSpan={3}>{company.address || "-"}</td></tr>
+              <tr><th className="border border-gray-800 bg-gray-50 px-2 py-1 whitespace-nowrap">업태</th><td className="border border-gray-800 px-2 py-1">{company.business_type || "-"}</td><th className="border border-gray-800 bg-gray-50 px-2 py-1 whitespace-nowrap">종목</th><td className="border border-gray-800 px-2 py-1">{company.business_category || "-"}</td></tr>
+              <tr><th className="border border-gray-800 bg-gray-50 px-2 py-1 whitespace-nowrap">TEL / E-mail</th><td className="border border-gray-800 px-2 py-1" colSpan={3}>{company.phone || "-"} / {company.email || "-"}</td></tr>
             </tbody>
           </table>
         </div>
