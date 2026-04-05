@@ -357,7 +357,7 @@ export default function WritePage() {
           <div className="flex items-start gap-2 md:col-span-2">
             <label className="w-16 text-xs font-bold text-[#3b4b5b] shrink-0 pt-1">후가공</label>
             <div className="flex-1 flex flex-wrap gap-x-3 gap-y-1 px-2 py-1.5 border border-gray-300 rounded">
-              {["재단","1줄오시","2줄오시","3줄오시","기타오시","접지","금박","에폭시","스코딕스"].map(opt => {
+              {["하드커버","금박","에폭시","스코딕스"].map(opt => {
                 const selected = (formData.cover_finishing || "").split(",").filter(Boolean);
                 const checked = selected.includes(opt);
                 return (
