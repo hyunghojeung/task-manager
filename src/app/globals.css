@@ -24,3 +24,30 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+@media print {
+  /* 프린트 시 숨길 요소 */
+  .print\:hidden,
+  nav,
+  .no-print {
+    display: none !important;
+  }
+  /* sticky 해제 (프린트 시 중간에 반복 방지) */
+  .sticky {
+    position: static !important;
+  }
+  /* 첫 번째 div (대시보드 레이아웃의 헤더/네비바 컨테이너) */
+  body > div > div.min-h-screen > div.sticky,
+  body > div > div.min-h-screen > div > div.sticky {
+    display: none !important;
+  }
+  /* 프린트 시 배경 색상 유지 */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  /* 페이지 여백 */
+  @page {
+    margin: 10mm;
+  }
+}
