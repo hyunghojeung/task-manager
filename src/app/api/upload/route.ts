@@ -54,16 +54,27 @@ export async function POST(request: NextRequest) {
     const uploadPath = `${basePath}/${orderId || "general"}/${file.name}`;
     const fileBuffer = await file.arrayBuffer();
 
+    function escapeNonAscii(s: string): string {
+      let out = "";
+      for (let i = 0; i < s.length; i++) {
+        const code = s.charCodeAt(i);
+        if (code < 128) out += s[i];
+        else out += "\\u" + code.toString(16).padStart(4, "0");
+      }
+      return out;
+    }
+    const argHeader = escapeNonAscii(JSON.stringify({
+      path: uploadPath,
+      mode: "add",
+      autorename: true,
+      mute: false,
+    }));
+
     const uploadRes = await fetch("https://content.dropboxapi.com/2/files/upload", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${accessToken}`,
-        "Dropbox-API-Arg": JSON.stringify({
-          path: uploadPath,
-          mode: "add",
-          autorename: true,
-          mute: false,
-        }).replace(/[\u0080-\uffff]/g, c => "\\u" + ("0000" + c.charCodeAt(0).toString(16)).slice(-4)),
+        "Dropbox-API-Arg": argHeader,
         "Content-Type": "application/octet-stream",
       },
       body: fileBuffer,
