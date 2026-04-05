@@ -181,7 +181,7 @@ export default function BoardPage() {
               {/* 답글 입력 */}
               {replyTo === c.id && (
                 <div className="ml-8 mt-2 flex gap-2 items-start">
-                  <input type="text" placeholder="작성자" value={commentAuthor} onChange={e => setCommentAuthor(e.target.value)} className="px-2 py-1.5 border border-gray-300 rounded text-xs w-20" />
+                  <input type="text" value={commentAuthor} readOnly className="px-2 py-1.5 border border-gray-200 rounded text-xs w-20 bg-gray-50 text-gray-500" />
                   <input type="password" placeholder="비번" value={commentPassword} onChange={e => setCommentPassword(e.target.value)} className="px-2 py-1.5 border border-gray-300 rounded text-xs w-20" />
                   <input type="text" placeholder="답글 내용" value={commentContent} onChange={e => setCommentContent(e.target.value)} className="flex-1 px-2 py-1.5 border border-gray-300 rounded text-xs" />
                   <button onClick={handleComment} className="px-3 py-1.5 bg-blue-600 text-white rounded text-xs whitespace-nowrap">등록</button>
@@ -193,7 +193,7 @@ export default function BoardPage() {
           {/* 댓글 작성 */}
           <div className="mt-4 pt-3 border-t border-gray-200">
             <div className="flex gap-2 items-start">
-              <input type="text" placeholder="작성자" value={commentAuthor} onChange={e => setCommentAuthor(e.target.value)} className="px-2 py-1.5 border border-gray-300 rounded text-sm w-24" />
+              <input type="text" value={commentAuthor} readOnly className="px-2 py-1.5 border border-gray-200 rounded text-sm w-28 bg-gray-50 text-gray-500" />
               <input type="password" placeholder="비밀번호" value={commentPassword} onChange={e => setCommentPassword(e.target.value)} className="px-2 py-1.5 border border-gray-300 rounded text-sm w-24" />
               <input type="text" placeholder="댓글 내용을 입력하세요" value={commentContent} onChange={e => setCommentContent(e.target.value)} onKeyDown={e => { if (e.key === "Enter") { setReplyTo(null); handleComment(); }}} className="flex-1 px-2 py-1.5 border border-gray-300 rounded text-sm" />
               <button onClick={() => { setReplyTo(null); handleComment(); }} className="px-4 py-1.5 bg-indigo-600 text-white rounded text-sm whitespace-nowrap">댓글 등록</button>
