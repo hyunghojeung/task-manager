@@ -622,8 +622,19 @@ export default function WritePage() {
                 </tr>
               ))}
               {(() => {
-                // 합계 집계용 컬럼: 자동계산 타입 OR 이름에 공급/부가/합계/총액 포함 (타입 무관, auto 제외)
-                const sumCols = templateCols.filter(tc => tc.type !== "auto" && (tc.type === "자동계산" || tc.name.includes("공급") || tc.name.includes("부가") || tc.name.includes("합계") || tc.name.includes("총액")));
+                // 합계 집계용 컬럼: auto 제외하고 숫자/자동계산 타입 또는 이름 매칭
+                const sumCols = templateCols.filter(tc => {
+                  if (tc.type === "auto") return false;
+                  const name = (tc.name || "").trim();
+                  // 숫자 타입이지만 단가/수량/페이지 같은 단순 숫자는 제외
+                  if (tc.type === "자동계산") return true;
+                  if (name.includes("공급")) return true;
+                  if (name.includes("부가")) return true;
+                  if (name.includes("합계")) return true;
+                  if (name.includes("총액")) return true;
+                  if (name.includes("금액") && !name.includes("외화")) return true;
+                  return false;
+                });
                 const nonCalcCount = templateCols.length - sumCols.length;
                 const sums: Record<string, number> = {};
                 sumCols.forEach(c => { sums[c.name] = itemData.reduce((acc, row) => acc + (parseInt(row[c.name]) || 0), 0); });
