@@ -54,21 +54,17 @@ export async function POST(request: NextRequest) {
     const uploadPath = `${basePath}/${orderId || "general"}/${file.name}`;
     const fileBuffer = await file.arrayBuffer();
 
-    function escapeNonAscii(s: string): string {
-      let out = "";
-      for (let i = 0; i < s.length; i++) {
-        const code = s.charCodeAt(i);
-        if (code < 128) out += s[i];
-        else out += "\\u" + code.toString(16).padStart(4, "0");
+    // 한글 등 비ASCII 문자를 \uXXXX 형식으로 이스케이프 (HTTP 헤더는 ASCII만 허용)
+    const argJson = JSON.stringify({ path: uploadPath, mode: "add", autorename: true, mute: false });
+    let argHeader = "";
+    for (let i = 0; i < argJson.length; i++) {
+      const code = argJson.charCodeAt(i);
+      if (code < 128) {
+        argHeader += argJson[i];
+      } else {
+        argHeader += "\\u" + code.toString(16).padStart(4, "0");
       }
-      return out;
     }
-    const argHeader = escapeNonAscii(JSON.stringify({
-      path: uploadPath,
-      mode: "add",
-      autorename: true,
-      mute: false,
-    }));
 
     const uploadRes = await fetch("https://content.dropboxapi.com/2/files/upload", {
       method: "POST",
