@@ -46,10 +46,12 @@ export default function AdminPage() {
 }
 
 // ===== CSV 가져오기 =====
+interface FileInfo { name: string; rows: Record<string,string>[]; headers: string[] }
+
 function ImportTab() {
-  const [rows, setRows] = useState<Record<string,string>[]>([]);
-  const [headers, setHeaders] = useState<string[]>([]);
+  const [files, setFiles] = useState<FileInfo[]>([]);
   const [importing, setImporting] = useState(false);
+  const [progress, setProgress] = useState("");
   const [result, setResult] = useState<{success:number;skip:number;errors:string[]}|null>(null);
 
   function parseCsv(text: string): { headers: string[]; rows: Record<string,string>[] } {
@@ -82,66 +84,112 @@ function ImportTab() {
     return { headers: h, rows: rs };
   }
 
-  function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      const buffer = reader.result as ArrayBuffer;
-      // UTF-8 시도
-      let text = new TextDecoder("utf-8", { fatal: false }).decode(buffer);
-      // 한글이 깨졌는지 확인 (� 포함 여부)
-      if (text.includes("\uFFFD")) {
-        // EUC-KR로 재시도
-        try {
-          text = new TextDecoder("euc-kr").decode(buffer);
-        } catch {
-          try { text = new TextDecoder("cp949").decode(buffer); }
-          catch { /* fallback to utf-8 */ }
-        }
+  async function parseXlsx(file: File): Promise<{ headers: string[]; rows: Record<string,string>[] }> {
+    const XLSX = await import("xlsx");
+    const buffer = await file.arrayBuffer();
+    const wb = XLSX.read(buffer, { type: "array" });
+    const sheet = wb.Sheets[wb.SheetNames[0]];
+    const json = XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet, { defval: "", raw: false });
+    if (json.length === 0) return { headers: [], rows: [] };
+    const h = Object.keys(json[0]);
+    const rs = json.map(r => {
+      const o: Record<string,string> = {};
+      for (const k of h) o[k] = ((r[k] ?? "") + "").trim();
+      return o;
+    });
+    return { headers: h, rows: rs };
+  }
+
+  async function readCsv(file: File): Promise<{ headers: string[]; rows: Record<string,string>[] }> {
+    const buffer = await file.arrayBuffer();
+    let text = new TextDecoder("utf-8", { fatal: false }).decode(buffer);
+    if (text.includes("\uFFFD")) {
+      try { text = new TextDecoder("euc-kr").decode(buffer); }
+      catch { try { text = new TextDecoder("cp949").decode(buffer); } catch { /* ignore */ } }
+    }
+    return parseCsv(text);
+  }
+
+  async function handleFiles(e: React.ChangeEvent<HTMLInputElement>) {
+    const list = e.target.files;
+    if (!list || list.length === 0) return;
+    const parsed: FileInfo[] = [];
+    setProgress("파일 읽는 중...");
+    for (let i = 0; i < list.length; i++) {
+      const file = list[i];
+      setProgress(`파일 읽는 중 ${i+1}/${list.length}: ${file.name}`);
+      try {
+        const isXlsx = file.name.toLowerCase().endsWith(".xlsx") || file.name.toLowerCase().endsWith(".xls");
+        const { headers, rows } = isXlsx ? await parseXlsx(file) : await readCsv(file);
+        parsed.push({ name: file.name, headers, rows });
+      } catch (err) {
+        console.error("파일 읽기 실패:", file.name, err);
       }
-      const { headers, rows } = parseCsv(text);
-      setHeaders(headers);
-      setRows(rows);
-      setResult(null);
-    };
-    reader.readAsArrayBuffer(file);
+    }
+    setFiles(parsed);
+    setProgress("");
+    setResult(null);
   }
 
   async function handleImport() {
-    if (rows.length === 0) { alert("파일을 먼저 업로드해주세요."); return; }
-    if (!confirm(`${rows.length}개 행을 가져오시겠습니까?`)) return;
+    if (files.length === 0) { alert("파일을 먼저 업로드해주세요."); return; }
+    const totalRows = files.reduce((s, f) => s + f.rows.length, 0);
+    if (!confirm(`${files.length}개 파일, 총 ${totalRows}행을 가져오시겠습니까?`)) return;
     setImporting(true);
     setResult(null);
-    const res = await fetch("/api/admin/import-orders", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ rows }) });
-    const d = await res.json();
-    setResult(d);
+    const combined = { success: 0, skip: 0, errors: [] as string[] };
+    for (let i = 0; i < files.length; i++) {
+      const f = files[i];
+      setProgress(`가져오는 중 ${i+1}/${files.length}: ${f.name} (${f.rows.length}행)`);
+      try {
+        const res = await fetch("/api/admin/import-orders", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ rows: f.rows }) });
+        const d = await res.json();
+        combined.success += d.success || 0;
+        combined.skip += d.skip || 0;
+        if (d.errors && Array.isArray(d.errors)) combined.errors.push(...d.errors.map((e: string) => `[${f.name}] ${e}`));
+      } catch (err) {
+        combined.errors.push(`[${f.name}] ${err instanceof Error ? err.message : "전송 실패"}`);
+      }
+    }
+    setResult(combined);
+    setProgress("");
     setImporting(false);
   }
 
+  const totalRows = files.reduce((s, f) => s + f.rows.length, 0);
+
   return (
     <div className="bg-white rounded-lg shadow p-6">
-      <h3 className="text-base font-bold text-gray-800 mb-4 pb-2 border-b-2 border-gray-200">이카운트 CSV 가져오기</h3>
+      <h3 className="text-base font-bold text-gray-800 mb-4 pb-2 border-b-2 border-gray-200">이카운트 CSV/엑셀 가져오기</h3>
       <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded text-xs text-blue-800">
         <p className="font-semibold mb-1">필수 컬럼:</p>
         <p>작성일, 순번, 주문자, 연락처, 거래처명, 제품형태, 제목, 거래유형, 세부사양/후가공, 품목명, 규격, 수량, 페이지수, 단가, 공급가액, 부가세, 합계금액</p>
-        <p className="mt-2">※ 같은 작성일+순번은 하나의 주문으로 그룹됩니다. 같은 주문번호가 이미 있으면 건너뜁니다.</p>
+        <p className="mt-2">※ CSV 또는 엑셀(xlsx, xls) 파일 지원. 여러 파일 동시 선택 가능 (Ctrl+클릭)</p>
+        <p>※ 같은 작성일+순번은 하나의 주문으로 그룹됩니다. 같은 주문번호가 이미 있으면 건너뜁니다.</p>
       </div>
       <div className="mb-4">
-        <input type="file" accept=".csv" onChange={handleFile} className="text-sm" />
+        <input type="file" accept=".csv,.xlsx,.xls" multiple onChange={handleFiles} className="text-sm" />
       </div>
 
-      {rows.length > 0 && (
+      {progress && (
+        <div className="mb-3 p-2 bg-gray-100 rounded text-xs text-gray-700">{progress}</div>
+      )}
+
+      {files.length > 0 && (
         <div className="mb-4">
-          <p className="text-sm font-semibold text-gray-700 mb-2">미리보기: 총 {rows.length}행</p>
-          <div className="overflow-x-auto border border-gray-300 rounded">
-            <table className="text-xs">
-              <thead className="bg-gray-100">
-                <tr>{headers.map(h => <th key={h} className="border border-gray-200 px-2 py-1 whitespace-nowrap">{h}</th>)}</tr>
-              </thead>
+          <p className="text-sm font-semibold text-gray-700 mb-2">선택된 파일: {files.length}개 (총 {totalRows}행)</p>
+          <div className="border border-gray-300 rounded max-h-60 overflow-y-auto">
+            <table className="w-full text-xs">
+              <thead className="bg-gray-100 sticky top-0"><tr>
+                <th className="border border-gray-200 px-2 py-1 text-left">파일명</th>
+                <th className="border border-gray-200 px-2 py-1 w-20 text-center">행 수</th>
+              </tr></thead>
               <tbody>
-                {rows.slice(0, 3).map((r, i) => (
-                  <tr key={i}>{headers.map(h => <td key={h} className="border border-gray-200 px-2 py-1 whitespace-nowrap max-w-[200px] truncate">{r[h]}</td>)}</tr>
+                {files.map((f, i) => (
+                  <tr key={i}>
+                    <td className="border border-gray-200 px-2 py-1 truncate max-w-md">{f.name}</td>
+                    <td className="border border-gray-200 px-2 py-1 text-center">{f.rows.length}</td>
+                  </tr>
                 ))}
               </tbody>
             </table>
@@ -149,7 +197,7 @@ function ImportTab() {
         </div>
       )}
 
-      {rows.length > 0 && (
+      {files.length > 0 && (
         <button onClick={handleImport} disabled={importing} className="px-6 py-2 bg-blue-600 text-white rounded text-sm disabled:opacity-50">
           {importing ? "가져오는 중..." : "가져오기 실행"}
         </button>
