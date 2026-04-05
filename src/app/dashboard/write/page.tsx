@@ -622,8 +622,8 @@ export default function WritePage() {
                 </tr>
               ))}
               {(() => {
-                // 합계 집계용 컬럼: 자동계산 OR 공급가/부가세/합계 이름 포함 숫자 컬럼
-                const sumCols = templateCols.filter(tc => tc.type === "자동계산" || (tc.type === "숫자" && (tc.name.includes("공급") || tc.name.includes("부가") || tc.name.includes("합계") || tc.name.includes("총액"))));
+                // 합계 집계용 컬럼: 자동계산 타입 OR 이름에 공급/부가/합계/총액 포함 (타입 무관, auto 제외)
+                const sumCols = templateCols.filter(tc => tc.type !== "auto" && (tc.type === "자동계산" || tc.name.includes("공급") || tc.name.includes("부가") || tc.name.includes("합계") || tc.name.includes("총액")));
                 const nonCalcCount = templateCols.length - sumCols.length;
                 const sums: Record<string, number> = {};
                 sumCols.forEach(c => { sums[c.name] = itemData.reduce((acc, row) => acc + (parseInt(row[c.name]) || 0), 0); });
@@ -636,6 +636,8 @@ export default function WritePage() {
                   const vatCol = templateCols.find(c => c.name.includes("부가"));
                   grandTotal = (supplyCol ? sums[supplyCol.name] || 0 : 0) + (vatCol ? sums[vatCol.name] || 0 : 0);
                 }
+                const discountAmt = parseInt(formData.discount) || 0;
+                const finalAmount = discountAmt > 0 ? grandTotal - discountAmt : 0;
                 const calcCols = sumCols;
                 return (
                   <>
@@ -658,7 +660,7 @@ export default function WritePage() {
                     </tr>
                     <tr className="bg-emerald-50 font-bold">
                       <td colSpan={nonCalcCount} className="border border-gray-200 px-2 py-2 text-right text-emerald-700">할인 후 총액</td>
-                      <td colSpan={calcCols.length} className="border border-gray-200 px-2 py-2 text-right text-emerald-700 text-sm">{(grandTotal - (parseInt(formData.discount) || 0)).toLocaleString()}</td>
+                      <td colSpan={calcCols.length} className="border border-gray-200 px-2 py-2 text-right text-emerald-700 text-sm">{finalAmount.toLocaleString()}</td>
                     </tr>
                   </>
                 );
