@@ -21,7 +21,7 @@ export default function WritePage() {
     orderer: "", contact: "", email: "", client_name: "",
     product_type: "", title: "", category_id: "",
     trade_type: "vat", tax_invoice: "", payment: "",
-    paper_type: "", color: "", print_side: "", copies: "",
+    paper_type: "", paper_weight: "", color: "", print_side: "", copies: "",
     binding: "", paper_size: "", coating: "", finishing: "",
     cover_paper_size: "", cover_orientation: "", cover_paper_type: "", cover_paper_weight: "",
     cover_print_side: "", cover_color: "",
@@ -129,7 +129,7 @@ export default function WritePage() {
             client_name: data.client_name || "", product_type: data.product_type || "",
             title: data.title || "", category_id: data.category_id || "",
             trade_type: data.trade_type || "vat", tax_invoice: data.tax_invoice || "",
-            payment: data.payment || "", paper_type: data.paper_type || "",
+            payment: data.payment || "", paper_type: data.paper_type || "", paper_weight: data.paper_weight || "",
             color: data.color || "", print_side: data.print_side || "",
             copies: data.copies || "", binding: data.binding || "",
             paper_size: data.paper_size || "", coating: data.coating || "",
@@ -503,8 +503,32 @@ export default function WritePage() {
         <hr className="my-4 border-t-2 border-gray-300" />
         <div className="font-bold text-sm text-emerald-700 mb-3 px-3 py-2 border-l-4 border-emerald-700">📗 작업내용2</div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2 text-sm">
+          <div className="flex items-center gap-2">
+            <label className="w-16 text-xs font-bold text-[#3b4b5b] shrink-0">용지</label>
+            {(() => {
+              const paperWeights: Record<string, number[]> = {
+                "복사지": [80, 100],
+                "모조": [80, 100, 120, 150, 180, 230],
+                "스노우": [100, 120, 150, 180, 200, 250, 300],
+                "아트지": [100, 120, 150, 180, 200, 250, 300],
+                "아르떼": [105, 130, 160, 190, 230],
+              };
+              const weights = paperWeights[formData.paper_type] || [];
+              return (
+                <div className="flex-1 flex gap-2">
+                  <select value={formData.paper_type} onChange={e => { handleChange("paper_type", e.target.value); handleChange("paper_weight", ""); }} className="flex-1 px-2 py-1.5 border border-gray-300 rounded text-sm">
+                    <option value="">선택</option>
+                    {["복사지","모조","스노우","아트지","아르떼","펄지","CCP"].map(o => <option key={o}>{o}</option>)}
+                  </select>
+                  <select value={formData.paper_weight} onChange={e => handleChange("paper_weight", e.target.value)} disabled={weights.length === 0} className="w-24 px-2 py-1.5 border border-gray-300 rounded text-sm disabled:bg-gray-100 disabled:text-gray-400">
+                    <option value="">무게</option>
+                    {weights.map(w => <option key={w} value={String(w)}>{w}g</option>)}
+                  </select>
+                </div>
+              );
+            })()}
+          </div>
           {[
-            ["용지", "paper_type", ["모조","스노우","아트지","아르떼","펄지","CCP"]],
             ["색상", "color", ["칼라","흑백"]],
             ["인쇄면", "print_side", ["양면","단면"]],
             ["제본방식", "binding", ["무선제본","중철","스프링","인쇄만"]],
