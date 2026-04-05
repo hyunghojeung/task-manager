@@ -17,6 +17,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [fontSize, setFontSize] = useState("text-base");
   const [year, setYear] = useState("전체");
+  const [month, setMonth] = useState("전체");
 
   useEffect(() => {
     const saved = typeof window !== "undefined" ? localStorage.getItem("listFontSize") : null;
@@ -33,13 +34,20 @@ export default function DashboardPage() {
     const params = new URLSearchParams({ page: String(page), limit: "40" });
     if (keyword) { params.set("keyword", keyword); params.set("searchField", searchField); }
     if (year !== "전체") {
-      params.set("startDate", `${year}-01-01`);
-      params.set("endDate", `${year}-12-31`);
+      if (month !== "전체") {
+        const m = month.padStart(2, "0");
+        const lastDay = new Date(parseInt(year), parseInt(month), 0).getDate();
+        params.set("startDate", `${year}-${m}-01`);
+        params.set("endDate", `${year}-${m}-${String(lastDay).padStart(2, "0")}`);
+      } else {
+        params.set("startDate", `${year}-01-01`);
+        params.set("endDate", `${year}-12-31`);
+      }
     }
     const res = await fetch(`/api/orders?${params}`);
     if (res.ok) { const data = await res.json(); setOrders(data.data || []); setTotal(data.total || 0); }
     setLoading(false);
-  }, [page, keyword, searchField, year]);
+  }, [page, keyword, searchField, year, month]);
 
   useEffect(() => { fetchOrders(); }, [fetchOrders]);
 
@@ -64,10 +72,16 @@ export default function DashboardPage() {
             <option value="text-base">글자: 크게</option>
             <option value="text-lg">글자: 아주 크게</option>
           </select>
-          <select value={year} onChange={e => { setYear(e.target.value); setPage(1); }} className="px-2 py-1.5 border border-gray-300 rounded text-xs" title="연도">
+          <select value={year} onChange={e => { setYear(e.target.value); setPage(1); if (e.target.value === "전체") setMonth("전체"); }} className="px-2 py-1.5 border border-gray-300 rounded text-xs" title="연도">
             <option value="전체">연도: 전체</option>
             {Array.from({length: 7}, (_, i) => 2026 - i).map(y => (
               <option key={y} value={String(y)}>{y}년</option>
+            ))}
+          </select>
+          <select value={month} onChange={e => { setMonth(e.target.value); setPage(1); }} disabled={year === "전체"} className="px-2 py-1.5 border border-gray-300 rounded text-xs disabled:bg-gray-100 disabled:text-gray-400" title="월">
+            <option value="전체">월: 전체</option>
+            {Array.from({length: 12}, (_, i) => i + 1).map(m => (
+              <option key={m} value={String(m)}>{m}월</option>
             ))}
           </select>
           <select value={searchField} onChange={e => setSearchField(e.target.value)} className="px-2 py-1.5 border border-gray-300 rounded text-xs">
