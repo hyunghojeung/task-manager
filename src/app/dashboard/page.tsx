@@ -50,40 +50,29 @@ export default function DashboardPage() {
         </div>
       </div>
       <div className="overflow-x-auto">
-        <table className="w-full border-collapse border border-gray-300 text-xs table-fixed">
+        <table className="w-full border-collapse border border-gray-300 text-xs">
           <thead><tr className="bg-[#3b4b5b] text-white">
-            <th className="border border-[#2d3a47] px-1 py-1.5 whitespace-nowrap w-[88px]">순번</th>
-            <th className="border border-[#2d3a47] px-1 py-1.5 whitespace-nowrap w-[110px]">거래처</th>
-            <th className="border border-[#2d3a47] px-1 py-1.5 whitespace-nowrap w-[80px]">주문자</th>
-            <th className="border border-[#2d3a47] px-1 py-1.5 whitespace-nowrap w-[100px]">연락처</th>
-            <th className="border border-[#2d3a47] px-1 py-1.5 whitespace-nowrap">제목</th>
-            <th className="border border-[#2d3a47] px-1 py-1.5 whitespace-nowrap w-[80px]">금액</th>
-            <th className="border border-[#2d3a47] px-1 py-1.5 whitespace-nowrap w-[70px]">제품형태</th>
-            <th className="border border-[#2d3a47] px-1 py-1.5 whitespace-nowrap w-[70px]">결제</th>
-            <th className="border border-[#2d3a47] px-1 py-1.5 whitespace-nowrap w-[55px]">진행상태</th>
-            <th className="border border-[#2d3a47] px-1 py-1.5 whitespace-nowrap w-[55px]">명세서</th>
-            <th className="border border-[#2d3a47] px-1 py-1.5 whitespace-nowrap w-[55px]">견적서</th>
-            <th className="border border-[#2d3a47] px-1 py-1.5 whitespace-nowrap w-[90px]">작성자</th>
+            <th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap">순번</th><th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap">거래처</th><th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap">주문자</th><th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap">연락처</th><th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap">제목</th><th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap">금액</th><th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap">제품형태</th><th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap">결제</th><th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap">진행상태</th><th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap">거래명세서</th><th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap">견적서</th><th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap">작성자</th>
           </tr></thead>
           <tbody>
             {loading ? <tr><td colSpan={12} className="text-center py-8 text-gray-400">로딩중...</td></tr> :
             orders.length === 0 ? <tr><td colSpan={12} className="text-center py-8 text-gray-400">등록된 작업이 없습니다. 작업등록 버튼을 눌러 새 작업을 등록하세요.</td></tr> :
             orders.map((o, i) => (
               <tr key={o.id} className={`${i % 2 === 1 ? "bg-gray-50" : ""} hover:bg-blue-50`}>
-                <td className="border border-gray-200 px-1 py-[5px] text-center whitespace-nowrap truncate">{o.order_no}</td>
-                <td className="border border-gray-200 px-1 py-[5px] text-left truncate"><a href={`/dashboard/write?id=${o.id}`} className="hover:text-blue-600 hover:underline">{o.client_name}</a></td>
-                <td className="border border-gray-200 px-1 py-[5px] text-left truncate">{o.orderer}</td>
-                <td className="border border-gray-200 px-1 py-[5px] text-left truncate">{o.contact}</td>
-                <td className="border border-gray-200 px-1 py-[5px] text-left truncate"><a href={`/dashboard/write?id=${o.id}`} className="hover:text-blue-600 hover:underline">{o.title}</a></td>
-                <td className="border border-gray-200 px-1 py-[5px] text-right">{(o.total_amount||0).toLocaleString()}</td>
-                <td className="border border-gray-200 px-1 py-[5px] text-center truncate">{o.product_type}</td>
-                <td className="border border-gray-200 px-1 py-[5px] text-center truncate">{o.payment}</td>
-                <td className="border border-gray-200 px-1 py-[5px] text-center">
+                <td className="border border-gray-200 px-1.5 py-[7px] text-center whitespace-nowrap">{o.order_no}</td>
+                <td className="border border-gray-200 px-1.5 py-[7px] text-left"><a href={`/dashboard/write?id=${o.id}`} className="hover:text-blue-600 hover:underline">{o.client_name}</a></td>
+                <td className="border border-gray-200 px-1.5 py-[7px] text-left">{o.orderer}</td>
+                <td className="border border-gray-200 px-1.5 py-[7px] text-left">{o.contact}</td>
+                <td className="border border-gray-200 px-1.5 py-[7px] text-left"><a href={`/dashboard/write?id=${o.id}`} className="hover:text-blue-600 hover:underline">{o.title}</a></td>
+                <td className="border border-gray-200 px-1.5 py-[7px] text-right">{(o.total_amount||0).toLocaleString()}</td>
+                <td className="border border-gray-200 px-1.5 py-[7px] text-center">{o.product_type}</td>
+                <td className="border border-gray-200 px-1.5 py-[7px] text-center">{o.payment}</td>
+                <td className="border border-gray-200 px-1.5 py-[7px] text-center">
                   <button onClick={()=>toggleStatus(o.id,o.status)} className={`text-xs font-semibold cursor-pointer ${o.status==="progress"?"text-blue-600":"text-red-600"}`}>{o.status==="progress"?"진행중":"완료"}</button>
                 </td>
-                <td className="border border-gray-200 px-1 py-[5px] text-center"><a href={`/print/statement?id=${o.id}`} target="_blank" className="px-1.5 py-0.5 border border-gray-300 rounded text-xs hover:text-blue-600">명세서</a></td>
-                <td className="border border-gray-200 px-1 py-[5px] text-center"><a href={`/print/estimate?id=${o.id}`} target="_blank" className="px-1.5 py-0.5 border border-gray-300 rounded text-xs hover:text-red-600">견적서</a></td>
-                <td className="border border-gray-200 px-1 py-[5px] text-center text-xs truncate">{o.author || "-"}</td>
+                <td className="border border-gray-200 px-1.5 py-[7px] text-center"><a href={`/print/statement?id=${o.id}`} target="_blank" className="px-2 py-0.5 border border-gray-300 rounded text-xs hover:text-blue-600">명세서</a></td>
+                <td className="border border-gray-200 px-1.5 py-[7px] text-center"><a href={`/print/estimate?id=${o.id}`} target="_blank" className="px-2 py-0.5 border border-gray-300 rounded text-xs hover:text-red-600">견적서</a></td>
+                <td className="border border-gray-200 px-1.5 py-[7px] text-center text-xs">{o.author || "-"}</td>
               </tr>
             ))}
           </tbody>
