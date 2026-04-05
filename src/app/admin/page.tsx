@@ -375,7 +375,13 @@ function CompanyTab() {
   const [company, setCompany] = useState<Record<string,string>>({});
   const [saving, setSaving] = useState(false);
   useEffect(() => { fetch("/api/company").then(r=>r.json()).then(setCompany); }, []);
-  async function save() { setSaving(true); await fetch("/api/company",{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify(company)}); setSaving(false); alert("저장되었습니다."); }
+  async function save() {
+    setSaving(true);
+    const res = await fetch("/api/company",{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify(company)});
+    setSaving(false);
+    if (res.ok) alert("저장되었습니다.");
+    else { const d = await res.json().catch(() => ({})); alert("저장 실패: " + (d.error || res.status)); }
+  }
   function set(k:string,v:string) { setCompany(p=>({...p,[k]:v})); }
 
   const fields = [
