@@ -37,6 +37,13 @@ export default async function DashboardLayout({
     .limit(1)
     .single();
 
+  // 시스템 설정 조회
+  const { data: settingsData } = await supabase
+    .from("system_settings")
+    .select("system_name")
+    .eq("id", 1)
+    .maybeSingle();
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Header
@@ -47,6 +54,7 @@ export default async function DashboardLayout({
         bannerText={bannerData?.content}
         bannerLink={bannerData?.link_url}
         bannerButton={bannerData?.button_text}
+        systemName={settingsData?.system_name}
       />
       <NoticeBar notices={notices || []} />
       <NavBar />

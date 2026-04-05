@@ -10,9 +10,10 @@ interface HeaderProps {
   bannerText?: string;
   bannerLink?: string;
   bannerButton?: string;
+  systemName?: string;
 }
 
-export default function Header({ companyName, userName, userId, userRole, bannerText, bannerLink, bannerButton }: HeaderProps) {
+export default function Header({ companyName, userName, userId, userRole, bannerText, bannerLink, bannerButton, systemName }: HeaderProps) {
   const router = useRouter();
 
   async function handleLogout() {
@@ -26,7 +27,7 @@ export default function Header({ companyName, userName, userId, userRole, banner
       <div className="bg-slate-800 text-white px-4 md:px-6 py-3 flex justify-between items-center">
         <h1 className="text-base md:text-lg font-bold flex items-center gap-2">
           <a href="/dashboard" className="text-white no-underline">Blackcopy.kr</a>
-          <span className="text-xs md:text-sm font-normal text-slate-400">인쇄전용 ERP Bcount</span>
+          <span className="text-xs md:text-sm font-normal text-slate-400">{systemName || "인쇄전용 ERP Bcount"}</span>
           {companyName && (
             <span className="text-xs md:text-sm text-blue-400 ml-2">{companyName}</span>
           )}
@@ -39,6 +40,7 @@ export default function Header({ companyName, userName, userId, userRole, banner
           <button onClick={handleLogout} className="text-slate-400 hover:text-white transition">
             로그아웃
           </button>
+          <a href="/dashboard/board" className="px-2 py-0.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-[10px] md:text-xs whitespace-nowrap transition">프로그램 문의</a>
         </div>
       </div>
 
