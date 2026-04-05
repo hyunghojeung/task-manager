@@ -284,7 +284,7 @@ export default function WritePage() {
             </td>
           </tr>
           <tr>
-            <td className="font-semibold text-gray-600 text-xs py-1 align-top pt-2">작업내용1<br/>(메모)</td>
+            <td className="font-semibold text-gray-600 text-xs py-1 align-top pt-2">작업내용1<br/>(작업 및 memo)</td>
             <td colSpan={3} className="py-1">
               <textarea placeholder="세부사양 및 후가공 내용" value={formData.detail_spec} onChange={e => handleChange("detail_spec", e.target.value)} className="w-full px-2 py-2 border border-gray-300 rounded text-sm min-h-[120px] resize-y" />
             </td>
@@ -292,9 +292,10 @@ export default function WritePage() {
         </tbody></table>
       </div>
 
-      {/* 표지 */}
+      {/* 세부내역 */}
       <div className="bg-white border border-gray-300 rounded p-4 mb-3">
-        <p className="font-bold text-sm text-gray-800 mb-3 pb-2 border-b border-gray-200">표지</p>
+        <p className="font-bold text-sm text-gray-800 mb-3 pb-2 border-b border-gray-200">세부내역</p>
+        <p className="font-semibold text-xs text-gray-600 mb-2">표지</p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2 text-sm">
           <div className="flex items-center gap-2">
             <label className="w-16 text-xs font-semibold text-gray-600 shrink-0">사이즈</label>
@@ -356,11 +357,9 @@ export default function WritePage() {
             </div>
           </div>
         </div>
-      </div>
 
-      {/* 작업내용2 */}
-      <div className="bg-white border border-gray-300 rounded p-4 mb-3">
-        <p className="font-bold text-sm text-gray-800 mb-3 pb-2 border-b border-gray-200">작업내용2</p>
+        <hr className="my-4 border-t border-gray-300" />
+        <p className="font-semibold text-xs text-gray-600 mb-2">작업내용2</p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2 text-sm">
           {[
             ["용지", "paper_type", ["모조","스노우","아트지","아르떼","펄지","CCP"]],
