@@ -4,7 +4,7 @@ import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 
 interface OrderItemRow { sort_order: number; data: Record<string, string> }
-interface OrderData { id: string; order_no: string; client_name: string; title: string; total_amount: number; total_supply: number; total_vat: number; created_at: string; order_items?: OrderItemRow[] }
+interface OrderData { id: string; order_no: string; client_name: string; title: string; total_amount: number; total_supply: number; total_vat: number; discount: number; created_at: string; order_items?: OrderItemRow[] }
 interface CompanyData { company_name: string; business_number: string; representative: string; address: string; business_type: string; business_category: string; phone: string; email: string }
 
 function fmt(n: number) { return (n || 0).toLocaleString(); }
@@ -77,7 +77,8 @@ function EstimateContent() {
 
   const supplyTotal = order.total_supply || 0;
   const vatTotal = order.total_vat || 0;
-  const grandTotal = order.total_amount || (supplyTotal + vatTotal);
+  const discount = order.discount || 0;
+  const grandTotal = (supplyTotal + vatTotal) - discount;
   const orderDate = new Date(order.created_at);
   const dateStr = `${orderDate.getFullYear()}년 ${String(orderDate.getMonth() + 1).padStart(2, "0")}월 ${String(orderDate.getDate()).padStart(2, "0")}일`;
   const emptyRows = Math.max(8 - items.length, 0);
@@ -145,6 +146,10 @@ function EstimateContent() {
                 <td className="border border-gray-800 px-3 py-2 text-right">{fmt(supplyTotal)}</td>
                 <th className="border border-gray-800 bg-gray-100 px-3 py-2">부가세 합계</th>
                 <td className="border border-gray-800 px-3 py-2 text-right">{fmt(vatTotal)}</td>
+                {discount > 0 && <>
+                  <th className="border border-gray-800 bg-gray-100 px-3 py-2 text-red-700">할인</th>
+                  <td className="border border-gray-800 px-3 py-2 text-right text-red-700">-{fmt(discount)}</td>
+                </>}
                 <th className="border border-gray-800 bg-gray-100 px-3 py-2">총 합계</th>
                 <td className="border border-gray-800 px-3 py-2 text-right font-bold">{fmt(grandTotal)}</td>
               </tr>
