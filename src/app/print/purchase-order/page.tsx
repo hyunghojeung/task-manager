@@ -5,7 +5,7 @@ import { useState, useEffect, Suspense } from "react";
 
 interface POItem { product_name: string; spec: string; paper_grain: string; cut_size: string; quantity: string; received: string }
 interface POData { po_no: string; po_date: string; supplier_name: string; orderer: string; contact: string; request_note: string; purchase_order_items?: POItem[] }
-interface CompanyData { company_name: string; business_number: string; representative: string; address: string; phone: string; fax: string; email: string }
+interface CompanyData { company_name: string; business_number: string; representative: string; address: string; phone: string; fax: string; email: string; seal_image?: string }
 
 function PrintContent() {
   const searchParams = useSearchParams();
@@ -44,7 +44,7 @@ function PrintContent() {
               <tr><td colSpan={2} className="border border-gray-800 bg-gray-50 px-2 py-1 text-center font-bold">공급자정보</td></tr>
               <tr><th className="border border-gray-800 bg-gray-50 px-2 py-1 w-[100px]">사업자등록번호</th><td className="border border-gray-800 px-2 py-1">{company.business_number || "-"}</td></tr>
               <tr><th className="border border-gray-800 bg-gray-50 px-2 py-1">상 호</th><td className="border border-gray-800 px-2 py-1">{company.company_name}</td></tr>
-              <tr><th className="border border-gray-800 bg-gray-50 px-2 py-1">대표자</th><td className="border border-gray-800 px-2 py-1">{company.representative || "-"}</td></tr>
+              <tr><th className="border border-gray-800 bg-gray-50 px-2 py-1">대표자</th><td className="border border-gray-800 px-2 py-1 relative">{company.representative || "-"}{company.seal_image && <img src={company.seal_image} alt="도장" className="absolute -right-2 -top-2 w-12 h-12 object-contain pointer-events-none" style={{opacity:0.85}} />}</td></tr>
               <tr><th className="border border-gray-800 bg-gray-50 px-2 py-1">TEL / FAX</th><td className="border border-gray-800 px-2 py-1">{company.phone || "-"} / {company.fax || "-"}</td></tr>
               <tr><th className="border border-gray-800 bg-gray-50 px-2 py-1">주 소</th><td className="border border-gray-800 px-2 py-1">{company.address || "-"}</td></tr>
             </tbody>

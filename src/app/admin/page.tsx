@@ -392,6 +392,26 @@ function CompanyTab() {
               <input type={k==="password"||k==="mail_password"?"password":"text"} value={company[k]||""} onChange={e=>set(k,e.target.value)} className="flex-1 px-2 py-1.5 border border-gray-300 rounded text-sm" />
             </div>
           ))}
+          <div className="flex items-start gap-2 md:col-span-2">
+            <label className="w-20 text-xs font-semibold text-gray-600 shrink-0 pt-2">회사 도장</label>
+            <div className="flex-1">
+              <input type="file" accept="image/*" onChange={e => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+                if (file.size > 500 * 1024) { alert("500KB 이하 이미지만 첨부 가능합니다."); return; }
+                const reader = new FileReader();
+                reader.onload = () => set("seal_image", reader.result as string);
+                reader.readAsDataURL(file);
+              }} className="text-xs" />
+              <p className="text-[10px] text-gray-400 mt-1">PNG 투명 배경 권장, 500KB 이하 (DB companies.seal_image 컬럼에 저장)</p>
+              {company.seal_image && (
+                <div className="mt-2 flex items-center gap-2">
+                  <img src={company.seal_image} alt="도장" className="w-20 h-20 object-contain border border-gray-200 rounded bg-white" />
+                  <button type="button" onClick={() => set("seal_image", "")} className="px-2 py-1 text-xs text-red-500 border border-red-300 rounded hover:bg-red-50">삭제</button>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </div>
       <div className="bg-white rounded-lg shadow p-6 mb-5">
