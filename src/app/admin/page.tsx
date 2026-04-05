@@ -87,13 +87,25 @@ function ImportTab() {
     if (!file) return;
     const reader = new FileReader();
     reader.onload = () => {
-      const text = reader.result as string;
+      const buffer = reader.result as ArrayBuffer;
+      // UTF-8 시도
+      let text = new TextDecoder("utf-8", { fatal: false }).decode(buffer);
+      // 한글이 깨졌는지 확인 (� 포함 여부)
+      if (text.includes("\uFFFD")) {
+        // EUC-KR로 재시도
+        try {
+          text = new TextDecoder("euc-kr").decode(buffer);
+        } catch {
+          try { text = new TextDecoder("cp949").decode(buffer); }
+          catch { /* fallback to utf-8 */ }
+        }
+      }
       const { headers, rows } = parseCsv(text);
       setHeaders(headers);
       setRows(rows);
       setResult(null);
     };
-    reader.readAsText(file, "UTF-8");
+    reader.readAsArrayBuffer(file);
   }
 
   async function handleImport() {
