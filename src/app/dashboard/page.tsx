@@ -101,10 +101,10 @@ export default function DashboardPage() {
             orders.length === 0 ? <tr><td colSpan={11} className="text-center py-8 text-gray-400">등록된 작업이 없습니다. 작업등록 버튼을 눌러 새 작업을 등록하세요.</td></tr> :
             orders.map((o, i) => (
               <tr key={o.id} className={`${i % 2 === 1 ? "bg-gray-50" : ""} hover:bg-blue-50`}>
-                <td className="border border-gray-200 px-1.5 py-[7px] text-center whitespace-nowrap">{o.order_no}</td>
+                <td className="border border-gray-200 px-1.5 py-[7px] text-center whitespace-nowrap"><a href={`/dashboard/write?id=${o.id}`} className="hover:text-blue-600 hover:underline">{o.order_no}</a></td>
                 <td className="border border-gray-200 px-1.5 py-[7px] text-left"><a href={`/dashboard/write?id=${o.id}`} className="hover:text-blue-600 hover:underline">{o.client_name}</a></td>
-                <td className="border border-gray-200 px-1.5 py-[7px] text-left">{o.orderer}</td>
-                <td className="border border-gray-200 px-1.5 py-[7px] text-left">{o.contact}</td>
+                <td className="border border-gray-200 px-1.5 py-[7px] text-left"><a href={`/dashboard/write?id=${o.id}`} className="hover:text-blue-600 hover:underline">{o.orderer}</a></td>
+                <td className="border border-gray-200 px-1.5 py-[7px] text-left"><a href={`/dashboard/write?id=${o.id}`} className="hover:text-blue-600 hover:underline">{o.contact}</a></td>
                 <td className="border border-gray-200 px-1.5 py-[7px] text-left max-w-[400px]"><a href={`/dashboard/write?id=${o.id}`} title={o.title} className="hover:text-blue-600 hover:underline block truncate">{o.title}</a></td>
                 <td className="border border-gray-200 px-1.5 py-[7px] text-right">{(o.total_amount||0).toLocaleString()}</td>
                 <td className="border border-gray-200 px-1.5 py-[7px] text-center">{o.product_type}</td>
