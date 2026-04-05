@@ -14,7 +14,7 @@ async function getDropboxAccessToken(refreshToken: string, appKey: string, appSe
     }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.error_description || "Dropbox 토큰 갱신 실패");
+  if (!res.ok) throw new Error("Dropbox 토큰 갱신 실패: " + (data.error_description || data.error || JSON.stringify(data)));
   return data.access_token;
 }
 
