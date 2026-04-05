@@ -264,7 +264,12 @@ function CategoryTab() {
   const load = useCallback(async () => { const r = await fetch("/api/categories"); if(r.ok) setItems(await r.json()); }, []);
   useEffect(() => { load(); }, [load]);
   async function create() { if(!name) return; await fetch("/api/categories",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({name})}); setName(""); load(); }
-  async function remove(id:string) { if(!confirm("정말 삭제할까요?")) return; await fetch(`/api/categories/${id}`,{method:"DELETE"}); load(); }
+  async function remove(id:string) {
+    if(!confirm("정말 삭제할까요?")) return;
+    const res = await fetch(`/api/categories/${id}`,{method:"DELETE"});
+    if (res.ok) load();
+    else { const d = await res.json().catch(() => ({})); alert("삭제 실패: " + (d.error || res.status)); }
+  }
 
   return (
     <div className="bg-white rounded-lg shadow p-6">
