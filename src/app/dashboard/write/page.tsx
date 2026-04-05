@@ -243,19 +243,19 @@ export default function WritePage() {
       <div className="bg-white rounded mb-3 overflow-hidden">
         <table className="w-full border-collapse text-sm"><tbody>
           <tr>
-            <td className="w-[80px] bg-[#3b4b5b] text-white font-semibold text-xs py-2 px-2 border border-[#2d3a47]">주문No.</td>
+            <td className="w-[80px] text-[#3b4b5b] font-bold text-xs py-2 px-2 border border-gray-200">주문No.</td>
             <td className="py-1.5 px-2 border border-gray-200"><input type="text" readOnly className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm bg-gray-100 text-gray-400" value={orderNo} /></td>
-            <td className="w-[80px] bg-[#3b4b5b] text-white font-semibold text-xs py-2 px-2 border border-[#2d3a47] text-center">작성일</td>
+            <td className="w-[80px] text-[#3b4b5b] font-bold text-xs py-2 px-2 border border-gray-200 text-center">작성일</td>
             <td className="py-1.5 px-2 border border-gray-200"><input type="date" value={formData.order_date} onChange={e => handleChange("order_date", e.target.value)} className="px-2 py-1.5 border border-gray-300 rounded text-sm" /></td>
           </tr>
           <tr>
-            <td className="bg-[#3b4b5b] text-white font-semibold text-xs py-2 px-2 border border-[#2d3a47]">주문자</td>
+            <td className="text-[#3b4b5b] font-bold text-xs py-2 px-2 border border-gray-200">주문자</td>
             <td className="py-1.5 px-2 border border-gray-200"><input type="text" placeholder="주문자" value={formData.orderer} onChange={e => handleChange("orderer", e.target.value)} className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm" /></td>
-            <td className="bg-[#3b4b5b] text-white font-semibold text-xs py-2 px-2 border border-[#2d3a47] text-center">연락처</td>
+            <td className="text-[#3b4b5b] font-bold text-xs py-2 px-2 border border-gray-200 text-center">연락처</td>
             <td className="py-1.5 px-2 border border-gray-200"><input type="text" placeholder="연락처" value={formData.contact} onChange={e => handleChange("contact", e.target.value)} className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm" /></td>
           </tr>
           <tr>
-            <td className="bg-[#3b4b5b] text-white font-semibold text-xs py-2 px-2 border border-[#2d3a47]">
+            <td className="text-[#3b4b5b] font-bold text-xs py-2 px-2 border border-gray-200">
               <button type="button" onClick={() => setShowRegisterModal(true)} className="px-2 py-0.5 bg-blue-600 text-white rounded text-xs">거래처</button>
             </td>
             <td className="py-1.5 px-2 border border-gray-200">
@@ -274,29 +274,29 @@ export default function WritePage() {
                 )}
               </div>
             </td>
-            <td className="bg-[#3b4b5b] text-white font-semibold text-xs py-2 px-2 border border-[#2d3a47] text-center">이메일</td>
+            <td className="text-[#3b4b5b] font-bold text-xs py-2 px-2 border border-gray-200 text-center">이메일</td>
             <td className="py-1.5 px-2 border border-gray-200"><input type="text" placeholder="이메일" value={formData.email} onChange={e => handleChange("email", e.target.value)} className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm" /></td>
           </tr>
           <tr>
-            <td className="bg-[#3b4b5b] text-white font-semibold text-xs py-2 px-2 border border-[#2d3a47]">카테고리</td>
+            <td className="text-[#3b4b5b] font-bold text-xs py-2 px-2 border border-gray-200">카테고리</td>
             <td className="py-1.5 px-2 border border-gray-200">
               <select value={formData.category_id} onChange={e => handleChange("category_id", e.target.value)} className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm">
                 <option value="">선택</option><option>블랙카피</option><option>출력실</option><option>디자인실</option>
               </select>
             </td>
-            <td className="bg-[#3b4b5b] text-white font-semibold text-xs py-2 px-2 border border-[#2d3a47] text-center">제품형태</td>
+            <td className="text-[#3b4b5b] font-bold text-xs py-2 px-2 border border-gray-200 text-center">제품형태</td>
             <td className="py-1.5 px-2 border border-gray-200"><input type="text" placeholder="제품형태" value={formData.product_type} onChange={e => handleChange("product_type", e.target.value)} className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm" /></td>
           </tr>
           <tr>
-            <td className="bg-[#3b4b5b] text-white font-semibold text-xs py-2 px-2 border border-[#2d3a47]">세금계산서</td>
+            <td className="text-[#3b4b5b] font-bold text-xs py-2 px-2 border border-gray-200">세금계산서</td>
             <td className="py-1.5 px-2 border border-gray-200"><input type="text" placeholder="발행일 직접 입력" value={formData.tax_invoice} onChange={e => handleChange("tax_invoice", e.target.value)} className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm" /></td>
-            <td className="bg-[#3b4b5b] text-white font-semibold text-xs py-2 px-2 border border-[#2d3a47] text-center">결제</td>
+            <td className="text-[#3b4b5b] font-bold text-xs py-2 px-2 border border-gray-200 text-center">결제</td>
             <td className="py-1.5 px-2 border border-gray-200"><input type="text" placeholder="결제 정보" value={formData.payment} onChange={e => handleChange("payment", e.target.value)} className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm" /></td>
           </tr>
           <tr>
-            <td className="bg-[#3b4b5b] text-white font-semibold text-xs py-2 px-2 border border-[#2d3a47]">제목</td>
+            <td className="text-[#3b4b5b] font-bold text-xs py-2 px-2 border border-gray-200">제목</td>
             <td className="py-1.5 px-2 border border-gray-200"><input type="text" placeholder="제목" value={formData.title} onChange={e => handleChange("title", e.target.value)} className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm" /></td>
-            <td className="bg-[#3b4b5b] text-white font-semibold text-xs py-2 px-2 border border-[#2d3a47] text-center">거래유형</td>
+            <td className="text-[#3b4b5b] font-bold text-xs py-2 px-2 border border-gray-200 text-center">거래유형</td>
             <td className="py-1.5 px-2 border border-gray-200">
               <select value={formData.trade_type} onChange={e => handleChange("trade_type", e.target.value)} className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm">
                 <option value="vat">부가세율 적용</option><option value="novat">부가세율 미적용</option>
@@ -304,7 +304,7 @@ export default function WritePage() {
             </td>
           </tr>
           <tr>
-            <td className="bg-[#3b4b5b] text-white font-semibold text-xs py-2 px-2 border border-[#2d3a47]">첨부</td>
+            <td className="text-[#3b4b5b] font-bold text-xs py-2 px-2 border border-gray-200">첨부</td>
             <td colSpan={3} className="py-1.5 px-2 border border-gray-200">
               <div className="border-2 border-dashed border-gray-300 rounded p-3 text-center text-gray-400 text-xs cursor-pointer hover:border-blue-500 transition">
                 + 파일을 드래그하여 놓거나 클릭하여 첨부 (최대 1GB, Dropbox)
@@ -312,7 +312,7 @@ export default function WritePage() {
             </td>
           </tr>
           <tr>
-            <td className="bg-[#3b4b5b] text-white font-semibold text-xs py-2 px-2 border border-[#2d3a47] align-top">작업내용1</td>
+            <td className="text-[#3b4b5b] font-bold text-xs py-2 px-2 border border-gray-200 align-top">작업내용1</td>
             <td colSpan={3} className="py-1.5 px-2 border border-gray-200">
               <textarea placeholder="세부사양 및 후가공, 고객 상담 메모 등을 입력해주세요" value={formData.detail_spec} onChange={e => handleChange("detail_spec", e.target.value)} className="w-full px-2 py-2 border border-gray-300 rounded text-sm min-h-[120px] resize-y" />
             </td>
