@@ -46,16 +46,23 @@ export async function GET(request: NextRequest) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
+  // 빈 주문(임시저장) 필터링: 제목과 거래처명 모두 비어있는 주문 제외
+  const filtered = (data || []).filter((o: Record<string, unknown>) => {
+    const title = (o.title || "").toString().trim();
+    const clientName = (o.client_name || "").toString().trim();
+    return title !== "" || clientName !== "";
+  });
+
   // 작성자 정보 조회
-  const createdByIds = (data || []).map((o: Record<string, unknown>) => o.created_by).filter(Boolean);
+  const createdByIds = filtered.map((o: Record<string, unknown>) => o.created_by).filter(Boolean);
   let usersMap: Record<string, string> = {};
   if (createdByIds.length > 0) {
     const { data: users } = await supabase.from("users").select("id, name, user_id").in("id", createdByIds);
     if (users) for (const u of users) usersMap[u.id] = `${u.name}(${u.user_id})`;
   }
-  const result = (data || []).map((o: Record<string, unknown>) => ({ ...o, author: o.created_by ? usersMap[o.created_by as string] || "-" : "-" }));
+  const result = filtered.map((o: Record<string, unknown>) => ({ ...o, author: o.created_by ? usersMap[o.created_by as string] || "-" : "-" }));
 
-  return NextResponse.json({ data: result, total: count, page, limit });
+  return NextResponse.json({ data: result, total: (count || 0) - ((data?.length || 0) - filtered.length), page, limit });
 }
 
 // 작업 등록
