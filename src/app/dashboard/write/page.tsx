@@ -10,6 +10,7 @@ export default function WritePage() {
   const [saving, setSaving] = useState(false);
   const [showClientModal, setShowClientModal] = useState(false);
   const [clients, setClients] = useState<Array<{id:string;name:string;contact_person:string;phone:string;mobile:string;email:string}>>([]);
+  const [categoryList, setCategoryList] = useState<Array<{id:string;name:string}>>([]);
   const [clientSearch, setClientSearch] = useState("");
   const [showAutoComplete, setShowAutoComplete] = useState(false);
   const [autoClients, setAutoClients] = useState<Array<{id:string;name:string;contact_person:string;phone:string;mobile:string;email:string}>>([]);
@@ -91,6 +92,9 @@ export default function WritePage() {
   }
 
   useEffect(() => {
+    fetch(`/api/categories?_=${Date.now()}`).then(r => r.json()).then(d => {
+      if (Array.isArray(d)) setCategoryList(d);
+    }).catch(() => {});
     fetch(`/api/templates?_=${Date.now()}`).then(r => r.json()).then(d => {
       if (Array.isArray(d) && d.length > 0) {
         setTemplateList(d);
@@ -281,7 +285,8 @@ export default function WritePage() {
             <td className="text-[#3b4b5b] font-bold text-xs py-2 px-2 border border-gray-200">카테고리</td>
             <td className="py-1.5 px-2 border border-gray-200">
               <select value={formData.category_id} onChange={e => handleChange("category_id", e.target.value)} className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm">
-                <option value="">선택</option><option>블랙카피</option><option>출력실</option><option>디자인실</option>
+                <option value="">선택</option>
+                {categoryList.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
             </td>
             <td className="text-[#3b4b5b] font-bold text-xs py-2 px-2 border border-gray-200 text-center">제품형태</td>
