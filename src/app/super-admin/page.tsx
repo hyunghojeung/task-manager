@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 export default function SuperAdminLoginPage() {
@@ -9,9 +9,16 @@ export default function SuperAdminLoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
+  useEffect(() => {
+    if (typeof window !== "undefined" && sessionStorage.getItem("superAdminAuth") === "1") {
+      router.replace("/super-admin/dashboard");
+    }
+  }, [router]);
+
   function handleLogin(e: React.FormEvent) {
     e.preventDefault();
     if (adminId === "blackcopy2" && password === "@kingsize2") {
+      sessionStorage.setItem("superAdminAuth", "1");
       router.push("/super-admin/dashboard");
     } else {
       setError("아이디 또는 비밀번호가 올바르지 않습니다.");

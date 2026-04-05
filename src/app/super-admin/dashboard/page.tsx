@@ -277,7 +277,7 @@ export default function SuperAdminDashboard() {
         <h1 className="text-lg font-bold">Platform Admin - <a href="https://blackcopy.kr" className="text-blue-400 no-underline">Blackcopy.kr</a></h1>
         <div className="flex items-center gap-3 text-sm">
           <span>최고관리자</span>
-          <a href="/super-admin" className="text-slate-400 hover:text-white">로그아웃</a>
+          <button onClick={() => { if (typeof window !== "undefined") sessionStorage.removeItem("superAdminAuth"); window.location.href = "/super-admin"; }} className="text-slate-400 hover:text-white">로그아웃</button>
         </div>
       </div>
 
