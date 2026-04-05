@@ -413,12 +413,37 @@ function TemplateTab() {
   const [editTmpl, setEditTmpl] = useState<Tmpl | null>(null);
   const [cols, setCols] = useState<Array<{name:string;type:string}>>([{name:"순번",type:"auto"}]);
   const [formulas, setFormulas] = useState<Array<{target:string;expression:string}>>([]);
+  const [colOptions, setColOptions] = useState<Array<{id:string;name:string;sort_order:number}>>([]);
+  const [newColName, setNewColName] = useState("");
+  const defaultColNames = ["품목명","규격","종류","수량","페이지수","단가","공급가액","부가세","합계금액"];
 
   const load = useCallback(async () => {
     const r = await fetch(`/api/templates?_=${Date.now()}`);
     if (r.ok) setTemplates(await r.json());
   }, []);
-  useEffect(() => { load(); }, [load]);
+  const loadOptions = useCallback(async () => {
+    const r = await fetch(`/api/column-options?_=${Date.now()}`);
+    if (r.ok) setColOptions(await r.json());
+  }, []);
+  useEffect(() => { load(); loadOptions(); }, [load, loadOptions]);
+
+  async function addColOption() {
+    if (!newColName.trim()) return;
+    await fetch("/api/column-options", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: newColName.trim(), sort_order: colOptions.length }) });
+    setNewColName("");
+    loadOptions();
+  }
+  async function removeColOption(id: string) {
+    if (!confirm("정말 삭제할까요?")) return;
+    await fetch(`/api/column-options/${id}`, { method: "DELETE" });
+    loadOptions();
+  }
+  async function updateColOption(id: string, name: string) {
+    await fetch(`/api/column-options/${id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name }) });
+    loadOptions();
+  }
+  // 사용할 컬럼명 리스트: DB에 있으면 그것을 사용, 없으면 기본값
+  const availableColNames = colOptions.length > 0 ? colOptions.map(o => o.name) : defaultColNames;
 
   async function addTemplate() {
     if (!newName) return;
@@ -456,6 +481,41 @@ function TemplateTab() {
     <div className="bg-white rounded-lg shadow p-6">
       <h3 className="text-base font-bold text-gray-800 mb-2 pb-2 border-b-2 border-gray-200">표양식관리</h3>
       <p className="text-xs text-gray-500 mb-4">양식을 만들면 사용자가 주문서 입력 시 선택할 수 있습니다. 컬럼과 계산공식을 자유롭게 지정하세요.</p>
+
+      {/* 컬럼명 관리 */}
+      <div className="mb-5 p-4 bg-gray-50 border border-gray-200 rounded">
+        <p className="text-sm font-bold text-gray-800 mb-2">사용 가능한 컬럼명 관리</p>
+        <p className="text-xs text-gray-500 mb-3">양식 편집 시 선택 가능한 컬럼명 리스트입니다. 원하는 항목을 추가/삭제/수정하세요.</p>
+        <div className="flex flex-wrap gap-2 mb-3">
+          {(colOptions.length > 0 ? colOptions : defaultColNames.map((n, i) => ({ id: `default-${i}`, name: n, sort_order: i }))).map(o => (
+            <div key={o.id} className="flex items-center gap-1 px-2 py-1 bg-white border border-gray-300 rounded text-xs">
+              {o.id.startsWith("default-") ? (
+                <span className="text-gray-600">{o.name}</span>
+              ) : (
+                <input type="text" value={o.name} onChange={e => setColOptions(prev => prev.map(p => p.id === o.id ? {...p, name: e.target.value} : p))} onBlur={e => updateColOption(o.id, e.target.value)} className="w-20 px-1 py-0 border-0 text-xs bg-transparent focus:outline-none focus:bg-yellow-50" />
+              )}
+              {!o.id.startsWith("default-") && (
+                <button onClick={() => removeColOption(o.id)} className="text-red-500 hover:text-red-700">×</button>
+              )}
+            </div>
+          ))}
+        </div>
+        {colOptions.length === 0 && (
+          <p className="text-xs text-amber-600 mb-3">※ 기본값 사용중. 컬럼명을 추가하면 기본값이 대체됩니다.</p>
+        )}
+        <div className="flex gap-2">
+          <input type="text" placeholder="새 컬럼명" value={newColName} onChange={e => setNewColName(e.target.value)} onKeyDown={e => { if (e.key === "Enter") addColOption(); }} className="px-2 py-1 border border-gray-300 rounded text-xs w-32" />
+          <button onClick={addColOption} className="px-3 py-1 bg-gray-700 text-white rounded text-xs">+ 추가</button>
+          {colOptions.length === 0 && (
+            <button onClick={async () => {
+              for (let i = 0; i < defaultColNames.length; i++) {
+                await fetch("/api/column-options", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: defaultColNames[i], sort_order: i }) });
+              }
+              loadOptions();
+            }} className="px-3 py-1 border border-gray-300 rounded text-xs text-gray-600">기본값 불러오기</button>
+          )}
+        </div>
+      </div>
 
       {/* 양식 목록 */}
       <div className="mb-4">
@@ -498,9 +558,9 @@ function TemplateTab() {
                   {c.type === "auto" ? (
                     <input type="text" value={c.name} readOnly className="w-24 px-1 py-0.5 border border-gray-300 rounded text-xs" style={{background:"#eee"}} />
                   ) : (
-                    <select value={c.name} onChange={e => updateCol(i, "name", e.target.value)} className="w-24 px-1 py-0.5 border border-gray-300 rounded text-xs">
+                    <select value={c.name} onChange={e => updateCol(i, "name", e.target.value)} className="w-28 px-1 py-0.5 border border-gray-300 rounded text-xs">
                       <option value="">선택</option>
-                      {["품목명","규격","종류","수량","페이지수","단가","공급가액","부가세","합계금액"].map(n => <option key={n} value={n}>{n}</option>)}
+                      {availableColNames.map(n => <option key={n} value={n}>{n}</option>)}
                     </select>
                   )}
                   <select value={c.type} onChange={e => updateCol(i, "type", e.target.value)} className="text-xs px-1 py-0.5 border border-gray-300 rounded">
