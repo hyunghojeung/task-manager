@@ -22,6 +22,11 @@ export async function POST(request: NextRequest) {
   const session = await getApiSession();
   if (!session) return unauthorized();
 
+  // pwindow 외 업체는 첨부 기능 차단
+  if (session.company.company_id !== "pwindow") {
+    return NextResponse.json({ error: "이 기능은 추후 제공될 예정입니다." }, { status: 403 });
+  }
+
   const supabase = getSupabase();
   const { data: company } = await supabase
     .from("companies")
