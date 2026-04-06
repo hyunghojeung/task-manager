@@ -175,6 +175,18 @@ export default function WritePage() {
   }, [editId]);
 
   async function uploadFiles(files: FileList | File[]) {
+    // pwindow 외 업체는 첨부 기능 차단
+    try {
+      const cookies = document.cookie.split(";").map(c => c.trim());
+      const sc = cookies.find(c => c.startsWith("session="));
+      if (sc) {
+        const s = JSON.parse(decodeURIComponent(sc.split("=").slice(1).join("=")));
+        if (s.company?.company_id !== "pwindow") {
+          alert("이 기능은 추후 제공될 예정입니다.");
+          return;
+        }
+      }
+    } catch { /* ignore */ }
     setUploading(true);
     try {
       let orderId = editId;
