@@ -86,7 +86,11 @@ export default function WritePage() {
     for (const f of formulas) {
       try {
         let expr = f.expression;
-        for (const key of Object.keys(result)) {
+        // "x"를 "*"로 변환 (곱셈 기호 호환)
+        expr = expr.replace(/(\d)x(\d)/g, '$1*$2').replace(/([가-힣])x([가-힣])/g, '$1*$2').replace(/\bx\b/g, '*');
+        // 키를 긴 순서대로 정렬 (부분 문자열 충돌 방지: 공급가액 > 공급가)
+        const sortedKeys = Object.keys(result).sort((a, b) => b.length - a.length);
+        for (const key of sortedKeys) {
           const val = parseFloat(result[key]) || 0;
           expr = expr.replace(new RegExp(key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), String(val));
         }
