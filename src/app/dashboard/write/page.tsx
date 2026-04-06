@@ -381,6 +381,27 @@ export default function WritePage() {
           <tr className="print:hidden">
             <td className="text-[#3b4b5b] font-bold text-xs py-2 px-2 border border-gray-200 align-top">첨부</td>
             <td colSpan={3} className="py-1.5 px-2 border border-gray-200">
+              {(() => {
+                let isPwindow = false;
+                try {
+                  const cookies = document.cookie.split(";").map(c => c.trim());
+                  const sc = cookies.find(c => c.startsWith("session="));
+                  if (sc) { const s = JSON.parse(decodeURIComponent(sc.split("=").slice(1).join("="))); isPwindow = s.company?.company_id === "pwindow"; }
+                } catch { /* ignore */ }
+                if (!isPwindow) {
+                  return <div className="border-2 border-dashed border-gray-200 rounded p-3 text-center text-xs text-gray-400 bg-gray-50 cursor-not-allowed" onClick={() => alert("이 기능은 추후 제공될 예정입니다.")}>첨부파일 기능은 추후 제공될 예정입니다.</div>;
+                }
+                return null;
+              })()}
+              {(() => {
+                let isPwindow = false;
+                try {
+                  const cookies = document.cookie.split(";").map(c => c.trim());
+                  const sc = cookies.find(c => c.startsWith("session="));
+                  if (sc) { const s = JSON.parse(decodeURIComponent(sc.split("=").slice(1).join("="))); isPwindow = s.company?.company_id === "pwindow"; }
+                } catch { /* ignore */ }
+                if (!isPwindow) return null;
+                return (
               <label
                 onDragOver={e => { e.preventDefault(); setDragOver(true); }}
                 onDragLeave={() => setDragOver(false)}
@@ -390,6 +411,8 @@ export default function WritePage() {
                 <input type="file" multiple className="hidden" onChange={e => { if (e.target.files) uploadFiles(e.target.files); e.target.value = ""; }} />
                 {uploading ? "업로드 중..." : editId ? "+ 파일을 드래그하여 놓거나 클릭하여 첨부 (Dropbox)" : "작업 저장 후 첨부 가능합니다"}
               </label>
+                );
+              })()}
               {attachments.length > 0 && (
                 <ul className="mt-2 space-y-1">
                   {attachments.map(a => (
