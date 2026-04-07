@@ -69,9 +69,38 @@ export async function POST(request: NextRequest) {
         body: JSON.stringify({ path: uploadData.path_display }),
       });
       const shareData = await shareRes.json();
-      // dl=0 → dl=1로 변경하여 직접 이미지 URL로 사용
-      shareUrl = (shareData.url || "").replace("dl=0", "raw=1");
+      if (shareData.url) {
+        shareUrl = shareData.url.replace("dl=0", "raw=1").replace("?dl=0", "?raw=1");
+      } else if (shareData.error?.[".tag"] === "shared_link_already_exists") {
+        // 이미 공유 링크가 있는 경우 기존 링크 조회
+        const listRes = await fetch("https://api.dropboxapi.com/2/sharing/list_shared_links", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
+          body: JSON.stringify({ path: uploadData.path_display, direct_only: true }),
+        });
+        const listData = await listRes.json();
+        if (listData.links?.[0]?.url) {
+          shareUrl = listData.links[0].url.replace("dl=0", "raw=1").replace("?dl=0", "?raw=1");
+        }
+      }
     } catch { /* ignore */ }
+
+    // 공유 링크 실패 시 임시 링크 사용
+    if (!shareUrl) {
+      try {
+        const tmpRes = await fetch("https://api.dropboxapi.com/2/files/get_temporary_link", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
+          body: JSON.stringify({ path: uploadData.path_display }),
+        });
+        const tmpData = await tmpRes.json();
+        shareUrl = tmpData.link || "";
+      } catch { /* ignore */ }
+    }
+
+    if (!shareUrl) {
+      return NextResponse.json({ error: "이미지 업로드는 완료되었으나 공유 링크 생성에 실패했습니다." }, { status: 500 });
+    }
 
     return NextResponse.json({ success: true, url: shareUrl, path: uploadData.path_display });
   } catch (err) {
