@@ -151,8 +151,19 @@ export default function WritePage() {
     setSelectedTemplate(name);
     const tmpl = templateList.find(t => t.name === name);
     if (tmpl?.columns?.length) setTemplateCols(tmpl.columns);
-    if (tmpl?.formulas?.length) setTemplateFormulas(tmpl.formulas);
-    else setTemplateFormulas([]);
+    const newFormulas = tmpl?.formulas?.length ? tmpl.formulas : [];
+    setTemplateFormulas(newFormulas);
+    // 양식 변경 시 자동계산 필드를 새 수식으로 재계산
+    if (newFormulas.length > 0) {
+      setItemData(prev => prev.map(row => {
+        // 자동계산 대상 키 삭제 후 재계산
+        const cleaned: Record<string,string> = {};
+        for (const [k, v] of Object.entries(row)) {
+          if (!newFormulas.some(f => f.target === k)) cleaned[k] = v;
+        }
+        return calcFormulas(cleaned, newFormulas);
+      }));
+    }
   }
 
   useEffect(() => {
