@@ -296,11 +296,11 @@ function UsersTab() {
         <tbody>{users.map((u,i) => (
           <tr key={u.id} className={i%2===1?"bg-gray-50":""}>
             <td className="border border-gray-200 px-2 py-2 text-center">{i+1}</td>
-            <td className="border border-gray-200 px-2 py-2 text-center font-bold"><button onClick={() => openEdit(u)} className="text-blue-600 hover:underline cursor-pointer">{u.user_id}</button></td>
+            <td className="border border-gray-200 px-2 py-2 text-center font-bold">{u.user_id}</td>
             <td className="border border-gray-200 px-2 py-2 text-center">{u.name}</td>
             <td className="border border-gray-200 px-2 py-2 text-center"><button onClick={() => toggleRole(u.id, u.role)} className={`px-2 py-0.5 rounded-full text-xs cursor-pointer hover:opacity-80 ${u.role==="admin"?"bg-amber-100 text-amber-800":"bg-blue-100 text-blue-800"}`}>{u.role==="admin"?"관리자":"사용자"}</button></td>
             <td className="border border-gray-200 px-2 py-2 text-center">{u.created_at?.slice(0,10)}</td>
-            <td className="border border-gray-200 px-2 py-2 text-center"><button onClick={()=>remove(u.id)} className="text-red-600 border border-red-600 px-2 py-0.5 rounded text-xs">삭제</button></td>
+            <td className="border border-gray-200 px-2 py-2 text-center"><button onClick={() => openEdit(u)} className="text-blue-600 border border-blue-600 px-2 py-0.5 rounded text-xs mr-1">수정</button><button onClick={()=>remove(u.id)} className="text-red-600 border border-red-600 px-2 py-0.5 rounded text-xs">삭제</button></td>
           </tr>
         ))}</tbody>
       </table>
