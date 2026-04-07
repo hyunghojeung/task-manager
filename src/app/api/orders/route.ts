@@ -46,11 +46,14 @@ export async function GET(request: NextRequest) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  // 빈 주문(임시저장) 필터링: 제목과 거래처명 모두 비어있는 주문 제외
+  // 빈 주문(임시저장) 필터링
   const filtered = (data || []).filter((o: Record<string, unknown>) => {
     const title = (o.title || "").toString().trim();
     const clientName = (o.client_name || "").toString().trim();
-    return title !== "" || clientName !== "";
+    // 제목과 거래처 둘 다 비어있거나, 제목이 "임시저장"이고 거래처 비어있는 주문 제외
+    if (title === "" && clientName === "") return false;
+    if (title === "임시저장" && clientName === "") return false;
+    return true;
   });
 
   // 작성자 정보 조회

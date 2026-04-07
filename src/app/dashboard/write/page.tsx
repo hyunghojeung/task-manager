@@ -196,7 +196,7 @@ export default function WritePage() {
       let orderId = editId;
       // editId가 없으면 임시 저장 후 orderId 획득
       if (!orderId) {
-        const draftBody = { ...formData, title: formData.title || "임시저장", total_supply: 0, total_vat: 0, total_amount: 0, discount: 0 };
+        const draftBody = { ...formData, title: formData.title || "", total_supply: 0, total_vat: 0, total_amount: 0, discount: 0 };
         const res = await fetch("/api/orders", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(draftBody) });
         const saved = await res.json();
         if (!res.ok || !saved?.id) { alert("임시저장 실패"); return; }
