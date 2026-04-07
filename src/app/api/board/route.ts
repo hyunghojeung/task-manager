@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "제목, 작성자, 비밀번호를 입력해주세요." }, { status: 400 });
   }
   const supabase = getSupabase();
-  const { data, error } = await supabase.from("board_posts").insert({ title: body.title, content: body.content || "", author: body.author, password: body.password }).select().single();
+  const { data, error } = await supabase.from("board_posts").insert({ title: body.title, content: body.content || "", author: body.author, password: body.password, images: body.images || [] }).select().single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json(data, { status: 201 });
 }

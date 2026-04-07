@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 
 type View = "list" | "write" | "view" | "edit";
-interface Post { id: string; title: string; content: string; author: string; view_count: number; comment_count: number; created_at: string; comments?: Comment[] }
+interface Post { id: string; title: string; content: string; author: string; view_count: number; comment_count: number; created_at: string; comments?: Comment[]; images?: string[] }
 interface Comment { id: string; post_id: string; parent_id: string | null; author: string; content: string; created_at: string }
 
 export default function BoardPage() {
@@ -37,6 +37,8 @@ export default function BoardPage() {
   const [formContent, setFormContent] = useState("");
   const [formAuthor, setFormAuthor] = useState("");
   const [formPassword, setFormPassword] = useState("");
+  const [formImages, setFormImages] = useState<string[]>([]);
+  const [imageUploading, setImageUploading] = useState(false);
 
   // 댓글 폼
   const [commentAuthor, setCommentAuthor] = useState("");
@@ -65,7 +67,7 @@ export default function BoardPage() {
       const r = await fetch(`/api/board/${current.id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ title: formTitle, content: formContent, password: formPassword }) });
       if (r.ok) { loadPost(current.id); } else { const d = await r.json(); alert(d.error); }
     } else {
-      const r = await fetch("/api/board", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ title: formTitle, content: formContent, author: formAuthor, password: formPassword }) });
+      const r = await fetch("/api/board", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ title: formTitle, content: formContent, author: formAuthor, password: formPassword, images: formImages }) });
       if (r.ok) { setView("list"); setRefreshKey(k => k + 1); resetForm(); }
     }
   }
@@ -101,9 +103,38 @@ export default function BoardPage() {
     else { const d = await r.json(); alert(d.error); }
   }
 
-  function resetForm() { setFormTitle(""); setFormContent(""); setFormAuthor(""); setFormPassword(""); }
+  async function uploadBoardImage(file: File) {
+    setImageUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch("/api/board/upload", { method: "POST", body: fd });
+      const d = await res.json();
+      if (res.ok && d.url) {
+        setFormImages(prev => [...prev, d.url]);
+      } else {
+        alert("이미지 업로드 실패: " + (d.error || ""));
+      }
+    } catch { alert("이미지 업로드 실패"); }
+    finally { setImageUploading(false); }
+  }
+
+  function handlePaste(e: React.ClipboardEvent) {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].type.startsWith("image/")) {
+        e.preventDefault();
+        const file = items[i].getAsFile();
+        if (file) uploadBoardImage(file);
+        return;
+      }
+    }
+  }
+
+  function resetForm() { setFormTitle(""); setFormContent(""); setFormAuthor(""); setFormPassword(""); setFormImages([]); }
   function openWrite() { resetForm(); setFormAuthor(currentUser); setCommentAuthor(currentUser); setView("write"); }
-  function openEdit() { if (current) { setFormTitle(current.title); setFormContent(current.content); setFormAuthor(current.author); setFormPassword(""); setView("edit"); } }
+  function openEdit() { if (current) { setFormTitle(current.title); setFormContent(current.content); setFormAuthor(current.author); setFormPassword(""); setFormImages(current.images || []); setView("edit"); } }
 
   const totalPages = Math.ceil(total / 20);
   const comments = current?.comments || [];
@@ -122,7 +153,28 @@ export default function BoardPage() {
               <div className="flex-1"><label className="block text-xs font-semibold text-gray-600 mb-1">비밀번호</label><input type="password" value={formPassword} onChange={e => setFormPassword(e.target.value)} placeholder="수정/삭제 시 필요" className="w-full px-3 py-2 border border-gray-300 rounded text-sm" /></div>
             </div>
             <div><label className="block text-xs font-semibold text-gray-600 mb-1">제목</label><input type="text" value={formTitle} onChange={e => setFormTitle(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded text-sm" /></div>
-            <div><label className="block text-xs font-semibold text-gray-600 mb-1">내용</label><textarea value={formContent} onChange={e => setFormContent(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded text-sm min-h-[250px] resize-y" /></div>
+            <div>
+              <label className="block text-xs font-semibold text-gray-600 mb-1">내용</label>
+              <textarea value={formContent} onChange={e => setFormContent(e.target.value)} onPaste={handlePaste} placeholder="내용을 입력하세요. 이미지를 붙여넣기(Ctrl+V)할 수 있습니다." className="w-full px-3 py-2 border border-gray-300 rounded text-sm min-h-[250px] resize-y" />
+              <div className="mt-2 flex items-center gap-2">
+                <label className="px-3 py-1 bg-gray-600 text-white rounded text-xs cursor-pointer hover:bg-gray-700">
+                  이미지 첨부
+                  <input type="file" accept="image/*" className="hidden" onChange={e => { if (e.target.files?.[0]) uploadBoardImage(e.target.files[0]); e.target.value = ""; }} />
+                </label>
+                {imageUploading && <span className="text-xs text-gray-400">업로드 중...</span>}
+                <span className="text-[10px] text-gray-400">Ctrl+V로 캡처 이미지 붙여넣기 가능</span>
+              </div>
+              {formImages.length > 0 && (
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {formImages.map((url, i) => (
+                    <div key={i} className="relative group">
+                      <img src={url} alt={`첨부${i+1}`} className="w-24 h-24 object-cover rounded border border-gray-300" />
+                      <button type="button" onClick={() => setFormImages(prev => prev.filter((_, idx) => idx !== i))} className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-4 h-4 text-xs leading-4 text-center opacity-0 group-hover:opacity-100 transition">×</button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
           <div className="flex gap-2 mt-4">
             <button onClick={handleSave} className="px-6 py-2 bg-indigo-600 text-white rounded text-sm">저장</button>
@@ -145,6 +197,15 @@ export default function BoardPage() {
             <span>조회: {current.view_count}</span>
           </div>
           <div className="text-sm text-gray-700 leading-7 whitespace-pre-wrap min-h-[100px] mb-5">{current.content}</div>
+          {current.images && current.images.length > 0 && (
+            <div className="mb-5 space-y-2">
+              {current.images.map((url, i) => (
+                <a key={i} href={url} target="_blank" rel="noreferrer">
+                  <img src={url} alt={`첨부이미지${i+1}`} className="max-w-full md:max-w-lg rounded border border-gray-300 shadow-sm hover:shadow-md transition" />
+                </a>
+              ))}
+            </div>
+          )}
           <div className="flex gap-2 items-center">
             <button onClick={() => setView("list")} className="px-5 py-2 border border-gray-300 rounded text-sm">목록</button>
             <button onClick={() => { setActionPassword(""); setShowDeleteConfirm(false); openEdit(); }} className="px-5 py-2 bg-indigo-600 text-white rounded text-sm">수정</button>
