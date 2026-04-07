@@ -782,7 +782,7 @@ export default function WritePage() {
       {/* 거래처 검색 모달 */}
       {showClientModal && (
         <div className="fixed inset-0 bg-black/50 z-[1000] flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg p-6 w-full max-w-[800px] max-h-[80vh] overflow-y-auto shadow-xl">
+          <div className="bg-white rounded-lg p-6 w-full max-w-[700px] max-h-[80vh] overflow-y-auto shadow-xl">
             <h4 className="text-base font-bold text-gray-800 mb-3 pb-2 border-b-2 border-gray-200">거래처 검색</h4>
             <div className="flex gap-2 mb-3">
               <input type="text" placeholder="거래처명을 입력하세요" value={clientSearch} onChange={e => setClientSearch(e.target.value)} className="flex-1 px-3 py-2 border border-gray-300 rounded text-sm" />
