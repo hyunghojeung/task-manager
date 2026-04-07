@@ -61,45 +61,35 @@ export async function POST(request: NextRequest) {
     if (!uploadRes.ok) throw new Error(uploadData.error_summary || "Dropbox 업로드 실패");
 
     // 공유 링크 생성
+    const shareRes = await fetch("https://api.dropboxapi.com/2/sharing/create_shared_link_with_settings", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ path: uploadData.path_display, settings: { requested_visibility: "public" } }),
+    });
+    const shareData = await shareRes.json();
+
     let shareUrl = "";
-    try {
-      const shareRes = await fetch("https://api.dropboxapi.com/2/sharing/create_shared_link_with_settings", {
+    if (shareData.url) {
+      shareUrl = shareData.url.replace("dl=0", "raw=1").replace("?dl=0", "?raw=1");
+    } else if (shareData.error?.[".tag"] === "shared_link_already_exists") {
+      // 이미 공유 링크가 있으면 기존 링크 조회
+      const listRes = await fetch("https://api.dropboxapi.com/2/sharing/list_shared_links", {
         method: "POST",
         headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ path: uploadData.path_display }),
+        body: JSON.stringify({ path: uploadData.path_display, direct_only: true }),
       });
-      const shareData = await shareRes.json();
-      if (shareData.url) {
-        shareUrl = shareData.url.replace("dl=0", "raw=1").replace("?dl=0", "?raw=1");
-      } else if (shareData.error?.[".tag"] === "shared_link_already_exists") {
-        // 이미 공유 링크가 있는 경우 기존 링크 조회
-        const listRes = await fetch("https://api.dropboxapi.com/2/sharing/list_shared_links", {
-          method: "POST",
-          headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
-          body: JSON.stringify({ path: uploadData.path_display, direct_only: true }),
-        });
-        const listData = await listRes.json();
-        if (listData.links?.[0]?.url) {
-          shareUrl = listData.links[0].url.replace("dl=0", "raw=1").replace("?dl=0", "?raw=1");
-        }
+      const listData = await listRes.json();
+      if (listData.links?.[0]?.url) {
+        shareUrl = listData.links[0].url.replace("dl=0", "raw=1").replace("?dl=0", "?raw=1");
       }
-    } catch { /* ignore */ }
-
-    // 공유 링크 실패 시 임시 링크 사용
-    if (!shareUrl) {
-      try {
-        const tmpRes = await fetch("https://api.dropboxapi.com/2/files/get_temporary_link", {
-          method: "POST",
-          headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
-          body: JSON.stringify({ path: uploadData.path_display }),
-        });
-        const tmpData = await tmpRes.json();
-        shareUrl = tmpData.link || "";
-      } catch { /* ignore */ }
     }
 
     if (!shareUrl) {
-      return NextResponse.json({ error: "이미지 업로드는 완료되었으나 공유 링크 생성에 실패했습니다." }, { status: 500 });
+      return NextResponse.json({
+        error: "공유 링크 생성 실패",
+        dropbox_error: shareData,
+        path: uploadData.path_display,
+      }, { status: 500 });
     }
 
     return NextResponse.json({ success: true, url: shareUrl, path: uploadData.path_display });
