@@ -266,8 +266,9 @@ function UsersTab() {
   async function remove(id:string) { if(!confirm("정말 삭제할까요?")) return; await fetch(`/api/users/${id}`,{method:"DELETE"}); load(); }
   async function toggleRole(id:string, currentRole:string) {
     const newRole = currentRole === "admin" ? "user" : "admin";
-    await fetch(`/api/users/${id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ role: newRole }) });
-    load();
+    const res = await fetch(`/api/users/${id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ role: newRole }) });
+    if (res.ok) load();
+    else { const d = await res.json().catch(() => ({})); alert(d.error || "권한 변경 실패"); }
   }
 
   return (
