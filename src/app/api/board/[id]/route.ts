@@ -21,7 +21,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
   // 비밀번호 확인
   const { data: post } = await supabase.from("board_posts").select("password").eq("id", id).single();
   if (!post || post.password !== body.password) return NextResponse.json({ error: "비밀번호가 일치하지 않습니다." }, { status: 403 });
-  const { error } = await supabase.from("board_posts").update({ title: body.title, content: body.content, updated_at: new Date().toISOString() }).eq("id", id);
+  const { error } = await supabase.from("board_posts").update({ title: body.title, content: body.content, images: body.images || [], updated_at: new Date().toISOString() }).eq("id", id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ success: true });
 }

@@ -64,7 +64,7 @@ export default function BoardPage() {
   async function handleSave() {
     if (!formTitle || !formAuthor || !formPassword) { alert("제목, 작성자, 비밀번호를 입력해주세요."); return; }
     if (view === "edit" && current) {
-      const r = await fetch(`/api/board/${current.id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ title: formTitle, content: formContent, password: formPassword }) });
+      const r = await fetch(`/api/board/${current.id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ title: formTitle, content: formContent, password: formPassword, images: formImages }) });
       if (r.ok) { loadPost(current.id); } else { const d = await r.json(); alert(d.error); }
     } else {
       const r = await fetch("/api/board", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ title: formTitle, content: formContent, author: formAuthor, password: formPassword, images: formImages }) });
