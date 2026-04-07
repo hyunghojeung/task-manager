@@ -260,10 +260,27 @@ function UsersTab() {
   const [users, setUsers] = useState<Array<{id:string;user_id:string;name:string;role:string;created_at:string}>>([]);
   const [form, setForm] = useState({name:"",user_id:"",password:"",role:"user"});
   const [showModal, setShowModal] = useState(false);
+  const [editUser, setEditUser] = useState<{id:string;user_id:string;name:string;role:string}|null>(null);
+  const [editForm, setEditForm] = useState({name:"",password:"",role:"user"});
+  const [showEditModal, setShowEditModal] = useState(false);
   const load = useCallback(async () => { const r = await fetch("/api/users"); if(r.ok) setUsers(await r.json()); }, []);
   useEffect(() => { load(); }, [load]);
   async function create(e:React.FormEvent) { e.preventDefault(); await fetch("/api/users",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(form)}); setShowModal(false); setForm({name:"",user_id:"",password:"",role:"user"}); load(); }
   async function remove(id:string) { if(!confirm("정말 삭제할까요?")) return; await fetch(`/api/users/${id}`,{method:"DELETE"}); load(); }
+  function openEdit(u: {id:string;user_id:string;name:string;role:string}) {
+    setEditUser(u);
+    setEditForm({name:u.name,password:"",role:u.role});
+    setShowEditModal(true);
+  }
+  async function saveEdit(e:React.FormEvent) {
+    e.preventDefault();
+    if (!editUser) return;
+    const body: Record<string,string> = { name: editForm.name, role: editForm.role };
+    if (editForm.password) body.password = editForm.password;
+    const res = await fetch(`/api/users/${editUser.id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+    if (res.ok) { setShowEditModal(false); setEditUser(null); load(); }
+    else { const d = await res.json().catch(() => ({})); alert(d.error || "수정 실패"); }
+  }
   async function toggleRole(id:string, currentRole:string) {
     const newRole = currentRole === "admin" ? "user" : "admin";
     const res = await fetch(`/api/users/${id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ role: newRole }) });
@@ -279,7 +296,7 @@ function UsersTab() {
         <tbody>{users.map((u,i) => (
           <tr key={u.id} className={i%2===1?"bg-gray-50":""}>
             <td className="border border-gray-200 px-2 py-2 text-center">{i+1}</td>
-            <td className="border border-gray-200 px-2 py-2 text-center font-bold">{u.user_id}</td>
+            <td className="border border-gray-200 px-2 py-2 text-center font-bold"><button onClick={() => openEdit(u)} className="text-blue-600 hover:underline cursor-pointer">{u.user_id}</button></td>
             <td className="border border-gray-200 px-2 py-2 text-center">{u.name}</td>
             <td className="border border-gray-200 px-2 py-2 text-center"><button onClick={() => toggleRole(u.id, u.role)} className={`px-2 py-0.5 rounded-full text-xs cursor-pointer hover:opacity-80 ${u.role==="admin"?"bg-amber-100 text-amber-800":"bg-blue-100 text-blue-800"}`}>{u.role==="admin"?"관리자":"사용자"}</button></td>
             <td className="border border-gray-200 px-2 py-2 text-center">{u.created_at?.slice(0,10)}</td>
@@ -288,6 +305,20 @@ function UsersTab() {
         ))}</tbody>
       </table>
       <button onClick={()=>setShowModal(true)} className="mt-4 px-5 py-2 bg-blue-600 text-white rounded text-sm">+ 사용자 추가</button>
+      {showEditModal && editUser && (
+        <div className="fixed inset-0 bg-black/50 z-[1000] flex items-center justify-center p-4" onClick={e=>{if(e.target===e.currentTarget)setShowEditModal(false)}}>
+          <form onSubmit={saveEdit} className="bg-white rounded-lg p-6 w-full max-w-sm shadow-xl">
+            <h4 className="text-base font-bold mb-4 pb-2 border-b-2 border-gray-200">사용자 수정</h4>
+            <div className="grid gap-3 text-sm">
+              <div><label className="block text-xs font-semibold text-gray-600 mb-1">사용자 ID</label><input type="text" value={editUser.user_id} readOnly className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm bg-gray-100 text-gray-400" /></div>
+              <div><label className="block text-xs font-semibold text-gray-600 mb-1">이름</label><input required type="text" value={editForm.name} onChange={e=>setEditForm(p=>({...p,name:e.target.value}))} className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm" /></div>
+              <div><label className="block text-xs font-semibold text-gray-600 mb-1">비밀번호</label><input type="password" value={editForm.password} onChange={e=>setEditForm(p=>({...p,password:e.target.value}))} placeholder="변경 시에만 입력" className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm" /></div>
+              <div><label className="block text-xs font-semibold text-gray-600 mb-1">권한</label><select value={editForm.role} onChange={e=>setEditForm(p=>({...p,role:e.target.value}))} className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm"><option value="user">사용자</option><option value="admin">관리자</option></select></div>
+            </div>
+            <div className="flex gap-2 justify-end mt-4"><button type="submit" className="px-5 py-2 bg-blue-600 text-white rounded text-sm">저장</button><button type="button" onClick={()=>setShowEditModal(false)} className="px-5 py-2 border border-gray-300 rounded text-sm">취소</button></div>
+          </form>
+        </div>
+      )}
       {showModal && (
         <div className="fixed inset-0 bg-black/50 z-[1000] flex items-center justify-center p-4" onClick={e=>{if(e.target===e.currentTarget)setShowModal(false)}}>
           <form onSubmit={create} className="bg-white rounded-lg p-6 w-full max-w-sm shadow-xl">
