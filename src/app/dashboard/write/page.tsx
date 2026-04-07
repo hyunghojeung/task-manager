@@ -782,7 +782,7 @@ export default function WritePage() {
       {/* 거래처 검색 모달 */}
       {showClientModal && (
         <div className="fixed inset-0 bg-black/50 z-[1000] flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg p-6 w-full max-w-[650px] max-h-[80vh] overflow-y-auto shadow-xl">
+          <div className="bg-white rounded-lg p-6 w-full max-w-[800px] max-h-[80vh] overflow-y-auto shadow-xl">
             <h4 className="text-base font-bold text-gray-800 mb-3 pb-2 border-b-2 border-gray-200">거래처 검색</h4>
             <div className="flex gap-2 mb-3">
               <input type="text" placeholder="거래처명을 입력하세요" value={clientSearch} onChange={e => setClientSearch(e.target.value)} className="flex-1 px-3 py-2 border border-gray-300 rounded text-sm" />
@@ -790,18 +790,18 @@ export default function WritePage() {
             <table className="w-full border-collapse text-xs">
               <thead>
                 <tr>
-                  <th className="bg-gray-50 px-2 py-2 border-b-2 border-gray-200 text-center font-semibold text-gray-600">회사명</th>
-                  <th className="bg-gray-50 px-2 py-2 border-b-2 border-gray-200 text-center font-semibold text-gray-600">담당자</th>
-                  <th className="bg-gray-50 px-2 py-2 border-b-2 border-gray-200 text-center font-semibold text-gray-600">전화</th>
-                  <th className="bg-gray-50 px-2 py-2 border-b-2 border-gray-200 text-center font-semibold text-gray-600">핸드폰</th>
-                  <th className="bg-gray-50 px-2 py-2 border-b-2 border-gray-200 text-center font-semibold text-gray-600">이메일</th>
+                  <th className="bg-gray-50 px-2 py-2 border-b-2 border-gray-200 text-center font-semibold text-gray-600 whitespace-nowrap">회사명</th>
+                  <th className="bg-gray-50 px-2 py-2 border-b-2 border-gray-200 text-center font-semibold text-gray-600 whitespace-nowrap">담당자</th>
+                  <th className="bg-gray-50 px-2 py-2 border-b-2 border-gray-200 text-center font-semibold text-gray-600 whitespace-nowrap">전화</th>
+                  <th className="bg-gray-50 px-2 py-2 border-b-2 border-gray-200 text-center font-semibold text-gray-600 whitespace-nowrap">핸드폰</th>
+                  <th className="bg-gray-50 px-2 py-2 border-b-2 border-gray-200 text-center font-semibold text-gray-600 whitespace-nowrap">이메일</th>
                 </tr>
               </thead>
               <tbody>
                 {clients.filter(c => !clientSearch || c.name?.toLowerCase().includes(clientSearch.toLowerCase())).map(c => (
                   <tr key={c.id} className="hover:bg-blue-50 cursor-pointer" onClick={() => selectClient(c)}>
-                    <td className="px-2 py-2 border-b border-gray-100 text-left">{c.name}</td>
-                    <td className="px-2 py-2 border-b border-gray-100 text-center">{c.contact_person}</td>
+                    <td className="px-2 py-2 border-b border-gray-100 text-left whitespace-nowrap">{c.name}</td>
+                    <td className="px-2 py-2 border-b border-gray-100 text-center whitespace-nowrap">{c.contact_person}</td>
                     <td className="px-2 py-2 border-b border-gray-100 text-center">{c.phone}</td>
                     <td className="px-2 py-2 border-b border-gray-100 text-center">{c.mobile}</td>
                     <td className="px-2 py-2 border-b border-gray-100 text-left">{c.email}</td>
