@@ -558,9 +558,9 @@ function TemplateTab() {
               {cols.map((c, i) => (
                 <div key={`${c.name}-${c.type}-${i}`} onDragOver={e => handleDragOver(e, i)} onDrop={e => e.preventDefault()} className={`flex items-center gap-2 px-3 py-1.5 rounded border text-xs ${dragIdx === i ? "opacity-50 border-blue-400 bg-blue-50" : ""} ${c.type === "자동계산" ? "bg-amber-50 border-amber-300" : c.type === "auto" ? "bg-gray-100 border-gray-300" : "bg-white border-gray-200"}`}>
                   <span draggable onDragStart={e => handleDragStart(e, i)} onDragEnd={handleDragEnd} className="text-gray-400 cursor-grab select-none text-sm" title="드래그하여 순서 변경">☰</span>
-                  <span className="flex flex-col gap-0 mr-1">
-                    <button type="button" onClick={() => moveCol(i, i - 1)} disabled={i === 0} className="text-[9px] leading-none text-gray-400 hover:text-blue-600 disabled:opacity-30">▲</button>
-                    <button type="button" onClick={() => moveCol(i, i + 1)} disabled={i === cols.length - 1} className="text-[9px] leading-none text-gray-400 hover:text-blue-600 disabled:opacity-30">▼</button>
+                  <span className="flex flex-col">
+                    <button type="button" onClick={() => moveCol(i, i - 1)} disabled={i === 0} className="text-xs leading-3 text-gray-500 hover:text-blue-600 disabled:opacity-20 px-0.5">▲</button>
+                    <button type="button" onClick={() => moveCol(i, i + 1)} disabled={i === cols.length - 1} className="text-xs leading-3 text-gray-500 hover:text-blue-600 disabled:opacity-20 px-0.5">▼</button>
                   </span>
                   {c.type === "auto" ? (
                     <input type="text" value={c.name} readOnly className="w-24 px-1 py-0.5 border border-gray-300 rounded text-xs" style={{background:"#eee"}} />
