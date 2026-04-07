@@ -113,7 +113,7 @@ export default function BoardPage() {
       if (res.ok && d.url) {
         setFormImages(prev => [...prev, d.url]);
       } else {
-        alert("이미지 업로드 실패: " + (d.error || "") + (d.dropbox_error ? "\n" + JSON.stringify(d.dropbox_error) : ""));
+        alert("이미지 업로드 실패: " + (d.error || ""));
       }
     } catch { alert("이미지 업로드 실패"); }
     finally { setImageUploading(false); }
