@@ -790,7 +790,7 @@ export default function WritePage() {
             <table className="w-full border-collapse text-xs">
               <thead>
                 <tr>
-                  <th className="bg-gray-50 px-2 py-2 border-b-2 border-gray-200 text-center font-semibold text-gray-600 whitespace-nowrap">회사명</th>
+                  <th className="bg-gray-50 px-2 py-2 border-b-2 border-gray-200 text-center font-semibold text-gray-600 whitespace-nowrap" style={{maxWidth:"100px"}}>회사명</th>
                   <th className="bg-gray-50 px-2 py-2 border-b-2 border-gray-200 text-center font-semibold text-gray-600 whitespace-nowrap">담당자</th>
                   <th className="bg-gray-50 px-2 py-2 border-b-2 border-gray-200 text-center font-semibold text-gray-600 whitespace-nowrap">전화</th>
                   <th className="bg-gray-50 px-2 py-2 border-b-2 border-gray-200 text-center font-semibold text-gray-600 whitespace-nowrap">핸드폰</th>
@@ -800,7 +800,7 @@ export default function WritePage() {
               <tbody>
                 {clients.filter(c => !clientSearch || c.name?.toLowerCase().includes(clientSearch.toLowerCase())).map(c => (
                   <tr key={c.id} className="hover:bg-blue-50 cursor-pointer" onClick={() => selectClient(c)}>
-                    <td className="px-2 py-2 border-b border-gray-100 text-left whitespace-nowrap">{c.name}</td>
+                    <td className="px-2 py-2 border-b border-gray-100 text-left" style={{maxWidth:"100px",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{c.name}</td>
                     <td className="px-2 py-2 border-b border-gray-100 text-center whitespace-nowrap">{c.contact_person}</td>
                     <td className="px-2 py-2 border-b border-gray-100 text-center">{c.phone}</td>
                     <td className="px-2 py-2 border-b border-gray-100 text-center">{c.mobile}</td>
