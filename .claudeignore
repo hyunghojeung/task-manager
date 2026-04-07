@@ -5,6 +5,9 @@ dist/
 build/
 out/
 
+# Supabase 마이그레이션 (대용량)
+supabase/
+
 # 불필요한 파일 제외
 *.log
 package-lock.json
@@ -21,8 +24,6 @@ __pycache__/
 .git/
 *.pyc
 .DS_Store
-# src 하위 대용량 폴더
-src/**/*.map
-src/**/*.min.js
-*.map
-*.min.js
+
+# preview 폴더 제외
+preview/
