@@ -110,10 +110,19 @@ export default function WritePage() {
     return result;
   }
 
+  function formatNumber(v: string): string {
+    const num = parseInt(v);
+    if (isNaN(num)) return v;
+    return num.toLocaleString();
+  }
+
   function handleItemChange(rowIdx: number, colName: string, value: string) {
     setItemData(prev => {
       const newData = [...prev];
-      newData[rowIdx] = {...newData[rowIdx], [colName]: value};
+      // 숫자 타입 컬럼이면 콤마 제거 후 순수 숫자만 저장
+      const col = templateCols.find(tc => tc.name === colName);
+      const raw = col?.type === "숫자" ? value.replace(/,/g, "").replace(/[^0-9\-]/g, "") : value;
+      newData[rowIdx] = {...newData[rowIdx], [colName]: raw};
       if (templateFormulas.length > 0) {
         newData[rowIdx] = calcFormulas(newData[rowIdx], templateFormulas);
       }
@@ -673,8 +682,8 @@ export default function WritePage() {
                   {templateCols.map((c, ci) => (
                     <td key={ci} className={`border border-gray-200 px-1 py-1 ${c.type === "자동계산" ? "bg-amber-50" : ""}`}>
                       {c.type === "auto" ? <span className="text-center block">{rowIdx + 1}</span> :
-                       c.type === "자동계산" ? <span className="block text-right text-xs px-1 py-1">{itemData[rowIdx]?.[c.name] || ""}</span> :
-                       <input type="text" value={itemData[rowIdx]?.[c.name] || ""} onChange={e => handleItemChange(rowIdx, c.name, e.target.value)} className={`w-full px-1 py-1 border border-gray-200 rounded text-xs ${c.type === "숫자" ? "text-right" : ""}`} />}
+                       c.type === "자동계산" ? <span className="block text-right text-xs px-1 py-1">{formatNumber(itemData[rowIdx]?.[c.name] || "")}</span> :
+                       <input type="text" value={c.type === "숫자" ? formatNumber(itemData[rowIdx]?.[c.name] || "") : (itemData[rowIdx]?.[c.name] || "")} onChange={e => handleItemChange(rowIdx, c.name, e.target.value)} className={`w-full px-1 py-1 border border-gray-200 rounded text-xs ${c.type === "숫자" ? "text-right" : ""}`} />}
                     </td>
                   ))}
                 </tr>
