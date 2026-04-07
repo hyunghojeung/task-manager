@@ -443,7 +443,11 @@ function TemplateTab() {
   const [templates, setTemplates] = useState<Tmpl[]>([]);
   const [newName, setNewName] = useState("");
   const [editTmpl, setEditTmpl] = useState<Tmpl | null>(null);
-  const [cols, setCols] = useState<Array<{name:string;type:string}>>([{name:"순번",type:"auto"}]);
+  let colIdCounter = 0;
+  function assignColIds(columns: Array<{name:string;type:string}>): Array<{name:string;type:string;_id:string}> {
+    return columns.map(c => ({...c, _id: (c as Record<string,string>)._id || `col_${Date.now()}_${colIdCounter++}`}));
+  }
+  const [cols, setCols] = useState<Array<{name:string;type:string;_id:string}>>(assignColIds([{name:"순번",type:"auto"}]));
   const [formulas, setFormulas] = useState<Array<{target:string;expression:string}>>([]);
   const [colOptions, setColOptions] = useState<Array<{id:string;name:string;sort_order:number}>>([]);
   const [newColName, setNewColName] = useState("");
@@ -490,15 +494,16 @@ function TemplateTab() {
   }
   function startEdit(t: Tmpl) {
     setEditTmpl(t);
-    setCols(t.columns?.length ? t.columns : [{name:"순번",type:"auto"}]);
+    setCols(assignColIds(t.columns?.length ? t.columns : [{name:"순번",type:"auto"}]));
     setFormulas(t.formulas?.length ? t.formulas : []);
   }
   async function saveTemplate() {
     if (!editTmpl) return;
-    await fetch(`/api/templates/${editTmpl.id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ columns: cols, formulas }) });
+    const saveCols = cols.map(({_id, ...rest}) => rest);
+    await fetch(`/api/templates/${editTmpl.id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ columns: saveCols, formulas }) });
     setEditTmpl(null); load(); alert("양식이 저장되었습니다.");
   }
-  function addCol() { setCols(p => [...p, {name:"",type:"텍스트"}]); }
+  function addCol() { setCols(p => [...p, {name:"",type:"텍스트",_id:`col_${Date.now()}_${Math.random()}`}]); }
   function removeCol(i: number) { setCols(p => p.filter((_,idx) => idx !== i)); }
   function updateCol(i: number, field: string, val: string) { setCols(p => p.map((c,idx) => idx === i ? {...c,[field]:val} : c)); }
   function addFormula() { setFormulas(p => [...p, {target:"",expression:""}]); }
@@ -556,7 +561,7 @@ function TemplateTab() {
             <p className="text-xs font-semibold text-gray-500 mb-2">1. 컬럼 설정</p>
             <div className="flex flex-col gap-1">
               {cols.map((c, i) => (
-                <div key={`${c.name}-${c.type}-${i}`} onDragOver={e => handleDragOver(e, i)} onDrop={e => e.preventDefault()} className={`flex items-center gap-2 px-3 py-1.5 rounded border text-xs ${dragIdx === i ? "opacity-50 border-blue-400 bg-blue-50" : ""} ${c.type === "자동계산" ? "bg-amber-50 border-amber-300" : c.type === "auto" ? "bg-gray-100 border-gray-300" : "bg-white border-gray-200"}`}>
+                <div key={c._id} onDragOver={e => handleDragOver(e, i)} onDrop={e => e.preventDefault()} className={`flex items-center gap-2 px-3 py-1.5 rounded border text-xs ${dragIdx === i ? "opacity-50 border-blue-400 bg-blue-50" : ""} ${c.type === "자동계산" ? "bg-amber-50 border-amber-300" : c.type === "auto" ? "bg-gray-100 border-gray-300" : "bg-white border-gray-200"}`}>
                   <span draggable onDragStart={e => handleDragStart(e, i)} onDragEnd={handleDragEnd} className="text-gray-400 cursor-grab select-none text-sm" title="드래그하여 순서 변경">☰</span>
                   <span className="flex flex-col">
                     <button type="button" onClick={() => moveCol(i, i - 1)} disabled={i === 0} className="text-xs leading-3 text-gray-500 hover:text-blue-600 disabled:opacity-20 px-0.5">▲</button>
