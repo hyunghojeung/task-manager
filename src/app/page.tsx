@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
@@ -10,6 +10,13 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const savedCompanyId = localStorage.getItem("login_companyId");
+    const savedUserId = localStorage.getItem("login_userId");
+    if (savedCompanyId) setCompanyId(savedCompanyId);
+    if (savedUserId) setUserId(savedUserId);
+  }, []);
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
@@ -30,6 +37,8 @@ export default function LoginPage() {
         return;
       }
 
+      localStorage.setItem("login_companyId", companyId);
+      localStorage.setItem("login_userId", userId);
       router.push("/dashboard");
     } catch {
       setError("서버에 연결할 수 없습니다.");
