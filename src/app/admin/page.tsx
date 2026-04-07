@@ -509,6 +509,7 @@ function TemplateTab() {
   function handleDragOver(e: React.DragEvent, i: number) { e.preventDefault(); if (dragIdx === null || dragIdx === i) return; setCols(prev => { const next = [...prev]; const [moved] = next.splice(dragIdx, 1); next.splice(i, 0, moved); return next; }); setDragIdx(i); }
   function handleDragEnd() { setDragIdx(null); }
   async function setDefault(id: string) {
+    setTemplates(prev => prev.map(t => ({ ...t, is_default: t.id === id })));
     await fetch("/api/templates/default", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }) });
     load();
   }
