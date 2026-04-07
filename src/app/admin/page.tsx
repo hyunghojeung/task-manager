@@ -23,10 +23,10 @@ export default function AdminPage() {
 
   return (
     <div>
-      <div className="bg-white border-b-2 border-gray-200 px-4 flex gap-0 overflow-x-auto mb-6">
+      <div className="bg-white border-b-2 border-gray-200 px-4 flex justify-center gap-0 overflow-x-auto mb-6">
         {tabs.map((t) => (
           <button key={t.key} onClick={() => setTab(t.key)}
-            className={`px-4 md:px-6 py-3 text-xs md:text-sm font-semibold border-b-[3px] whitespace-nowrap transition ${tab === t.key ? "text-blue-600 border-blue-600" : "text-gray-500 border-transparent hover:text-gray-800"}`}>
+            className={`px-4 md:px-6 py-3 text-sm md:text-base font-bold border-b-[3px] whitespace-nowrap transition ${tab === t.key ? "text-blue-600 border-blue-600" : "text-gray-800 border-transparent hover:text-blue-500"}`}>
             {t.label}
           </button>
         ))}
