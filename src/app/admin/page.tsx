@@ -505,9 +505,10 @@ function TemplateTab() {
   function removeFormula(i: number) { setFormulas(p => p.filter((_,idx) => idx !== i)); }
   function updateFormula(i: number, field: string, val: string) { setFormulas(p => p.map((f,idx) => idx === i ? {...f,[field]:val} : f)); }
   const [dragIdx, setDragIdx] = useState<number|null>(null);
-  function handleDragStart(i: number) { setDragIdx(i); }
+  const [draggable, setDraggable] = useState(false);
+  function handleDragStart(e: React.DragEvent, i: number) { setDragIdx(i); e.dataTransfer.effectAllowed = "move"; }
   function handleDragOver(e: React.DragEvent, i: number) { e.preventDefault(); if (dragIdx === null || dragIdx === i) return; setCols(prev => { const next = [...prev]; const [moved] = next.splice(dragIdx, 1); next.splice(i, 0, moved); return next; }); setDragIdx(i); }
-  function handleDragEnd() { setDragIdx(null); }
+  function handleDragEnd() { setDragIdx(null); setDraggable(false); }
   async function setDefault(id: string) {
     setTemplates(prev => prev.map(t => ({ ...t, is_default: t.id === id })));
     await fetch("/api/templates/default", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }) });
@@ -555,8 +556,8 @@ function TemplateTab() {
             <p className="text-xs font-semibold text-gray-500 mb-2">1. 컬럼 설정</p>
             <div className="flex flex-col gap-1">
               {cols.map((c, i) => (
-                <div key={i} draggable onDragStart={() => handleDragStart(i)} onDragOver={e => handleDragOver(e, i)} onDragEnd={handleDragEnd} className={`flex items-center gap-2 px-3 py-1.5 rounded border text-xs ${dragIdx === i ? "opacity-50" : ""} ${c.type === "자동계산" ? "bg-amber-50 border-amber-300" : c.type === "auto" ? "bg-gray-100 border-gray-300" : "bg-white border-gray-200"}`}>
-                  <span className="text-gray-400 cursor-grab select-none">☰</span>
+                <div key={`${c.name}-${c.type}-${i}`} draggable={draggable} onDragStart={e => handleDragStart(e, i)} onDragOver={e => handleDragOver(e, i)} onDragEnd={handleDragEnd} className={`flex items-center gap-2 px-3 py-1.5 rounded border text-xs ${dragIdx === i ? "opacity-50 border-blue-400 bg-blue-50" : ""} ${c.type === "자동계산" ? "bg-amber-50 border-amber-300" : c.type === "auto" ? "bg-gray-100 border-gray-300" : "bg-white border-gray-200"}`}>
+                  <span className="text-gray-400 cursor-grab select-none" onMouseDown={() => setDraggable(true)} onMouseUp={() => setDraggable(false)}>☰</span>
                   {c.type === "auto" ? (
                     <input type="text" value={c.name} readOnly className="w-24 px-1 py-0.5 border border-gray-300 rounded text-xs" style={{background:"#eee"}} />
                   ) : (
