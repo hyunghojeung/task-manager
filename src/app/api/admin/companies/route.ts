@@ -119,19 +119,21 @@ export async function POST(request: NextRequest) {
       { company_id: company.id, order_no: `${today}-T3`, order_date: new Date().toISOString().slice(0, 10), client_name: "TEST 거래처C", title: "TEST 샘플 작업 3", orderer: adminName || "관리자", status: "complete", created_by: adminId },
     ]);
 
-    // pwindow의 예전Ecount양식을 기본 폼 양식으로 복사
+    // pwindow의 모든 양식을 기본 폼 양식으로 복사
     const { data: pwindowCompany } = await supabase.from("companies").select("id").eq("company_id", "pwindow").maybeSingle();
     if (pwindowCompany) {
-      const { data: ecountTemplate } = await supabase.from("form_templates").select("name, columns, formulas").eq("company_id", pwindowCompany.id).ilike("name", "%Ecount%").maybeSingle();
-      if (ecountTemplate) {
-        await supabase.from("form_templates").insert({
-          company_id: company.id,
-          name: ecountTemplate.name,
-          columns: ecountTemplate.columns,
-          formulas: ecountTemplate.formulas,
-          is_default: true,
-          sort_order: 0,
-        });
+      const { data: pwindowTemplates } = await supabase.from("form_templates").select("name, columns, formulas, is_default, sort_order").eq("company_id", pwindowCompany.id).order("sort_order");
+      if (pwindowTemplates && pwindowTemplates.length > 0) {
+        await supabase.from("form_templates").insert(
+          pwindowTemplates.map((t, i) => ({
+            company_id: company.id,
+            name: t.name,
+            columns: t.columns,
+            formulas: t.formulas,
+            is_default: i === 0,
+            sort_order: t.sort_order ?? i,
+          }))
+        );
       }
     }
 
