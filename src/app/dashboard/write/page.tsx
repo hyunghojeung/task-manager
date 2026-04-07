@@ -119,9 +119,10 @@ export default function WritePage() {
   function handleItemChange(rowIdx: number, colName: string, value: string) {
     setItemData(prev => {
       const newData = [...prev];
-      // 숫자 타입 컬럼이면 콤마 제거 후 순수 숫자만 저장
+      // 숫자 타입이거나 콤마 포함된 숫자면 콤마 제거 후 순수 숫자만 저장
       const col = templateCols.find(tc => tc.name === colName);
-      const raw = col?.type === "숫자" ? value.replace(/,/g, "").replace(/[^0-9\-]/g, "") : value;
+      const stripped = value.replace(/,/g, "");
+      const raw = (col?.type === "숫자" || /^-?\d+$/.test(stripped)) ? stripped.replace(/[^0-9\-]/g, "") : value;
       newData[rowIdx] = {...newData[rowIdx], [colName]: raw};
       if (templateFormulas.length > 0) {
         newData[rowIdx] = calcFormulas(newData[rowIdx], templateFormulas);
@@ -683,7 +684,7 @@ export default function WritePage() {
                     <td key={ci} className={`border border-gray-200 px-1 py-1 ${c.type === "자동계산" ? "bg-amber-50" : ""}`}>
                       {c.type === "auto" ? <span className="text-center block">{rowIdx + 1}</span> :
                        c.type === "자동계산" ? <span className="block text-right text-xs px-1 py-1">{formatNumber(itemData[rowIdx]?.[c.name] || "")}</span> :
-                       <input type="text" value={c.type === "숫자" ? formatNumber(itemData[rowIdx]?.[c.name] || "") : (itemData[rowIdx]?.[c.name] || "")} onChange={e => handleItemChange(rowIdx, c.name, e.target.value)} className={`w-full px-1 py-1 border border-gray-200 rounded text-xs ${c.type === "숫자" ? "text-right" : ""}`} />}
+                       <input type="text" value={(c.type === "숫자" || /^\d+$/.test(itemData[rowIdx]?.[c.name] || "")) ? formatNumber(itemData[rowIdx]?.[c.name] || "") : (itemData[rowIdx]?.[c.name] || "")} onChange={e => handleItemChange(rowIdx, c.name, e.target.value)} className={`w-full px-1 py-1 border border-gray-200 rounded text-xs ${(c.type === "숫자" || /^\d+$/.test(itemData[rowIdx]?.[c.name] || "")) ? "text-right" : ""}`} />}
                     </td>
                   ))}
                 </tr>
