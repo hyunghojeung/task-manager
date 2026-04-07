@@ -83,22 +83,29 @@ export default function WritePage() {
 
   function calcFormulas(rowData: Record<string,string>, formulas: Array<{target:string;expression:string}>): Record<string,string> {
     const result = {...rowData};
+    // 자동계산 대상 필드의 이전 값을 삭제 → 낡은 값 간섭 방지
     for (const f of formulas) {
-      try {
-        let expr = f.expression;
-        // "x"를 "*"로 변환 (곱셈 기호 호환)
-        expr = expr.replace(/(\d)x(\d)/g, '$1*$2').replace(/([가-힣])x([가-힣])/g, '$1*$2').replace(/\bx\b/g, '*');
-        // 키를 긴 순서대로 정렬 (부분 문자열 충돌 방지: 공급가액 > 공급가)
-        const sortedKeys = Object.keys(result).sort((a, b) => b.length - a.length);
-        for (const key of sortedKeys) {
-          const val = parseFloat(result[key]) || 0;
-          expr = expr.replace(new RegExp(key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), String(val));
-        }
-        const computed = Function('"use strict"; return (' + expr + ')')();
-        if (typeof computed === 'number' && !isNaN(computed)) {
-          result[f.target] = String(Math.round(computed));
-        }
-      } catch { /* ignore */ }
+      delete result[f.target];
+    }
+    // 수식을 2회 반복하여 수식 간 의존성 해결
+    for (let pass = 0; pass < 2; pass++) {
+      for (const f of formulas) {
+        try {
+          let expr = f.expression;
+          // "x"를 "*"로 변환 (곱셈 기호 호환)
+          expr = expr.replace(/(\d)x(\d)/g, '$1*$2').replace(/([가-힣])x([가-힣])/g, '$1*$2').replace(/\bx\b/g, '*');
+          // 키를 긴 순서대로 정렬 (부분 문자열 충돌 방지: 공급가액 > 공급가)
+          const sortedKeys = Object.keys(result).sort((a, b) => b.length - a.length);
+          for (const key of sortedKeys) {
+            const val = parseFloat(result[key]) || 0;
+            expr = expr.replace(new RegExp(key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), String(val));
+          }
+          const computed = Function('"use strict"; return (' + expr + ')')();
+          if (typeof computed === 'number' && !isNaN(computed)) {
+            result[f.target] = String(Math.round(computed));
+          }
+        } catch { /* ignore */ }
+      }
     }
     return result;
   }
