@@ -21,3 +21,8 @@ __pycache__/
 .git/
 *.pyc
 .DS_Store
+# src 하위 대용량 폴더
+src/**/*.map
+src/**/*.min.js
+*.map
+*.min.js
