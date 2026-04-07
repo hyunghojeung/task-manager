@@ -21,9 +21,11 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
   // 비밀번호 확인
   const { data: post } = await supabase.from("board_posts").select("password").eq("id", id).single();
   if (!post || post.password !== body.password) return NextResponse.json({ error: "비밀번호가 일치하지 않습니다." }, { status: 403 });
-  const { error } = await supabase.from("board_posts").update({ title: body.title, content: body.content, images: body.images || [], updated_at: new Date().toISOString() }).eq("id", id);
+  const updateData: Record<string, unknown> = { title: body.title, content: body.content, updated_at: new Date().toISOString() };
+  if (body.images !== undefined) updateData.images = body.images;
+  const { data: updated, error } = await supabase.from("board_posts").update(updateData).eq("id", id).select("images").single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ success: true });
+  return NextResponse.json({ success: true, images: updated?.images });
 }
 
 export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {

@@ -65,7 +65,13 @@ export default function BoardPage() {
     if (!formTitle || !formAuthor || !formPassword) { alert("제목, 작성자, 비밀번호를 입력해주세요."); return; }
     if (view === "edit" && current) {
       const r = await fetch(`/api/board/${current.id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ title: formTitle, content: formContent, password: formPassword, images: formImages }) });
-      if (r.ok) { loadPost(current.id); } else { const d = await r.json(); alert(d.error); }
+      if (r.ok) {
+        const saved = await r.json();
+        if (saved.images && saved.images.length !== formImages.length) {
+          alert("이미지 저장에 문제가 있습니다. 전송: " + formImages.length + "개, 저장: " + saved.images.length + "개");
+        }
+        loadPost(current.id);
+      } else { const d = await r.json(); alert(d.error); }
     } else {
       const r = await fetch("/api/board", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ title: formTitle, content: formContent, author: formAuthor, password: formPassword, images: formImages }) });
       if (r.ok) { setView("list"); setRefreshKey(k => k + 1); resetForm(); }
