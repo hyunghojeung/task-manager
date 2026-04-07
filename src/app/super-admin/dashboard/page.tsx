@@ -351,7 +351,7 @@ export default function SuperAdminDashboard() {
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-base font-bold text-gray-800">업체 목록</h3>
               <div className="flex gap-2">
-                <button onClick={async () => { if(!confirm("pwindow 양식을 모든 업체에 복사하시겠습니까?")) return; const r = await fetch("/api/admin/sync-templates",{method:"POST"}); const d = await r.json(); alert(d.message || d.error); loadCompanies(); }} className="px-4 py-2 bg-gray-600 text-white rounded text-sm font-medium">양식 일괄복사</button>
+                <button onClick={async () => { if(!confirm("pwindow 양식을 모든 업체에 복사하시겠습니까?")) return; const r = await fetch("/api/admin/sync-templates",{method:"POST"}); const d = await r.json(); alert(d.message || d.error); }} className="px-4 py-2 bg-gray-600 text-white rounded text-sm font-medium">양식 일괄복사</button>
                 <button onClick={openCreate} className="px-5 py-2 bg-blue-600 text-white rounded text-sm font-medium">+ 업체 등록</button>
               </div>
             </div>
