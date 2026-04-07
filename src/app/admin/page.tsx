@@ -443,11 +443,10 @@ function TemplateTab() {
   const [templates, setTemplates] = useState<Tmpl[]>([]);
   const [newName, setNewName] = useState("");
   const [editTmpl, setEditTmpl] = useState<Tmpl | null>(null);
-  let colIdCounter = 0;
   function assignColIds(columns: Array<{name:string;type:string}>): Array<{name:string;type:string;_id:string}> {
-    return columns.map(c => ({...c, _id: (c as Record<string,string>)._id || `col_${Date.now()}_${colIdCounter++}`}));
+    return columns.map((c, i) => ({...c, _id: (c as Record<string,string>)._id || `col_${i}_${Math.random().toString(36).slice(2)}`}));
   }
-  const [cols, setCols] = useState<Array<{name:string;type:string;_id:string}>>(assignColIds([{name:"순번",type:"auto"}]));
+  const [cols, setCols] = useState<Array<{name:string;type:string;_id:string}>>(() => assignColIds([{name:"순번",type:"auto"}]));
   const [formulas, setFormulas] = useState<Array<{target:string;expression:string}>>([]);
   const [colOptions, setColOptions] = useState<Array<{id:string;name:string;sort_order:number}>>([]);
   const [newColName, setNewColName] = useState("");
