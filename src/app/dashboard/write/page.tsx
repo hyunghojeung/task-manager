@@ -806,11 +806,11 @@ export default function WritePage() {
             <table className="w-full border-collapse text-xs">
               <thead>
                 <tr>
-                  <th className="bg-gray-50 px-2 py-2 border-b-2 border-gray-200 text-left font-semibold text-gray-600" style={{width:"30%"}}>회사명</th>
-                  <th className="bg-gray-50 px-2 py-2 border-b-2 border-gray-200 text-center font-semibold text-gray-600" style={{width:"15%"}}>담당자</th>
-                  <th className="bg-gray-50 px-2 py-2 border-b-2 border-gray-200 text-center font-semibold text-gray-600" style={{width:"18%"}}>전화</th>
-                  <th className="bg-gray-50 px-2 py-2 border-b-2 border-gray-200 text-center font-semibold text-gray-600" style={{width:"18%"}}>핸드폰</th>
-                  <th className="bg-gray-50 px-2 py-2 border-b-2 border-gray-200 text-center font-semibold text-gray-600" style={{width:"19%"}}>이메일</th>
+                  <th className="bg-gray-50 px-2 py-2 border-b-2 border-gray-200 text-left font-semibold text-gray-600" style={{width:"35%"}}>회사명</th>
+                  <th className="bg-gray-50 px-2 py-2 border-b-2 border-gray-200 text-center font-semibold text-gray-600" style={{width:"13%"}}>담당자</th>
+                  <th className="bg-gray-50 px-2 py-2 border-b-2 border-gray-200 text-center font-semibold text-gray-600" style={{width:"17%"}}>전화</th>
+                  <th className="bg-gray-50 px-2 py-2 border-b-2 border-gray-200 text-center font-semibold text-gray-600" style={{width:"17%"}}>핸드폰</th>
+                  <th className="bg-gray-50 px-2 py-2 border-b-2 border-gray-200 text-center font-semibold text-gray-600" style={{width:"18%"}}>이메일</th>
                 </tr>
               </thead>
               <tbody>
