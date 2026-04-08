@@ -54,7 +54,13 @@ function EstimateContent() {
     try {
       const el = document.querySelector(".print-wrap") as HTMLElement;
       if (!el) { alert("캡처할 영역을 찾을 수 없습니다."); return; }
+      const origWidth = el.style.width;
+      const origMaxWidth = el.style.maxWidth;
+      el.style.width = "800px";
+      el.style.maxWidth = "800px";
       const imageData = await toPng(el, { quality: 1, pixelRatio: 2, backgroundColor: "#ffffff" });
+      el.style.width = origWidth;
+      el.style.maxWidth = origMaxWidth;
       const res = await fetch("/api/email", {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ to: emailTo, subject: "견적서", image: imageData }),
