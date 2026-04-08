@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import nodemailer from "nodemailer";
-import React from "react";
 import { renderToBuffer } from "@react-pdf/renderer";
 import { getApiSession, unauthorized } from "@/lib/api-helpers";
 import { getSupabase } from "@/lib/supabase-admin";
@@ -42,7 +41,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const pdfBuffer = await renderToBuffer(
-      React.createElement(StatementPDF, { order, company, type: isEstimate ? "estimate" : "statement" })
+      <StatementPDF order={order} company={company} type={isEstimate ? "estimate" : "statement"} />
     );
 
     // 이메일 설정
