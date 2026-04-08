@@ -52,17 +52,10 @@ export default function StatementPage() {
   const supplyKey = allKeys.find(k => k.includes("공급")) || "";
   const vatKey = allKeys.find(k => k.includes("부가")) || "";
 
-  // 항목 데이터에서 직접 합계 계산 (작업등록 화면과 동일)
-  const totalKey = allKeys.find(k => k === "합계" || k === "합계금액" || k === "총액") || allKeys.find(k => k.includes("합계") || k.includes("총액")) || "";
   const supplyTotal = items.reduce((acc, d) => acc + (supplyKey && d[supplyKey] ? parseInt(d[supplyKey]) || 0 : 0), 0);
   const vatTotal = items.reduce((acc, d) => acc + (vatKey && d[vatKey] ? parseInt(d[vatKey]) || 0 : 0), 0);
-  let grandTotal = supplyTotal + vatTotal;
-  if (totalKey) {
-    const colTotal = items.reduce((acc, d) => acc + (parseInt(d[totalKey]) || 0), 0);
-    if (colTotal > 0) grandTotal = colTotal;
-  }
   const discountAmt = order.discount || 0;
-  const finalAmount = grandTotal - discountAmt;
+  const finalAmount = (order.total_amount || 0) - discountAmt;
   const orderDate = new Date(order.created_at);
   const dateStr = `${orderDate.getFullYear()}년 ${String(orderDate.getMonth() + 1).padStart(2, "0")}월 ${String(orderDate.getDate()).padStart(2, "0")}일`;
   const emptyRows = Math.max(8 - items.length, 0);
@@ -124,7 +117,7 @@ export default function StatementPage() {
                 <th className="border border-gray-800 bg-gray-100 px-3 py-2">부가세 합계</th>
                 <td className="border border-gray-800 px-3 py-2 text-right min-w-[100px]">{fmt(vatTotal)}</td>
                 <th className="border border-gray-800 bg-gray-100 px-3 py-2">총 액</th>
-                <td className="border border-gray-800 px-3 py-2 text-right font-bold min-w-[100px]">{fmt(discountAmt > 0 ? finalAmount : grandTotal)}</td>
+                <td className="border border-gray-800 px-3 py-2 text-right font-bold min-w-[100px]">{fmt(finalAmount)}</td>
               </tr>
               {discountAmt > 0 && (
                 <tr>
