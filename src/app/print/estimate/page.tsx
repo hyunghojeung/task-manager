@@ -46,10 +46,20 @@ function EstimateContent() {
     if (!orderId) return;
     fetch(`/api/orders/${orderId}?_=${Date.now()}`).then(r => r.json()).then(d => setOrder(d));
     fetch(`/api/company?_=${Date.now()}`).then(r => r.json()).then(d => setCompany(d));
-    fetch(`/api/templates?_=${Date.now()}`).then(r => r.json()).then((templates: Array<{columns: Array<{name:string;type:string}>; is_default?: boolean}>) => {
-      if (templates?.length > 0) {
-        const tmpl = templates.find(t => t.is_default) || templates[0];
-        setTemplateCols(tmpl.columns.filter(c => c.type !== "auto").map(c => c.name));
+    Promise.all([
+      fetch(`/api/orders/${orderId}?_=${Date.now()}`).then(r => r.json()),
+      fetch(`/api/templates?_=${Date.now()}`).then(r => r.json()),
+    ]).then(([orderData, templates]) => {
+      if (templates?.length > 0 && orderData?.order_items?.length > 0) {
+        const itemKeys = new Set(Object.keys(orderData.order_items.sort((a: {sort_order:number}, b: {sort_order:number}) => a.sort_order - b.sort_order)[0].data || {}));
+        let bestTmpl = templates[0];
+        let bestMatch = 0;
+        for (const t of templates) {
+          const colNames = t.columns.filter((c: {type:string}) => c.type !== "auto").map((c: {name:string}) => c.name);
+          const match = colNames.filter((n: string) => itemKeys.has(n)).length;
+          if (match > bestMatch) { bestMatch = match; bestTmpl = t; }
+        }
+        setTemplateCols(bestTmpl.columns.filter((c: {type:string}) => c.type !== "auto").map((c: {name:string}) => c.name));
       }
     }).catch(() => {});
   }, [orderId]);
