@@ -304,16 +304,22 @@ export default function WritePage() {
     try {
       const url = editId ? `/api/orders/${editId}` : "/api/orders";
       const method = editId ? "PUT" : "POST";
-      // 합계 계산 - 자동계산 또는 숫자 타입 컬럼 모두 고려
+      // 합계 계산 - 합계금액/합계/총액 컬럼 우선, 없으면 공급가+부가세
       const supplyCol = templateCols.find(c => c.name.includes("공급") && (c.type === "자동계산" || c.type === "숫자"));
       const vatCol = templateCols.find(c => c.name.includes("부가") && (c.type === "자동계산" || c.type === "숫자"));
+      const totalCol = templateCols.find(c => (c.name === "합계" || c.name === "합계금액" || c.name === "총액") && (c.type === "자동계산" || c.type === "숫자"));
       let totalSupply = 0;
       let totalVat = 0;
       itemData.forEach(row => {
         if (supplyCol) totalSupply += parseInt(row[supplyCol.name]) || 0;
         if (vatCol) totalVat += parseInt(row[vatCol.name]) || 0;
       });
-      const totalAmount = totalSupply + totalVat;
+      let totalAmount = totalSupply + totalVat;
+      // 합계금액 컬럼이 있으면 그 값을 사용 (반올림 오차 방지)
+      if (totalCol) {
+        const colTotal = itemData.reduce((acc, row) => acc + (parseInt(row[totalCol.name]) || 0), 0);
+        if (colTotal > 0) totalAmount = colTotal;
+      }
       const discountAmount = parseInt(formData.discount) || 0;
       const finalAmount = totalAmount - discountAmount;
 
