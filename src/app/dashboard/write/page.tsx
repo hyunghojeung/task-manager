@@ -471,7 +471,7 @@ export default function WritePage() {
           <p className="font-bold text-sm text-gray-800">세부내역</p>
           <div className="flex items-center gap-3 print:hidden">
             <label className="flex items-center gap-1 text-xs text-gray-600 cursor-pointer">
-              <input type="checkbox" checked={alwaysCollapse} onChange={toggleAlwaysCollapse} />
+              <input type="checkbox" checked={alwaysCollapse} onChange={toggleAlwaysCollapse} style={{width:"14px",height:"14px"}} />
               항상 접기
             </label>
             <button type="button" onClick={toggleDetail} className="flex items-center gap-1 px-3 py-1 text-xs font-semibold text-[#3b4b5b] border border-[#3b4b5b] rounded hover:bg-[#3b4b5b] hover:text-white transition">
@@ -561,7 +561,7 @@ export default function WritePage() {
                 const checked = selected.includes(opt);
                 return (
                   <label key={opt} className="inline-flex items-center gap-1 text-xs cursor-pointer">
-                    <input type="checkbox" checked={checked} onChange={e => {
+                    <input type="checkbox" checked={checked} style={{width:"14px",height:"14px"}} onChange={e => {
                       const next = e.target.checked ? [...selected, opt] : selected.filter(v => v !== opt);
                       handleChange("cover_finishing", next.join(","));
                     }} />
@@ -623,7 +623,7 @@ export default function WritePage() {
                 const checked = selected.includes(opt);
                 return (
                   <label key={opt} className="inline-flex items-center gap-1 text-xs cursor-pointer">
-                    <input type="checkbox" checked={checked} onChange={e => {
+                    <input type="checkbox" checked={checked} style={{width:"14px",height:"14px"}} onChange={e => {
                       const next = e.target.checked ? [...selected, opt] : selected.filter(v => v !== opt);
                       handleChange("finishing", next.join(","));
                     }} />

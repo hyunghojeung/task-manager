@@ -13,7 +13,7 @@ export default function NavBar() {
   ];
 
   return (
-    <div className="bg-white px-4 md:px-6 py-2 border-b border-gray-200 flex justify-end gap-2 overflow-x-auto print:hidden">
+    <div className="bg-white px-4 md:px-6 py-2 border-b border-gray-200 flex justify-end gap-2 overflow-x-auto print:hidden" style={{scrollbarWidth:"none",WebkitOverflowScrolling:"touch"}}>
       {links.map((link) => (
         <a
           key={link.href}
