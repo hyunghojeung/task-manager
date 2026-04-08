@@ -5,8 +5,8 @@ export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // 공개 페이지 & API
-  const publicPaths = ["/", "/super-admin", "/api/auth/login", "/api/auth/logout"];
-  if (publicPaths.some((p) => pathname === p)) {
+  const publicPaths = ["/", "/signup", "/super-admin", "/api/auth/login", "/api/auth/logout"];
+  if (publicPaths.some((p) => pathname === p) || pathname.startsWith("/api/signup")) {
     return NextResponse.next();
   }
 

@@ -112,6 +112,15 @@ export default function LoginPage() {
           </button>
         </form>
 
+        <div className="mt-4">
+          <a
+            href="/signup"
+            className="inline-block w-full py-2.5 border border-blue-600 text-blue-600 rounded font-semibold text-sm hover:bg-blue-50 transition text-center"
+          >
+            신규업체 등록
+          </a>
+        </div>
+
         <div className="mt-5 pt-4 border-t border-gray-200">
           <a
             href="/super-admin"
