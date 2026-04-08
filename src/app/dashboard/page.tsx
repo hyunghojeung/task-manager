@@ -97,18 +97,10 @@ export default function DashboardPage() {
             <th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap">순번</th><th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap">거래처</th><th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap">주문자</th><th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap">연락처</th><th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap">제목</th><th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap">금액</th><th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap">제품형태</th><th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap">결제</th><th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap">진행상태</th><th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap" style={{minWidth:"60px"}}>거래명세서</th><th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap" style={{minWidth:"60px"}}>견적서</th>
           </tr></thead>
           <tbody>
-            {loading ? Array.from({length: 8}, (_, i) => (
-              <tr key={`sk${i}`} className={i % 2 === 1 ? "bg-gray-50" : ""}>
-                {Array.from({length: 11}, (_, j) => (
-                  <td key={j} className="border border-gray-200 px-1.5 py-[10px]">
-                    <div className="h-3 bg-gray-200 rounded animate-pulse" style={{width: j === 4 ? "80%" : j === 0 ? "70px" : "60%", margin: "0 auto"}}></div>
-                  </td>
-                ))}
-              </tr>
-            )) :
+            {loading ? <tr><td colSpan={11} className="text-center py-8 text-gray-300 text-sm">불러오는 중...</td></tr> :
             orders.length === 0 ? <tr><td colSpan={11} className="text-center py-8 text-gray-400">등록된 작업이 없습니다. 작업등록 버튼을 눌러 새 작업을 등록하세요.</td></tr> :
             orders.map((o, i) => (
-              <tr key={o.id} className={`${i % 2 === 1 ? "bg-gray-50" : ""} hover:bg-blue-50`}>
+              <tr key={o.id} className={`${i % 2 === 1 ? "bg-gray-50" : ""} hover:bg-blue-50`} style={{animation: `fadeIn 0.3s ease ${i * 0.02}s both`}}>
                 <td className="border border-gray-200 px-1.5 py-[7px] text-center whitespace-nowrap"><a href={`/dashboard/write?id=${o.id}`} className="hover:text-blue-600 hover:underline">{o.order_no}</a></td>
                 <td className="border border-gray-200 px-1.5 py-[7px] text-left"><a href={`/dashboard/write?id=${o.id}`} className="hover:text-blue-600 hover:underline">{o.client_name}</a></td>
                 <td className="border border-gray-200 px-1.5 py-[7px] text-left"><a href={`/dashboard/write?id=${o.id}`} className="hover:text-blue-600 hover:underline">{o.orderer}</a></td>
