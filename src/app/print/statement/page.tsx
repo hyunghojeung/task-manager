@@ -30,14 +30,13 @@ function StatementContent() {
     try {
       const el = document.querySelector(".print-wrap") as HTMLElement;
       if (!el) { alert("캡처할 영역을 찾을 수 없습니다."); return; }
-      // 캡처 시 너비를 고정하여 잘림 방지
-      const origWidth = el.style.width;
-      const origMaxWidth = el.style.maxWidth;
-      el.style.width = "800px";
-      el.style.maxWidth = "800px";
-      const imageData = await toPng(el, { quality: 1, pixelRatio: 2, backgroundColor: "#ffffff" });
-      el.style.width = origWidth;
-      el.style.maxWidth = origMaxWidth;
+      // 여러 번 시도하여 안정적 캡처
+      let imageData = "";
+      for (let i = 0; i < 3; i++) {
+        imageData = await toPng(el, { quality: 1, pixelRatio: 2, backgroundColor: "#ffffff", width: 800, style: { maxWidth: "800px", width: "800px" } });
+        if (imageData && imageData.length > 1000) break;
+      }
+      if (!imageData || imageData.length < 1000) { alert("이미지 생성에 실패했습니다. 다시 시도해주세요."); setSending(false); return; }
       const res = await fetch("/api/email", {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ to: emailTo, subject: "거래명세서", image: imageData }),
