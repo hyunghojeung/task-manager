@@ -168,13 +168,13 @@ export default function SuperAdminDashboard() {
   }
 
   function SettingsTab() {
-    const [settings, setSettings] = useState({ system_name: "Blackcopy.kr", admin_id: "blackcopy2" });
+    const [settings, setSettings] = useState({ system_name: "Blackcopy.kr", admin_id: "blackcopy2", og_title: "", og_description: "", og_url: "", og_site_name: "" });
     const [settingsLoading, setSettingsLoading] = useState(true);
     const [settingsSaving, setSettingsSaving] = useState(false);
 
     useEffect(() => {
       fetch(`/api/admin/settings?_=${Date.now()}`).then(r => r.json()).then(d => {
-        setSettings({ system_name: d.system_name || "Blackcopy.kr", admin_id: d.admin_id || "blackcopy2" });
+        setSettings({ system_name: d.system_name || "Blackcopy.kr", admin_id: d.admin_id || "blackcopy2", og_title: d.og_title || "", og_description: d.og_description || "", og_url: d.og_url || "", og_site_name: d.og_site_name || "" });
         setSettingsLoading(false);
       }).catch(() => setSettingsLoading(false));
     }, []);
@@ -201,6 +201,32 @@ export default function SuperAdminDashboard() {
             <label className="w-32 text-xs font-semibold text-gray-600">관리자 ID</label>
             <input type="text" value={settings.admin_id} onChange={e => setSettings(p => ({ ...p, admin_id: e.target.value }))} className="flex-1 px-3 py-2 border border-gray-300 rounded text-sm" />
           </div>
+        </div>
+        <h4 className="text-sm font-bold text-gray-700 mt-6 mb-3 pb-2 border-b border-gray-200">링크 공유 시 미리보기 (OG 메타태그)</h4>
+        <p className="text-xs text-gray-400 mb-3">SNS, 카카오톡, 네이버 등에서 링크 공유 시 표시되는 정보입니다.</p>
+        <div className="grid grid-cols-1 gap-3 text-sm max-w-lg">
+          <div className="flex items-center gap-3">
+            <label className="w-32 text-xs font-semibold text-gray-600">사이트 제목</label>
+            <input type="text" value={settings.og_title} onChange={e => setSettings(p => ({ ...p, og_title: e.target.value }))} placeholder="Blackcopy.kr | 인쇄전용 ERP Bcount" className="flex-1 px-3 py-2 border border-gray-300 rounded text-sm" />
+          </div>
+          <div className="flex items-center gap-3">
+            <label className="w-32 text-xs font-semibold text-gray-600">사이트 설명</label>
+            <input type="text" value={settings.og_description} onChange={e => setSettings(p => ({ ...p, og_description: e.target.value }))} placeholder="인쇄/출력 작업기록, 견적서..." className="flex-1 px-3 py-2 border border-gray-300 rounded text-sm" />
+          </div>
+          <div className="flex items-center gap-3">
+            <label className="w-32 text-xs font-semibold text-gray-600">사이트 URL</label>
+            <input type="text" value={settings.og_url} onChange={e => setSettings(p => ({ ...p, og_url: e.target.value }))} placeholder="https://blackcopy.kr" className="flex-1 px-3 py-2 border border-gray-300 rounded text-sm" />
+          </div>
+          <div className="flex items-center gap-3">
+            <label className="w-32 text-xs font-semibold text-gray-600">사이트명</label>
+            <input type="text" value={settings.og_site_name} onChange={e => setSettings(p => ({ ...p, og_site_name: e.target.value }))} placeholder="Blackcopy.kr" className="flex-1 px-3 py-2 border border-gray-300 rounded text-sm" />
+          </div>
+        </div>
+        <div className="mt-3 p-3 bg-gray-50 border border-gray-200 rounded max-w-lg">
+          <p className="text-xs text-gray-400 mb-1">미리보기</p>
+          <p className="text-sm font-bold text-gray-800">{settings.og_title || "Blackcopy.kr | 인쇄전용 ERP Bcount"}</p>
+          <p className="text-xs text-gray-500">{settings.og_description || "인쇄/출력 작업기록, 견적서, 거래명세서, 발주서까지 올인원 업무관리"}</p>
+          <p className="text-xs text-blue-600">{settings.og_url || "https://blackcopy.kr"}</p>
         </div>
         <button onClick={saveSettings} disabled={settingsSaving} className="mt-4 px-5 py-2 bg-blue-600 text-white rounded text-sm disabled:opacity-50">{settingsSaving ? "저장중..." : "설정 저장"}</button>
       </div>
