@@ -56,7 +56,7 @@ export default function LoginPage() {
           </a>
         </h1>
         <p className="text-sm font-semibold text-gray-500 mb-1">
-          인쇄전용 ERP Bcount
+          POD/인쇄 업체전용 ERP Bcount
         </p>
         <p className="text-xs text-gray-400 mb-6">
           업체 ID와 사용자 ID로 로그인하세요
