@@ -43,16 +43,13 @@ function StatementContent() {
   const rawItems = (order.order_items || []).sort((a, b) => a.sort_order - b.sort_order).map(it => it.data);
   const items = rawItems.filter(d => Object.values(d).some(v => v));
 
-  // 컬럼 키 추출: 품목명/수량/단가/공급가액/부가세 패턴 찾기
+  // 항목 데이터의 키 순서 그대로 컬럼으로 사용 (작업등록 양식과 동일)
   const allKeys = items.length > 0 ? Object.keys(items[0]) : [];
-  const nameKey = allKeys.find(k => k.includes("품목") || k.includes("품명") || k.includes("작업")) || allKeys[0] || "품목명";
-  const qtyKey = allKeys.find(k => k.includes("수량")) || "";
-  const priceKey = allKeys.find(k => k.includes("단가")) || "";
   const supplyKey = allKeys.find(k => k.includes("공급")) || "";
   const vatKey = allKeys.find(k => k.includes("부가")) || "";
 
-  const supplyTotal = order.total_supply || 0;
-  const vatTotal = order.total_vat || 0;
+  const supplyTotal = items.reduce((acc, d) => acc + (supplyKey && d[supplyKey] ? parseInt(d[supplyKey]) || 0 : 0), 0);
+  const vatTotal = items.reduce((acc, d) => acc + (vatKey && d[vatKey] ? parseInt(d[vatKey]) || 0 : 0), 0);
   const discount = order.discount || 0;
   const grandTotal = (order.total_amount || 0) - discount;
   const orderDate = new Date(order.created_at);
@@ -88,21 +85,29 @@ function StatementContent() {
 
         <table className="w-full border-collapse text-sm mb-4">
           <thead>
-            <tr><th className="border border-gray-800 bg-gray-100 px-2 py-2 w-12">순번</th><th className="border border-gray-800 bg-gray-100 px-2 py-2">품목명(규격)</th><th className="border border-gray-800 bg-gray-100 px-2 py-2 w-14">수량</th><th className="border border-gray-800 bg-gray-100 px-2 py-2 w-16">단가</th><th className="border border-gray-800 bg-gray-100 px-2 py-2 w-20">공급가액</th><th className="border border-gray-800 bg-gray-100 px-2 py-2 w-16">부가세</th></tr>
+            <tr>
+              <th className="border border-gray-800 bg-gray-100 px-2 py-2 w-10">순번</th>
+              {allKeys.map(k => (
+                <th key={k} className="border border-gray-800 bg-gray-100 px-2 py-2">{k}</th>
+              ))}
+            </tr>
           </thead>
           <tbody>
             {items.map((d, i) => (
               <tr key={i}>
                 <td className="border border-gray-300 px-2 py-2 text-center">{i + 1}</td>
-                <td className="border border-gray-300 px-2 py-2 text-left">{d[nameKey] || ""}</td>
-                <td className="border border-gray-300 px-2 py-2 text-center">{qtyKey ? d[qtyKey] || "" : ""}</td>
-                <td className="border border-gray-300 px-2 py-2 text-right">{priceKey && d[priceKey] ? parseInt(d[priceKey]).toLocaleString() : ""}</td>
-                <td className="border border-gray-300 px-2 py-2 text-right">{supplyKey && d[supplyKey] ? parseInt(d[supplyKey]).toLocaleString() : ""}</td>
-                <td className="border border-gray-300 px-2 py-2 text-right">{vatKey && d[vatKey] ? parseInt(d[vatKey]).toLocaleString() : ""}</td>
+                {allKeys.map(k => {
+                  const val = d[k] || "";
+                  const isNum = /^\d+$/.test(val);
+                  return <td key={k} className={`border border-gray-300 px-2 py-2 ${isNum ? "text-right" : "text-left"}`}>{isNum ? parseInt(val).toLocaleString() : val}</td>;
+                })}
               </tr>
             ))}
             {Array.from({ length: emptyRows }, (_, i) => (
-              <tr key={`e${i}`}><td className="border border-gray-300 px-2 py-2 text-center">&nbsp;</td><td className="border border-gray-300 px-2 py-2"></td><td className="border border-gray-300 px-2 py-2"></td><td className="border border-gray-300 px-2 py-2"></td><td className="border border-gray-300 px-2 py-2"></td><td className="border border-gray-300 px-2 py-2"></td></tr>
+              <tr key={`e${i}`}>
+                <td className="border border-gray-300 px-2 py-2 text-center">&nbsp;</td>
+                {allKeys.map(k => <td key={k} className="border border-gray-300 px-2 py-2"></td>)}
+              </tr>
             ))}
           </tbody>
         </table>

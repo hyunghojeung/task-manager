@@ -47,14 +47,12 @@ export default function StatementPDF({ order, company, type = "statement" }: Sta
   const rawItems = (order.order_items || []).sort((a, b) => a.sort_order - b.sort_order).map(it => it.data);
   const items = rawItems.filter(d => Object.values(d).some(v => v));
   const allKeys = items.length > 0 ? Object.keys(items[0]) : [];
-  const nameKey = allKeys.find(k => k.includes("품목") || k.includes("품명") || k.includes("작업")) || allKeys[0] || "품목명";
-  const qtyKey = allKeys.find(k => k.includes("수량")) || "";
-  const priceKey = allKeys.find(k => k.includes("단가")) || "";
   const supplyKey = allKeys.find(k => k.includes("공급")) || "";
   const vatKey = allKeys.find(k => k.includes("부가")) || "";
 
   const supplyTotal = items.reduce((acc, d) => acc + (supplyKey && d[supplyKey] ? parseInt(d[supplyKey]) || 0 : 0), 0);
   const vatTotal = items.reduce((acc, d) => acc + (vatKey && d[vatKey] ? parseInt(d[vatKey]) || 0 : 0), 0);
+  const colCount = allKeys.length;
   const discount = order.discount || 0;
   const grandTotal = (order.total_amount || 0) - discount;
   const orderDate = new Date(order.created_at);
@@ -116,31 +114,27 @@ export default function StatementPDF({ order, company, type = "statement" }: Sta
 
         <View style={s.table}>
           <View style={s.tableHeader}>
-            <Text style={[s.th, { width: 30 }]}>순번</Text>
-            <Text style={[s.th, { flex: 1 }]}>품목명(규격)</Text>
-            <Text style={[s.th, { width: 45 }]}>수량</Text>
-            <Text style={[s.th, { width: 55 }]}>단가</Text>
-            <Text style={[s.th, { width: 70 }]}>공급가액</Text>
-            <Text style={[s.th, { width: 55 }]}>부가세</Text>
+            <Text style={[s.th, { width: 25 }]}>순번</Text>
+            {allKeys.map((k, i) => (
+              <Text key={k} style={[s.th, i === 0 ? { flex: 1 } : { width: colCount > 7 ? 50 : 60 }]}>{k}</Text>
+            ))}
           </View>
           {items.map((d, i) => (
             <View key={i} style={s.tableRow}>
-              <Text style={[s.td, s.tdCenter, { width: 30 }]}>{i + 1}</Text>
-              <Text style={[s.td, { flex: 1 }]}>{d[nameKey] || ""}</Text>
-              <Text style={[s.td, s.tdCenter, { width: 45 }]}>{qtyKey ? d[qtyKey] || "" : ""}</Text>
-              <Text style={[s.td, s.tdRight, { width: 55 }]}>{priceKey && d[priceKey] ? fmt(parseInt(d[priceKey])) : ""}</Text>
-              <Text style={[s.td, s.tdRight, { width: 70 }]}>{supplyKey && d[supplyKey] ? fmt(parseInt(d[supplyKey])) : ""}</Text>
-              <Text style={[s.td, s.tdRight, { width: 55 }]}>{vatKey && d[vatKey] ? fmt(parseInt(d[vatKey])) : ""}</Text>
+              <Text style={[s.td, s.tdCenter, { width: 25 }]}>{i + 1}</Text>
+              {allKeys.map((k, j) => {
+                const val = d[k] || "";
+                const isNum = /^\d+$/.test(val);
+                return <Text key={k} style={[s.td, isNum ? s.tdRight : {}, j === 0 ? { flex: 1 } : { width: colCount > 7 ? 50 : 60 }]}>{isNum ? fmt(parseInt(val)) : val}</Text>;
+              })}
             </View>
           ))}
           {Array.from({ length: emptyRows }, (_, i) => (
             <View key={`e${i}`} style={s.tableRow}>
-              <Text style={[s.td, { width: 30 }]}> </Text>
-              <Text style={[s.td, { flex: 1 }]}> </Text>
-              <Text style={[s.td, { width: 45 }]}> </Text>
-              <Text style={[s.td, { width: 55 }]}> </Text>
-              <Text style={[s.td, { width: 70 }]}> </Text>
-              <Text style={[s.td, { width: 55 }]}> </Text>
+              <Text style={[s.td, { width: 25 }]}> </Text>
+              {allKeys.map((k, j) => (
+                <Text key={k} style={[s.td, j === 0 ? { flex: 1 } : { width: colCount > 7 ? 50 : 60 }]}> </Text>
+              ))}
             </View>
           ))}
         </View>
