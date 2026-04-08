@@ -199,7 +199,7 @@ export default function BoardPage() {
           <h3 className="text-lg font-bold text-gray-800 mb-2">{current.title}</h3>
           <div className="flex gap-4 text-xs text-gray-400 mb-4 pb-3 border-b border-gray-200">
             <span>작성자: {current.author}</span>
-            <span>작성일: {current.created_at?.slice(0, 10)}</span>
+            <span>작성일: {current.created_at?.slice(0, 16).replace("T", " ")}</span>
             <span>조회: {current.view_count}</span>
           </div>
           <div className="text-sm text-gray-700 leading-7 whitespace-pre-wrap min-h-[100px] mb-5">{current.content}</div>
@@ -235,7 +235,7 @@ export default function BoardPage() {
                 <div className="flex justify-between items-center mb-1">
                   <span className="text-xs font-semibold text-gray-700">{c.author}</span>
                   <div className="flex gap-2 items-center">
-                    <span className="text-xs text-gray-400">{c.created_at?.slice(0, 10)}</span>
+                    <span className="text-xs text-gray-400">{c.created_at?.slice(0, 16).replace("T", " ")}</span>
                     <button onClick={() => setReplyTo(replyTo === c.id ? null : c.id)} className="text-xs text-blue-500">답글</button>
                     <button onClick={() => editComment(c.id, c.content)} className="text-xs text-emerald-500">수정</button>
                     <button onClick={() => deleteComment(c.id)} className="text-xs text-red-500">삭제</button>
@@ -249,7 +249,7 @@ export default function BoardPage() {
                   <div className="flex justify-between items-center mb-1">
                     <span className="text-xs font-semibold text-gray-700">↳ {r.author}</span>
                     <div className="flex gap-2 items-center">
-                      <span className="text-xs text-gray-400">{r.created_at?.slice(0, 10)}</span>
+                      <span className="text-xs text-gray-400">{r.created_at?.slice(0, 16).replace("T", " ")}</span>
                       <button onClick={() => editComment(r.id, r.content)} className="text-xs text-emerald-500">수정</button>
                       <button onClick={() => deleteComment(r.id)} className="text-xs text-red-500">삭제</button>
                     </div>
@@ -299,7 +299,7 @@ export default function BoardPage() {
             <th className="border border-[#2d3a47] px-2 py-2.5 w-12">번호</th>
             <th className="border border-[#2d3a47] px-2 py-2.5">제목</th>
             <th className="border border-[#2d3a47] px-2 py-2.5 w-20">작성자</th>
-            <th className="border border-[#2d3a47] px-2 py-2.5 w-24">작성일</th>
+            <th className="border border-[#2d3a47] px-2 py-2.5 whitespace-nowrap" style={{minWidth:"120px"}}>작성일</th>
             <th className="border border-[#2d3a47] px-2 py-2.5 w-14">조회</th>
           </tr></thead>
           <tbody>
@@ -313,7 +313,7 @@ export default function BoardPage() {
                   {p.comment_count > 0 && <span className="text-blue-500 ml-1 text-xs">[{p.comment_count}]</span>}
                 </td>
                 <td className="border border-gray-200 px-2 py-2 text-center">{p.author}</td>
-                <td className="border border-gray-200 px-2 py-2 text-center">{p.created_at?.slice(0, 10)}</td>
+                <td className="border border-gray-200 px-2 py-2 text-center whitespace-nowrap">{p.created_at?.slice(0, 16).replace("T", " ")}</td>
                 <td className="border border-gray-200 px-2 py-2 text-center">{p.view_count}</td>
               </tr>
               {(p.comments || []).map((c: {id:string;author:string;content:string;created_at:string}) => (
@@ -321,7 +321,7 @@ export default function BoardPage() {
                   <td className="border border-gray-100 px-2 py-1.5 text-center text-gray-400">↳</td>
                   <td className="border border-gray-100 px-2 py-1.5 text-left text-gray-600 pl-6">{c.content?.slice(0, 80)}</td>
                   <td className="border border-gray-100 px-2 py-1.5 text-center text-gray-500">{c.author}</td>
-                  <td className="border border-gray-100 px-2 py-1.5 text-center text-gray-400">{c.created_at?.slice(0, 10)}</td>
+                  <td className="border border-gray-100 px-2 py-1.5 text-center text-gray-400 whitespace-nowrap">{c.created_at?.slice(0, 16).replace("T", " ")}</td>
                   <td className="border border-gray-100 px-2 py-1.5"></td>
                 </tr>
               ))}
