@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import html2canvas from "html2canvas";
+import { toPng } from "html-to-image";
 
 interface OrderItemRow { sort_order: number; data: Record<string, string> }
 interface OrderData { id: string; order_no: string; client_name: string; title: string; total_amount: number; total_supply: number; total_vat: number; discount: number; created_at: string; order_items?: OrderItemRow[] }
@@ -54,8 +54,7 @@ function EstimateContent() {
     try {
       const el = document.querySelector(".print-wrap") as HTMLElement;
       if (!el) { alert("캡처할 영역을 찾을 수 없습니다."); return; }
-      const canvas = await html2canvas(el, { scale: 2, useCORS: true, backgroundColor: "#ffffff" });
-      const imageData = canvas.toDataURL("image/png");
+      const imageData = await toPng(el, { quality: 1, pixelRatio: 2, backgroundColor: "#ffffff" });
       const res = await fetch("/api/email", {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ to: emailTo, subject: "견적서", image: imageData }),
