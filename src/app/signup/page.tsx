@@ -46,7 +46,7 @@ export default function SignupPage() {
     e.preventDefault();
     setError("");
 
-    if (!form.company_id || !form.company_name || !form.password || !form.adminName || !form.adminUserId || !form.adminPassword) {
+    if (!form.company_id || !form.company_name || !form.password || !form.business_number || !form.representative || !form.phone || !form.email || !form.adminName || !form.adminUserId || !form.adminPassword) {
       setError("필수 항목을 모두 입력해주세요.");
       return;
     }
@@ -142,22 +142,22 @@ export default function SignupPage() {
             </div>
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <label className="block text-xs font-semibold text-gray-600 mb-1">사업자번호</label>
-                <input type="text" placeholder="선택사항" value={form.business_number} onChange={e => handleChange("business_number", e.target.value)} className="w-full px-3 py-2.5 border border-gray-300 rounded text-sm focus:outline-none focus:border-blue-500" />
+                <label className="block text-xs font-semibold text-gray-600 mb-1">사업자번호 <span className="text-red-500">*</span></label>
+                <input type="text" placeholder="사업자등록번호" value={form.business_number} onChange={e => handleChange("business_number", e.target.value)} className="w-full px-3 py-2.5 border border-gray-300 rounded text-sm focus:outline-none focus:border-blue-500" required />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-gray-600 mb-1">대표자</label>
-                <input type="text" placeholder="선택사항" value={form.representative} onChange={e => handleChange("representative", e.target.value)} className="w-full px-3 py-2.5 border border-gray-300 rounded text-sm focus:outline-none focus:border-blue-500" />
+                <label className="block text-xs font-semibold text-gray-600 mb-1">대표자 <span className="text-red-500">*</span></label>
+                <input type="text" placeholder="대표자명" value={form.representative} onChange={e => handleChange("representative", e.target.value)} className="w-full px-3 py-2.5 border border-gray-300 rounded text-sm focus:outline-none focus:border-blue-500" required />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <label className="block text-xs font-semibold text-gray-600 mb-1">연락처</label>
-                <input type="text" placeholder="선택사항" value={form.phone} onChange={e => handleChange("phone", e.target.value)} className="w-full px-3 py-2.5 border border-gray-300 rounded text-sm focus:outline-none focus:border-blue-500" />
+                <label className="block text-xs font-semibold text-gray-600 mb-1">연락처 <span className="text-red-500">*</span></label>
+                <input type="text" placeholder="전화번호" value={form.phone} onChange={e => handleChange("phone", e.target.value)} className="w-full px-3 py-2.5 border border-gray-300 rounded text-sm focus:outline-none focus:border-blue-500" required />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-gray-600 mb-1">이메일</label>
-                <input type="text" placeholder="선택사항" value={form.email} onChange={e => handleChange("email", e.target.value)} className="w-full px-3 py-2.5 border border-gray-300 rounded text-sm focus:outline-none focus:border-blue-500" />
+                <label className="block text-xs font-semibold text-gray-600 mb-1">이메일 <span className="text-red-500">*</span></label>
+                <input type="text" placeholder="이메일 주소" value={form.email} onChange={e => handleChange("email", e.target.value)} className="w-full px-3 py-2.5 border border-gray-300 rounded text-sm focus:outline-none focus:border-blue-500" required />
               </div>
             </div>
           </div>
