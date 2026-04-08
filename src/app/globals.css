@@ -25,6 +25,32 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+/* Win11 브라우저 호환성: 폼 요소 정규화 */
+input[type="radio"],
+input[type="checkbox"] {
+  min-width: 14px;
+  min-height: 14px;
+  accent-color: #2563eb;
+  cursor: pointer;
+}
+
+select {
+  min-height: 28px;
+}
+
+/* Win11 오버레이 스크롤바 안정화 */
+.overflow-x-auto::-webkit-scrollbar {
+  height: 4px;
+}
+.overflow-x-auto::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 2px;
+}
+
+table {
+  border-spacing: 0;
+}
+
 @media print {
   /* 프린트 시 숨길 요소 */
   .print\:hidden,

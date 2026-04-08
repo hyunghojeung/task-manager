@@ -46,7 +46,7 @@ export default function Header({ companyName, userName, userId, userRole, banner
           <button onClick={handleLogout} className="text-slate-400 hover:text-white transition">
             로그아웃
           </button>
-          <a href="/dashboard/board" className="px-2 py-0.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-[10px] md:text-xs whitespace-nowrap transition">프로그램 문의</a>
+          <a href="/dashboard/board" className="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-xs whitespace-nowrap transition inline-flex items-center" style={{lineHeight:"1.2",minHeight:"24px"}}>프로그램 문의</a>
         </div>
       </div>
 
