@@ -33,12 +33,16 @@ export async function GET(request: NextRequest) {
 
   if (!company) return NextResponse.json({ error: "업체 정보를 찾을 수 없습니다." }, { status: 404 });
 
+  const { data: templates } = await supabase.from("form_templates").select("columns, is_default").eq("company_id", session.company.id).order("sort_order");
+  const tmpl = templates?.find((t: Record<string, unknown>) => t.is_default) || templates?.[0];
+  const colOrder = tmpl?.columns?.filter((c: {type:string}) => c.type !== "auto").map((c: {name:string}) => c.name) || [];
+
   try {
     const isEstimate = type === "estimate";
     const subject = isEstimate ? "견적서" : "거래명세서";
 
     const pdfBuffer = await renderToBuffer(
-      <StatementPDF order={order} company={company} type={isEstimate ? "estimate" : "statement"} />
+      <StatementPDF order={order} company={company} type={isEstimate ? "estimate" : "statement"} colOrder={colOrder} />
     );
 
     return new NextResponse(Buffer.from(pdfBuffer), {

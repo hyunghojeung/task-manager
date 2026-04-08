@@ -35,13 +35,18 @@ export async function POST(request: NextRequest) {
 
   if (!company) return NextResponse.json({ error: "업체 정보를 찾을 수 없습니다." }, { status: 404 });
 
+  // 템플릿 컬럼 순서 조회
+  const { data: templates } = await supabase.from("form_templates").select("columns, is_default").eq("company_id", session.company.id).order("sort_order");
+  const tmpl = templates?.find((t: Record<string, unknown>) => t.is_default) || templates?.[0];
+  const colOrder = tmpl?.columns?.filter((c: {type:string}) => c.type !== "auto").map((c: {name:string}) => c.name) || [];
+
   // PDF 생성
   const isEstimate = type === "estimate";
   const subject = isEstimate ? "견적서" : "거래명세서";
 
   try {
     const pdfBuffer = await renderToBuffer(
-      <StatementPDF order={order} company={company} type={isEstimate ? "estimate" : "statement"} />
+      <StatementPDF order={order} company={company} type={isEstimate ? "estimate" : "statement"} colOrder={colOrder} />
     );
 
     // 이메일 설정

@@ -41,12 +41,14 @@ export interface StatementPDFProps {
   order: { order_no: string; client_name: string; title: string; total_amount: number; total_supply: number; total_vat: number; discount: number; created_at: string; order_items?: Array<{ sort_order: number; data: Record<string, string> }> };
   company: { company_name: string; business_number: string; representative: string; address: string; business_type: string; business_category: string; phone: string; email: string };
   type?: "statement" | "estimate";
+  colOrder?: string[];
 }
 
-export default function StatementPDF({ order, company, type = "statement" }: StatementPDFProps) {
+export default function StatementPDF({ order, company, type = "statement", colOrder = [] }: StatementPDFProps) {
   const rawItems = (order.order_items || []).sort((a, b) => a.sort_order - b.sort_order).map(it => it.data);
   const items = rawItems.filter(d => Object.values(d).some(v => v));
-  const allKeys = items.length > 0 ? Object.keys(items[0]) : [];
+  const rawKeys = items.length > 0 ? Object.keys(items[0]) : [];
+  const allKeys = colOrder.length > 0 ? colOrder.filter(k => rawKeys.includes(k)) : rawKeys;
   const supplyKey = allKeys.find(k => k.includes("공급")) || "";
   const vatKey = allKeys.find(k => k.includes("부가")) || "";
 
