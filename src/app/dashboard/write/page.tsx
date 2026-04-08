@@ -323,7 +323,7 @@ export default function WritePage() {
       const discountAmount = parseInt(formData.discount) || 0;
       const finalAmount = totalAmount - discountAmount;
 
-      const res = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...formData, discount: discountAmount, total_supply: totalSupply, total_vat: totalVat, total_amount: totalAmount }) });
+      const res = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...formData, discount: discountAmount, total_supply: totalSupply, total_vat: totalVat, total_amount: totalAmount, template_name: selectedTemplate }) });
       if (res.ok) {
         const savedOrder = await res.json();
         const orderId = editId || savedOrder?.id;
