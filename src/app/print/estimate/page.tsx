@@ -78,7 +78,7 @@ function EstimateContent() {
   const supplyTotal = order.total_supply || 0;
   const vatTotal = order.total_vat || 0;
   const discount = order.discount || 0;
-  const grandTotal = (supplyTotal + vatTotal) - discount;
+  const grandTotal = (order.total_amount || 0) - discount;
   const orderDate = new Date(order.created_at);
   const dateStr = `${orderDate.getFullYear()}년 ${String(orderDate.getMonth() + 1).padStart(2, "0")}월 ${String(orderDate.getDate()).padStart(2, "0")}일`;
   const emptyRows = Math.max(8 - items.length, 0);
