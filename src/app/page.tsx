@@ -124,9 +124,9 @@ export default function LoginPage() {
         <div className="mt-5 pt-4 border-t border-gray-200">
           <a
             href="/super-admin"
-            className="text-xs text-gray-400 hover:text-blue-500 transition"
+            className="text-xs text-transparent hover:text-transparent transition select-none"
           >
-            플랫폼 최고관리자 로그인
+            &nbsp;
           </a>
         </div>
       </div>
