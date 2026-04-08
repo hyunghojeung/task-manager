@@ -38,6 +38,7 @@ function EstimateContent() {
   const orderId = searchParams.get("id");
   const [order, setOrder] = useState<OrderData | null>(null);
   const [company, setCompany] = useState<CompanyData | null>(null);
+  const [templateCols, setTemplateCols] = useState<string[]>([]);
   const [emailTo, setEmailTo] = useState("");
   const [sending, setSending] = useState(false);
 
@@ -45,6 +46,12 @@ function EstimateContent() {
     if (!orderId) return;
     fetch(`/api/orders/${orderId}?_=${Date.now()}`).then(r => r.json()).then(d => setOrder(d));
     fetch(`/api/company?_=${Date.now()}`).then(r => r.json()).then(d => setCompany(d));
+    fetch(`/api/templates?_=${Date.now()}`).then(r => r.json()).then((templates: Array<{columns: Array<{name:string;type:string}>; is_default?: boolean}>) => {
+      if (templates?.length > 0) {
+        const tmpl = templates.find(t => t.is_default) || templates[0];
+        setTemplateCols(tmpl.columns.filter(c => c.type !== "auto").map(c => c.name));
+      }
+    }).catch(() => {});
   }, [orderId]);
 
   async function handleSendEmail() {
@@ -67,7 +74,10 @@ function EstimateContent() {
   const rawItems = (order.order_items || []).sort((a, b) => a.sort_order - b.sort_order).map(it => it.data);
   const items = rawItems.filter(d => Object.values(d).some(v => v));
 
-  const allKeys = items.length > 0 ? Object.keys(items[0]) : [];
+  const rawKeys = items.length > 0 ? Object.keys(items[0]) : [];
+  const allKeys = templateCols.length > 0
+    ? templateCols.filter(k => rawKeys.includes(k))
+    : rawKeys;
   const supplyKey = allKeys.find(k => k.includes("공급")) || "";
   const vatKey = allKeys.find(k => k.includes("부가")) || "";
 
