@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
 
   const { searchParams } = new URL(request.url);
   const page = parseInt(searchParams.get("page") || "1");
-  const limit = parseInt(searchParams.get("limit") || "40");
+  const limit = parseInt(searchParams.get("limit") || "20");
   const category = searchParams.get("category");
   const searchField = searchParams.get("searchField");
   const keyword = searchParams.get("keyword");
@@ -20,8 +20,9 @@ export async function GET(request: NextRequest) {
   const supabase = getSupabase();
   let query = supabase
     .from("orders")
-    .select("*, categories(name)", { count: "exact" })
+    .select("id, order_no, client_name, orderer, contact, title, total_amount, discount, product_type, payment, status, created_by, order_date, created_at", { count: "exact" })
     .eq("company_id", session.company.id)
+    .not("title", "eq", "")
     .order("order_date", { ascending: false })
     .order("created_at", { ascending: false });
 
@@ -46,26 +47,18 @@ export async function GET(request: NextRequest) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  // 빈 주문(임시저장) 필터링
-  const filtered = (data || []).filter((o: Record<string, unknown>) => {
-    const title = (o.title || "").toString().trim();
-    const clientName = (o.client_name || "").toString().trim();
-    // 제목과 거래처 둘 다 비어있거나, 제목이 "임시저장"이고 거래처 비어있는 주문 제외
-    if (title === "" && clientName === "") return false;
-    if (title === "임시저장" && clientName === "") return false;
-    return true;
-  });
+  const rows = data || [];
 
   // 작성자 정보 조회
-  const createdByIds = filtered.map((o: Record<string, unknown>) => o.created_by).filter(Boolean);
+  const createdByIds = [...new Set(rows.map((o: Record<string, unknown>) => o.created_by).filter(Boolean))];
   let usersMap: Record<string, string> = {};
   if (createdByIds.length > 0) {
     const { data: users } = await supabase.from("users").select("id, name, user_id").in("id", createdByIds);
     if (users) for (const u of users) usersMap[u.id] = `${u.name}(${u.user_id})`;
   }
-  const result = filtered.map((o: Record<string, unknown>) => ({ ...o, author: o.created_by ? usersMap[o.created_by as string] || "-" : "-" }));
+  const result = rows.map((o: Record<string, unknown>) => ({ ...o, author: o.created_by ? usersMap[o.created_by as string] || "-" : "-" }));
 
-  return NextResponse.json({ data: result, total: (count || 0) - ((data?.length || 0) - filtered.length), page, limit });
+  return NextResponse.json({ data: result, total: count || 0, page, limit });
 }
 
 // 작업 등록
