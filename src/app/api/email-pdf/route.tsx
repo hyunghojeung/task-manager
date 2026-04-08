@@ -9,7 +9,7 @@ export async function POST(request: NextRequest) {
   const session = await getApiSession();
   if (!session) return unauthorized();
 
-  const { to, orderId, type } = await request.json();
+  const { to, orderId, type, customSubject, customFrom } = await request.json();
   if (!to || !orderId) {
     return NextResponse.json({ error: "수신 이메일과 주문 ID를 입력해주세요." }, { status: 400 });
   }
@@ -86,11 +86,14 @@ export async function POST(request: NextRequest) {
       auth: { user: mailId, pass: mailPassword },
     });
 
+    const fromName = customFrom || company.company_name;
+    const emailSubject = customSubject || `[${company.company_name}] ${subject} - ${order.title || order.order_no}`;
+
     await transporter.sendMail({
-      from: mailEmail,
+      from: `"${fromName}" <${mailEmail}>`,
       to,
-      subject: `[${company.company_name}] ${subject} - ${order.title || order.order_no}`,
-      html: `<p>${company.company_name}에서 보낸 ${subject}입니다.</p><p>첨부된 PDF 파일을 확인해주세요.</p>`,
+      subject: emailSubject,
+      html: `<p>${fromName}에서 보낸 ${subject}입니다.</p><p>첨부된 PDF 파일을 확인해주세요.</p>`,
       attachments: [{
         filename: `${subject}_${order.order_no}.pdf`,
         content: Buffer.from(pdfBuffer),

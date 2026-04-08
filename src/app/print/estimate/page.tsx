@@ -41,6 +41,8 @@ function EstimateContent() {
   const [templates, setTemplates] = useState<Array<{name:string; columns: Array<{name:string;type:string}>}>>([]);
   const [templateCols, setTemplateCols] = useState<string[]>([]);
   const [emailTo, setEmailTo] = useState("");
+  const [emailSubject, setEmailSubject] = useState("");
+  const [emailFrom, setEmailFrom] = useState("");
   const [sending, setSending] = useState(false);
 
   useEffect(() => {
@@ -72,7 +74,7 @@ function EstimateContent() {
     try {
       const res = await fetch("/api/email-pdf", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ to: emailTo, orderId, type: "estimate" }),
+        body: JSON.stringify({ to: emailTo, orderId, type: "estimate", customSubject: emailSubject || "", customFrom: emailFrom || "" }),
       });
       if (res.ok) alert("이메일이 발송되었습니다. (PDF 첨부)");
       else { const d = await res.json().catch(() => ({})); alert("발송 실패: " + (d.error || res.status)); }
@@ -183,10 +185,16 @@ function EstimateContent() {
       </div>
 
       <div className="max-w-[800px] mx-auto mt-3 flex flex-col gap-2 print:hidden">
-        <div className="flex gap-2 items-center">
-          <label className="text-sm">수신 이메일:</label>
+        <div className="flex flex-wrap gap-2 items-center">
+          <label className="text-sm shrink-0">수신 이메일:</label>
           <input type="email" placeholder="이메일 주소를 입력하세요" value={emailTo} onChange={e => setEmailTo(e.target.value)} className="px-3 py-1.5 border border-gray-300 rounded text-sm w-64" />
           <button onClick={handleSendEmail} disabled={sending} className="px-4 py-1.5 bg-gray-700 text-white rounded text-sm disabled:opacity-50">{sending ? "발송중..." : "발송"}</button>
+        </div>
+        <div className="flex flex-wrap gap-2 items-center">
+          <label className="text-sm shrink-0">이메일 제목:</label>
+          <input type="text" placeholder="미입력 시 자동생성" value={emailSubject} onChange={e => setEmailSubject(e.target.value)} className="px-3 py-1.5 border border-gray-300 rounded text-sm w-64" />
+          <label className="text-sm shrink-0 ml-2">작성자명:</label>
+          <input type="text" placeholder="미입력 시 업체명" value={emailFrom} onChange={e => setEmailFrom(e.target.value)} className="px-3 py-1.5 border border-gray-300 rounded text-sm w-40" />
         </div>
         <div className="flex gap-2">
           <button onClick={() => window.print()} className="px-6 py-2 bg-blue-600 text-white rounded text-sm">인쇄</button>
