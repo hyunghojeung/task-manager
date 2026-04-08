@@ -27,10 +27,10 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { company_id, company_name, password, adminName, adminUserId, adminPassword } = body;
+    const { company_id, company_name, password, business_number, representative, phone, email, adminName, adminUserId, adminPassword } = body;
 
     // 필수 필드 검증
-    if (!company_id || !company_name || !password || !adminName || !adminUserId || !adminPassword) {
+    if (!company_id || !company_name || !password || !business_number || !representative || !phone || !email || !adminName || !adminUserId || !adminPassword) {
       return NextResponse.json({ error: "필수 항목을 모두 입력해주세요." }, { status: 400 });
     }
 
