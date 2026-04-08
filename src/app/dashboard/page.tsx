@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 
 interface OrderData {
   id: string; order_no: string; client_name: string; orderer: string; contact: string;
-  title: string; total_amount: number; product_type: string; payment: string; status: string; author: string;
+  title: string; total_amount: number; discount: number; product_type: string; payment: string; status: string; author: string;
 }
 
 export default function DashboardPage() {
@@ -106,7 +106,7 @@ export default function DashboardPage() {
                 <td className="border border-gray-200 px-1.5 py-[7px] text-left"><a href={`/dashboard/write?id=${o.id}`} className="hover:text-blue-600 hover:underline">{o.orderer}</a></td>
                 <td className="border border-gray-200 px-1.5 py-[7px] text-left"><a href={`/dashboard/write?id=${o.id}`} className="hover:text-blue-600 hover:underline">{o.contact}</a></td>
                 <td className="border border-gray-200 px-1.5 py-[7px] text-left max-w-[400px]"><a href={`/dashboard/write?id=${o.id}`} title={o.title} className="hover:text-blue-600 hover:underline block truncate">{o.title}</a></td>
-                <td className="border border-gray-200 px-1.5 py-[7px] text-right">{(o.total_amount||0).toLocaleString()}</td>
+                <td className="border border-gray-200 px-1.5 py-[7px] text-right">{((o.total_amount||0) - (o.discount||0)).toLocaleString()}</td>
                 <td className="border border-gray-200 px-1.5 py-[7px] text-center">{o.product_type}</td>
                 <td className="border border-gray-200 px-1.5 py-[7px] text-center">{o.payment}</td>
                 <td className="border border-gray-200 px-1.5 py-[7px] text-center">
