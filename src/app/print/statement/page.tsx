@@ -2,7 +2,6 @@
 
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import { toPng } from "html-to-image";
 
 interface OrderItemRow { sort_order: number; data: Record<string, string> }
 interface OrderData { id: string; order_no: string; client_name: string; title: string; total_amount: number; total_supply: number; total_vat: number; discount: number; created_at: string; order_items?: OrderItemRow[] }
@@ -28,20 +27,11 @@ function StatementContent() {
     if (!emailTo) { alert("수신 이메일을 입력해주세요."); return; }
     setSending(true);
     try {
-      const el = document.querySelector(".print-wrap") as HTMLElement;
-      if (!el) { alert("캡처할 영역을 찾을 수 없습니다."); return; }
-      // 여러 번 시도하여 안정적 캡처
-      let imageData = "";
-      for (let i = 0; i < 3; i++) {
-        imageData = await toPng(el, { quality: 1, pixelRatio: 2, backgroundColor: "#ffffff", width: 800, style: { maxWidth: "800px", width: "800px" } });
-        if (imageData && imageData.length > 1000) break;
-      }
-      if (!imageData || imageData.length < 1000) { alert("이미지 생성에 실패했습니다. 다시 시도해주세요."); setSending(false); return; }
-      const res = await fetch("/api/email", {
+      const res = await fetch("/api/email-pdf", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ to: emailTo, subject: "거래명세서", image: imageData }),
+        body: JSON.stringify({ to: emailTo, orderId, type: "statement" }),
       });
-      if (res.ok) alert("이메일이 발송되었습니다.");
+      if (res.ok) alert("이메일이 발송되었습니다. (PDF 첨부)");
       else { const d = await res.json().catch(() => ({})); alert("발송 실패: " + (d.error || res.status)); }
     } catch (e) { alert("발송 실패: " + (e instanceof Error ? e.message : "네트워크 오류")); }
     finally { setSending(false); }

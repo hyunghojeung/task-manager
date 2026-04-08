@@ -6,6 +6,7 @@ const nextConfig: NextConfig = {
       bodySizeLimit: "1gb",
     },
   },
+  serverExternalPackages: ["@react-pdf/renderer"],
 };
 
 export default nextConfig;
