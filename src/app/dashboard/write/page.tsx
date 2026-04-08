@@ -753,34 +753,34 @@ export default function WritePage() {
             </tbody>
           </table>
         </div>
+      </div>
 
-        {/* 할인/할인 후 총액 - div 기반 레이아웃 */}
-        <div className="border border-gray-300 rounded overflow-hidden mt-0">
-          <div className="flex items-center bg-red-50 border-b border-gray-300">
-            <div className="flex-1 px-3 py-2 text-right text-red-700 font-bold text-xs">할 인</div>
-            <div className="px-2 py-1" style={{width:"160px"}}>
-              <input type="text" value={formData.discount} onChange={e => handleChange("discount", e.target.value.replace(/[^0-9]/g, ""))} placeholder="0" className="w-full px-2 py-1 border border-gray-300 rounded text-xs text-right" />
-            </div>
+      {/* 할인/할인 후 총액 - 표양식 컨테이너 바깥 독립 영역 */}
+      <div className="bg-white border border-gray-300 rounded p-0 mb-3 overflow-hidden">
+        <div className="flex items-center bg-red-50 border-b border-gray-300" style={{minHeight:"40px"}}>
+          <div className="flex-1 px-3 py-2 text-right text-red-700 font-bold text-xs">할 인</div>
+          <div className="px-2 py-1" style={{width:"160px"}}>
+            <input type="text" value={formData.discount} onChange={e => handleChange("discount", e.target.value.replace(/[^0-9]/g, ""))} placeholder="0" className="w-full px-2 py-1 border border-gray-300 rounded text-xs text-right" />
           </div>
-          <div className="flex items-center bg-emerald-50">
-            <div className="flex-1 px-3 py-2 text-right text-emerald-700 font-bold text-xs">할인 후 총액</div>
-            <div className="px-3 py-2 text-right text-emerald-700 font-bold text-sm" style={{width:"160px"}}>
-              {(() => {
-                const discountAmt = parseInt(formData.discount) || 0;
-                if (discountAmt <= 0) return "0";
-                const totalCol = templateCols.find(c => c.name === "합계" || c.name === "합계금액" || c.name === "총액");
-                let gt = 0;
-                if (totalCol) {
-                  gt = itemData.reduce((acc, row) => acc + (parseInt(row[totalCol.name]) || 0), 0);
-                } else {
-                  const supplyCol = templateCols.find(c => c.name.includes("공급"));
-                  const vatCol = templateCols.find(c => c.name.includes("부가"));
-                  if (supplyCol) gt += itemData.reduce((acc, row) => acc + (parseInt(row[supplyCol.name]) || 0), 0);
-                  if (vatCol) gt += itemData.reduce((acc, row) => acc + (parseInt(row[vatCol.name]) || 0), 0);
-                }
-                return (gt - discountAmt).toLocaleString();
-              })()}
-            </div>
+        </div>
+        <div className="flex items-center bg-emerald-50" style={{minHeight:"40px"}}>
+          <div className="flex-1 px-3 py-2 text-right text-emerald-700 font-bold text-xs">할인 후 총액</div>
+          <div className="px-3 py-2 text-right text-emerald-700 font-bold text-sm" style={{width:"160px"}}>
+            {(() => {
+              const discountAmt = parseInt(formData.discount) || 0;
+              if (discountAmt <= 0) return "0";
+              const totalCol = templateCols.find(c => c.name === "합계" || c.name === "합계금액" || c.name === "총액");
+              let gt = 0;
+              if (totalCol) {
+                gt = itemData.reduce((acc, row) => acc + (parseInt(row[totalCol.name]) || 0), 0);
+              } else {
+                const supplyCol = templateCols.find(c => c.name.includes("공급"));
+                const vatCol = templateCols.find(c => c.name.includes("부가"));
+                if (supplyCol) gt += itemData.reduce((acc, row) => acc + (parseInt(row[supplyCol.name]) || 0), 0);
+                if (vatCol) gt += itemData.reduce((acc, row) => acc + (parseInt(row[vatCol.name]) || 0), 0);
+              }
+              return (gt - discountAmt).toLocaleString();
+            })()}
           </div>
         </div>
       </div>
