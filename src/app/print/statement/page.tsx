@@ -4,7 +4,7 @@ import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 
 interface OrderItemRow { sort_order: number; data: Record<string, string> }
-interface OrderData { id: string; order_no: string; client_name: string; title: string; total_amount: number; total_supply: number; total_vat: number; discount: number; created_at: string; order_items?: OrderItemRow[] }
+interface OrderData { id: string; order_no: string; client_name: string; title: string; total_amount: number; total_supply: number; total_vat: number; discount: number; template_name?: string; created_at: string; order_items?: OrderItemRow[] }
 interface CompanyData { company_name: string; business_number: string; representative: string; address: string; business_type: string; business_category: string; phone: string; email: string; seal_image?: string }
 
 function fmt(n: number) { return (n || 0).toLocaleString(); }
@@ -14,6 +14,7 @@ function StatementContent() {
   const orderId = searchParams.get("id");
   const [order, setOrder] = useState<OrderData | null>(null);
   const [company, setCompany] = useState<CompanyData | null>(null);
+  const [templates, setTemplates] = useState<Array<{name:string; columns: Array<{name:string;type:string}>}>>([]);
   const [templateCols, setTemplateCols] = useState<string[]>([]);
   const [emailTo, setEmailTo] = useState("");
   const [sending, setSending] = useState(false);
@@ -22,24 +23,24 @@ function StatementContent() {
     if (!orderId) return;
     fetch(`/api/orders/${orderId}?_=${Date.now()}`).then(r => r.json()).then(d => setOrder(d));
     fetch(`/api/company?_=${Date.now()}`).then(r => r.json()).then(d => setCompany(d));
-    Promise.all([
-      fetch(`/api/orders/${orderId}?_=${Date.now()}`).then(r => r.json()),
-      fetch(`/api/templates?_=${Date.now()}`).then(r => r.json()),
-    ]).then(([orderData, templates]) => {
-      if (templates?.length > 0 && orderData?.order_items?.length > 0) {
-        const itemKeys = new Set(Object.keys(orderData.order_items.sort((a: {sort_order:number}, b: {sort_order:number}) => a.sort_order - b.sort_order)[0].data || {}));
-        // 항목 데이터의 키와 가장 많이 일치하는 템플릿 찾기
-        let bestTmpl = templates[0];
-        let bestMatch = 0;
-        for (const t of templates) {
-          const colNames = t.columns.filter((c: {type:string}) => c.type !== "auto").map((c: {name:string}) => c.name);
-          const match = colNames.filter((n: string) => itemKeys.has(n)).length;
-          if (match > bestMatch) { bestMatch = match; bestTmpl = t; }
-        }
-        setTemplateCols(bestTmpl.columns.filter((c: {type:string}) => c.type !== "auto").map((c: {name:string}) => c.name));
-      }
-    }).catch(() => {});
+    fetch(`/api/templates?_=${Date.now()}`).then(r => r.json()).then(d => setTemplates(d || [])).catch(() => {});
   }, [orderId]);
+
+  useEffect(() => {
+    if (!order || !templates.length) return;
+    let tmpl = order.template_name ? templates.find(t => t.name === order.template_name) : null;
+    if (!tmpl && order.order_items?.length) {
+      const itemKeys = new Set(Object.keys(order.order_items.sort((a, b) => a.sort_order - b.sort_order)[0].data || {}));
+      let bestMatch = 0;
+      for (const t of templates) {
+        const colNames = t.columns.filter(c => c.type !== "auto").map(c => c.name);
+        const match = colNames.filter(n => itemKeys.has(n)).length;
+        if (match > bestMatch) { bestMatch = match; tmpl = t; }
+      }
+    }
+    if (!tmpl) tmpl = templates[0];
+    setTemplateCols(tmpl.columns.filter(c => c.type !== "auto").map(c => c.name));
+  }, [order, templates]);
 
   async function handleSendEmail() {
     if (!emailTo) { alert("수신 이메일을 입력해주세요."); return; }
@@ -104,12 +105,12 @@ function StatementContent() {
 
         <p className="text-lg font-extrabold text-gray-800 my-4">작업명: {order.title}</p>
 
-        <table className="w-full border-collapse text-sm mb-4">
+        <table className="w-full border-collapse text-xs mb-4">
           <thead>
-            <tr>
-              <th className="border border-gray-800 bg-gray-100 px-2 py-2 w-10">순번</th>
+            <tr className="bg-[#3b4b5b] text-white">
+              <th className="border border-[#2d3a47] px-2 py-2.5 font-semibold" style={{width:"35px"}}>순번</th>
               {allKeys.map(k => (
-                <th key={k} className="border border-gray-800 bg-gray-100 px-2 py-2">{k}</th>
+                <th key={k} className="border border-[#2d3a47] px-2 py-2.5 font-semibold">{k}</th>
               ))}
             </tr>
           </thead>

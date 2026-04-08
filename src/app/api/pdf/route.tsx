@@ -33,16 +33,19 @@ export async function GET(request: NextRequest) {
 
   if (!company) return NextResponse.json({ error: "업체 정보를 찾을 수 없습니다." }, { status: 404 });
 
-  const { data: templates } = await supabase.from("form_templates").select("columns, is_default").eq("company_id", session.company.id).order("sort_order");
-  const itemKeys = new Set(Object.keys((order.order_items || []).sort((a: {sort_order:number}, b: {sort_order:number}) => a.sort_order - b.sort_order)[0]?.data || {}));
-  let bestTmpl = templates?.[0];
-  let bestMatch = 0;
-  for (const t of templates || []) {
-    const colNames = (t.columns || []).filter((c: {type:string}) => c.type !== "auto").map((c: {name:string}) => c.name);
-    const match = colNames.filter((n: string) => itemKeys.has(n)).length;
-    if (match > bestMatch) { bestMatch = match; bestTmpl = t; }
+  const { data: templates } = await supabase.from("form_templates").select("name, columns").eq("company_id", session.company.id).order("sort_order");
+  let matchedTmpl = order.template_name ? templates?.find((t: {name:string}) => t.name === order.template_name) : null;
+  if (!matchedTmpl && (order.order_items || []).length > 0) {
+    const itemKeys = new Set(Object.keys((order.order_items || []).sort((a: {sort_order:number}, b: {sort_order:number}) => a.sort_order - b.sort_order)[0]?.data || {}));
+    let bestMatch = 0;
+    for (const t of templates || []) {
+      const colNames = (t.columns || []).filter((c: {type:string}) => c.type !== "auto").map((c: {name:string}) => c.name);
+      const match = colNames.filter((n: string) => itemKeys.has(n)).length;
+      if (match > bestMatch) { bestMatch = match; matchedTmpl = t; }
+    }
   }
-  const colOrder = bestTmpl?.columns?.filter((c: {type:string}) => c.type !== "auto").map((c: {name:string}) => c.name) || [];
+  if (!matchedTmpl) matchedTmpl = templates?.[0];
+  const colOrder = matchedTmpl?.columns?.filter((c: {type:string}) => c.type !== "auto").map((c: {name:string}) => c.name) || [];
 
   try {
     const isEstimate = type === "estimate";
