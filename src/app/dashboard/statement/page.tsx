@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 
 interface OrderItemRow { sort_order: number; data: Record<string, string> }
-interface OrderData { id: string; order_no: string; client_name: string; title: string; total_amount: number; total_supply: number; total_vat: number; created_at: string; order_items?: OrderItemRow[] }
+interface OrderData { id: string; order_no: string; client_name: string; title: string; total_amount: number; total_supply: number; total_vat: number; discount: number; created_at: string; order_items?: OrderItemRow[] }
 interface CompanyData { company_name: string; business_number: string; representative: string; address: string; business_type: string; business_category: string; phone: string; email: string }
 
 function fmt(n: number) { return (n || 0).toLocaleString(); }
@@ -52,9 +52,13 @@ export default function StatementPage() {
   const supplyKey = allKeys.find(k => k.includes("공급")) || "";
   const vatKey = allKeys.find(k => k.includes("부가")) || "";
 
-  const supplyTotal = order.total_supply || 0;
-  const vatTotal = order.total_vat || 0;
-  const grandTotal = order.total_amount || (supplyTotal + vatTotal);
+  // 항목 데이터에서 직접 합계 계산 (작업등록 화면과 동일)
+  const totalKey = allKeys.find(k => k === "합계" || k === "합계금액" || k === "총액") || "";
+  const supplyTotal = items.reduce((acc, d) => acc + (supplyKey && d[supplyKey] ? parseInt(d[supplyKey]) || 0 : 0), 0);
+  const vatTotal = items.reduce((acc, d) => acc + (vatKey && d[vatKey] ? parseInt(d[vatKey]) || 0 : 0), 0);
+  const grandTotal = totalKey ? items.reduce((acc, d) => acc + (parseInt(d[totalKey]) || 0), 0) : (supplyTotal + vatTotal);
+  const discountAmt = order.discount || 0;
+  const finalAmount = grandTotal - discountAmt;
   const orderDate = new Date(order.created_at);
   const dateStr = `${orderDate.getFullYear()}년 ${String(orderDate.getMonth() + 1).padStart(2, "0")}월 ${String(orderDate.getDate()).padStart(2, "0")}일`;
   const emptyRows = Math.max(8 - items.length, 0);
@@ -115,9 +119,21 @@ export default function StatementPage() {
                 <td className="border border-gray-800 px-3 py-2 text-right">{fmt(supplyTotal)}</td>
                 <th className="border border-gray-800 bg-gray-100 px-3 py-2">부가세 합계</th>
                 <td className="border border-gray-800 px-3 py-2 text-right">{fmt(vatTotal)}</td>
-                <th className="border border-gray-800 bg-gray-100 px-3 py-2">총 합계</th>
+                <th className="border border-gray-800 bg-gray-100 px-3 py-2">총 액</th>
                 <td className="border border-gray-800 px-3 py-2 text-right font-bold">{fmt(grandTotal)}</td>
               </tr>
+              {discountAmt > 0 && (
+                <tr>
+                  <th className="border border-gray-800 bg-red-50 px-3 py-2 text-red-700" colSpan={5}>할 인</th>
+                  <td className="border border-gray-800 px-3 py-2 text-right text-red-700">{fmt(discountAmt)}</td>
+                </tr>
+              )}
+              {discountAmt > 0 && (
+                <tr>
+                  <th className="border border-gray-800 bg-emerald-50 px-3 py-2 text-emerald-700" colSpan={5}>할인 후 총액</th>
+                  <td className="border border-gray-800 px-3 py-2 text-right font-bold text-emerald-700">{fmt(finalAmount)}</td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
