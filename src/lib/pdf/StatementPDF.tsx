@@ -37,7 +37,7 @@ const s = StyleSheet.create({
 
 function fmt(n: number) { return (n || 0).toLocaleString(); }
 
-interface StatementPDFProps {
+export interface StatementPDFProps {
   order: { order_no: string; client_name: string; title: string; total_amount: number; total_supply: number; total_vat: number; discount: number; created_at: string; order_items?: Array<{ sort_order: number; data: Record<string, string> }> };
   company: { company_name: string; business_number: string; representative: string; address: string; business_type: string; business_category: string; phone: string; email: string };
   type?: "statement" | "estimate";

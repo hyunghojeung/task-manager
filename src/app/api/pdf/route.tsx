@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import React from "react";
 import { renderToBuffer } from "@react-pdf/renderer";
 import { getApiSession, unauthorized } from "@/lib/api-helpers";
 import { getSupabase } from "@/lib/supabase-admin";
@@ -39,7 +38,7 @@ export async function GET(request: NextRequest) {
     const subject = isEstimate ? "견적서" : "거래명세서";
 
     const pdfBuffer = await renderToBuffer(
-      React.createElement(StatementPDF, { order, company, type: isEstimate ? "estimate" : "statement" })
+      <StatementPDF order={order} company={company} type={isEstimate ? "estimate" : "statement"} />
     );
 
     return new NextResponse(Buffer.from(pdfBuffer), {
