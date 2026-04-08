@@ -7,7 +7,7 @@ export async function POST(request: NextRequest) {
   const session = await getApiSession();
   if (!session) return unauthorized();
 
-  const { to, subject, html } = await request.json();
+  const { to, subject, html, image } = await request.json();
 
   if (!to || !subject) {
     return NextResponse.json({ error: "수신 이메일과 제목을 입력해주세요." }, { status: 400 });
@@ -53,12 +53,22 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    await transporter.sendMail({
-      from: mailEmail,
-      to,
-      subject,
-      html: html || "",
-    });
+    const mailOptions: Record<string, unknown> = { from: mailEmail, to, subject };
+    if (image) {
+      // base64 이미지를 인라인 첨부
+      const base64Data = image.replace(/^data:image\/\w+;base64,/, "");
+      mailOptions.html = '<div style="font-family:sans-serif;"><img src="cid:document-image" style="max-width:100%;height:auto;" /></div>';
+      mailOptions.attachments = [{
+        filename: `${subject}.png`,
+        content: base64Data,
+        encoding: "base64",
+        cid: "document-image",
+      }];
+    } else {
+      mailOptions.html = html || "";
+    }
+
+    await transporter.sendMail(mailOptions);
 
     return NextResponse.json({ success: true, message: "이메일이 발송되었습니다." });
   } catch (err) {

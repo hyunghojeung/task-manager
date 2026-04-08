@@ -2,6 +2,7 @@
 
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
+import html2canvas from "html2canvas";
 
 interface OrderItemRow { sort_order: number; data: Record<string, string> }
 interface OrderData { id: string; order_no: string; client_name: string; title: string; total_amount: number; total_supply: number; total_vat: number; discount: number; created_at: string; order_items?: OrderItemRow[] }
@@ -27,10 +28,13 @@ function StatementContent() {
     if (!emailTo) { alert("수신 이메일을 입력해주세요."); return; }
     setSending(true);
     try {
-      const pageHtml = document.querySelector(".print-wrap")?.innerHTML || "";
+      const el = document.querySelector(".print-wrap") as HTMLElement;
+      if (!el) { alert("캡처할 영역을 찾을 수 없습니다."); return; }
+      const canvas = await html2canvas(el, { scale: 2, useCORS: true, backgroundColor: "#ffffff" });
+      const imageData = canvas.toDataURL("image/png");
       const res = await fetch("/api/email", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ to: emailTo, subject: "거래명세서", html: `<div style="font-family:sans-serif;">${pageHtml}</div>` }),
+        body: JSON.stringify({ to: emailTo, subject: "거래명세서", image: imageData }),
       });
       if (res.ok) alert("이메일이 발송되었습니다.");
       else { const d = await res.json().catch(() => ({})); alert("발송 실패: " + (d.error || res.status)); }
