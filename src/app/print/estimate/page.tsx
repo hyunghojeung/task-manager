@@ -165,6 +165,7 @@ function EstimateContent() {
         </div>
         <div className="flex gap-2">
           <button onClick={() => window.print()} className="px-6 py-2 bg-blue-600 text-white rounded text-sm">인쇄</button>
+          <a href={`/api/pdf?id=${orderId}&type=estimate`} className="px-6 py-2 bg-emerald-600 text-white rounded text-sm text-center">PDF 다운로드</a>
           <button onClick={() => window.close()} className="px-6 py-2 bg-white text-gray-600 border border-gray-300 rounded text-sm">닫기</button>
         </div>
       </div>
