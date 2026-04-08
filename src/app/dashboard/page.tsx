@@ -97,7 +97,15 @@ export default function DashboardPage() {
             <th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap">순번</th><th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap">거래처</th><th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap">주문자</th><th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap">연락처</th><th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap">제목</th><th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap">금액</th><th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap">제품형태</th><th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap">결제</th><th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap">진행상태</th><th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap" style={{minWidth:"60px"}}>거래명세서</th><th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap" style={{minWidth:"60px"}}>견적서</th>
           </tr></thead>
           <tbody>
-            {loading ? <tr><td colSpan={11} className="text-center py-8 text-gray-400">로딩중...</td></tr> :
+            {loading ? Array.from({length: 8}, (_, i) => (
+              <tr key={`sk${i}`} className={i % 2 === 1 ? "bg-gray-50" : ""}>
+                {Array.from({length: 11}, (_, j) => (
+                  <td key={j} className="border border-gray-200 px-1.5 py-[10px]">
+                    <div className="h-3 bg-gray-200 rounded animate-pulse" style={{width: j === 4 ? "80%" : j === 0 ? "70px" : "60%", margin: "0 auto"}}></div>
+                  </td>
+                ))}
+              </tr>
+            )) :
             orders.length === 0 ? <tr><td colSpan={11} className="text-center py-8 text-gray-400">등록된 작업이 없습니다. 작업등록 버튼을 눌러 새 작업을 등록하세요.</td></tr> :
             orders.map((o, i) => (
               <tr key={o.id} className={`${i % 2 === 1 ? "bg-gray-50" : ""} hover:bg-blue-50`}>
@@ -121,7 +129,7 @@ export default function DashboardPage() {
       </div>
       {totalPages > 1 && (
         <div className="flex items-center justify-center gap-1 mt-4">
-          <span className="text-xs text-gray-400 mr-2">40개씩</span>
+          <span className="text-xs text-gray-400 mr-2">20개씩</span>
           {Array.from({length:Math.min(totalPages,10)},(_,i)=>i+1).map(p=>(
             <button key={p} onClick={()=>setPage(p)} className={`px-2.5 py-1 rounded border text-xs ${p===page?"bg-blue-600 text-white border-blue-600":"border-gray-300 text-gray-500"}`}>{p}</button>
           ))}
