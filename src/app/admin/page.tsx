@@ -527,7 +527,7 @@ function TemplateTab() {
       {/* 양식 목록 */}
       <div className="mb-4">
         {templates.map(t => (
-          <div key={t.id} className={`flex justify-between items-center p-3 border rounded mb-2 ${editTmpl?.id === t.id ? "border-blue-500 bg-blue-50" : "border-gray-200 hover:bg-gray-50"}`}>
+          <div key={t.id} className="flex justify-between items-center p-3 border border-gray-200 rounded mb-2 hover:bg-gray-50">
             <div className="flex items-center gap-3">
               <label className="flex items-center gap-1 text-xs text-gray-600 cursor-pointer whitespace-nowrap">
                 <input type="radio" name="defaultTmpl" checked={!!t.is_default} onChange={() => setDefault(t.id)} style={{width:"16px",height:"16px",accentColor:"#2563eb",cursor:"pointer"}} />
