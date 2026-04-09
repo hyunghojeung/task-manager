@@ -153,17 +153,20 @@ export default function WritePage() {
     if (tmpl?.columns?.length) setTemplateCols(tmpl.columns);
     const newFormulas = tmpl?.formulas?.length ? tmpl.formulas : [];
     setTemplateFormulas(newFormulas);
-    // 양식 변경 시 자동계산 필드를 새 수식으로 재계산
-    if (newFormulas.length > 0) {
-      setItemData(prev => prev.map(row => {
-        // 자동계산 대상 키 삭제 후 재계산
-        const cleaned: Record<string,string> = {};
-        for (const [k, v] of Object.entries(row)) {
-          if (!newFormulas.some(f => f.target === k)) cleaned[k] = v;
-        }
+    // 양식 변경 시: 이전 자동계산 키 + 새 자동계산 키 모두 삭제 후 재계산
+    const oldFormulaTargets = templateFormulas.map(f => f.target);
+    const newFormulaTargets = newFormulas.map(f => f.target);
+    const allTargets = [...new Set([...oldFormulaTargets, ...newFormulaTargets])];
+    setItemData(prev => prev.map(row => {
+      const cleaned: Record<string,string> = {};
+      for (const [k, v] of Object.entries(row)) {
+        if (!allTargets.includes(k)) cleaned[k] = v;
+      }
+      if (newFormulas.length > 0) {
         return calcFormulas(cleaned, newFormulas);
-      }));
-    }
+      }
+      return cleaned;
+    }));
   }
 
   useEffect(() => {
@@ -201,10 +204,20 @@ export default function WritePage() {
           if (data.attachments && Array.isArray(data.attachments)) {
             setAttachments(data.attachments);
           }
+          // 저장된 양식으로 템플릿 설정
+          if (data.template_name && templateList.length > 0) {
+            const tmpl = templateList.find(t => t.name === data.template_name);
+            if (tmpl) {
+              setSelectedTemplate(tmpl.name);
+              if (tmpl.columns?.length) setTemplateCols(tmpl.columns);
+              if (tmpl.formulas?.length) setTemplateFormulas(tmpl.formulas);
+              else setTemplateFormulas([]);
+            }
+          }
         }
       });
     }
-  }, [editId]);
+  }, [editId, templateList]);
 
   async function uploadFiles(files: FileList | File[]) {
     // pwindow 외 업체는 첨부 기능 차단
