@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 export default function WritePage() {
@@ -147,16 +147,23 @@ export default function WritePage() {
     });
   }, []);
 
+  // 현재 수식 타겟을 ref로 추적 (state 비동기 문제 방지)
+  const currentFormulasRef = useRef(templateFormulas);
+  currentFormulasRef.current = templateFormulas;
+
   function handleTemplateChange(name: string) {
     setSelectedTemplate(name);
     const tmpl = templateList.find(t => t.name === name);
-    if (tmpl?.columns?.length) setTemplateCols(tmpl.columns);
-    const newFormulas = tmpl?.formulas?.length ? tmpl.formulas : [];
+    if (!tmpl) return;
+    const newCols = tmpl.columns?.length ? tmpl.columns : templateCols;
+    const newFormulas = tmpl.formulas?.length ? tmpl.formulas : [];
+    // 이전 수식 타겟은 ref에서 안전하게 읽기
+    const oldTargets = currentFormulasRef.current.map(f => f.target);
+    const newTargets = newFormulas.map(f => f.target);
+    const allTargets = [...new Set([...oldTargets, ...newTargets])];
+    // state 일괄 업데이트
+    setTemplateCols(newCols);
     setTemplateFormulas(newFormulas);
-    // 양식 변경 시: 이전 자동계산 키 + 새 자동계산 키 모두 삭제 후 재계산
-    const oldFormulaTargets = templateFormulas.map(f => f.target);
-    const newFormulaTargets = newFormulas.map(f => f.target);
-    const allTargets = [...new Set([...oldFormulaTargets, ...newFormulaTargets])];
     setItemData(prev => prev.map(row => {
       const cleaned: Record<string,string> = {};
       for (const [k, v] of Object.entries(row)) {
@@ -689,7 +696,7 @@ export default function WritePage() {
         <div className="flex justify-between items-center mb-2">
           <div className="flex items-center gap-2">
             <span className="text-sm font-bold text-[#3b4b5b] border-l-4 border-[#3b4b5b] pl-2">표양식</span>
-            <select value={selectedTemplate} onChange={e => handleTemplateChange(e.target.value)} className="px-2 py-1 border border-gray-300 rounded text-xs print:hidden">
+            <select key={selectedTemplate} value={selectedTemplate} onChange={e => { if (e.target.value !== selectedTemplate) handleTemplateChange(e.target.value); }} className="px-2 py-1 border border-gray-300 rounded text-xs print:hidden" style={{minHeight:"28px"}}>
               {templateList.length === 0 && <option>기본</option>}
               {templateList.map(t => <option key={t.id} value={t.name}>{t.name}</option>)}
             </select>
