@@ -701,6 +701,7 @@ export default function WritePage() {
               {templateList.map(t => <option key={t.id} value={t.name}>{t.name}</option>)}
             </select>
             <a href="/admin?tab=template" className="px-2 py-1 bg-gray-600 text-white rounded text-xs no-underline hover:bg-gray-700 print:hidden">양식등록</a>
+            <span className="text-xs text-red-500 print:hidden">※표양식을 변경하시려면 새로 작성하셔야 합니다.</span>
           </div>
           <button onClick={() => { setItemRows(r => r + 1); setItemData(p => [...p, {}]); }} className="px-3 py-1 border border-gray-300 rounded text-xs text-gray-500 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-500 transition print:hidden">+ 행 추가</button>
         </div>
