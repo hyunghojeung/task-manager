@@ -110,19 +110,24 @@ export async function createCompany(params: CreateCompanyParams): Promise<{ succ
     { company_id: company.id, order_no: `${today}-T3`, order_date: new Date().toISOString().slice(0, 10), client_name: "TEST 거래처C", title: "TEST 샘플 작업 3", orderer: adminName || "관리자", status: "complete", created_by: adminId },
   ]);
 
-  // pwindow의 모든 양식을 기본 폼 양식으로 복사
+  // pwindow의 양식 중 지정된 3개(부가세포함, 부가세별도, 현금가격양식)만 복사
+  const TARGET_TEMPLATES = ["부가세포함", "부가세별도", "현금가격양식"];
   const { data: pwindowCompany } = await supabase.from("companies").select("id").eq("company_id", "pwindow").maybeSingle();
   if (pwindowCompany) {
-    const { data: pwindowTemplates } = await supabase.from("form_templates").select("name, columns, formulas, is_default, sort_order").eq("company_id", pwindowCompany.id).order("sort_order");
+    const { data: pwindowTemplates } = await supabase.from("form_templates").select("name, columns, formulas, sort_order").eq("company_id", pwindowCompany.id).in("name", TARGET_TEMPLATES);
     if (pwindowTemplates && pwindowTemplates.length > 0) {
+      // 지정된 순서대로 정렬
+      const sorted = TARGET_TEMPLATES
+        .map(name => pwindowTemplates.find(t => t.name === name))
+        .filter((t): t is NonNullable<typeof t> => !!t);
       await supabase.from("form_templates").insert(
-        pwindowTemplates.map((t, i) => ({
+        sorted.map((t, i) => ({
           company_id: company.id,
           name: t.name,
           columns: t.columns,
           formulas: t.formulas,
           is_default: i === 0,
-          sort_order: t.sort_order ?? i,
+          sort_order: i,
         }))
       );
     }

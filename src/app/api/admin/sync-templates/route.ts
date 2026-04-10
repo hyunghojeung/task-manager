@@ -3,7 +3,9 @@ import { getSupabase } from "@/lib/supabase-admin";
 
 export const dynamic = "force-dynamic";
 
-// pwindow의 양식을 모든 기존 업체에 복사 (이미 있는 양식은 건너뜀)
+const TARGET_TEMPLATES = ["부가세포함", "부가세별도", "현금가격양식"];
+
+// pwindow의 지정 양식 3개(부가세포함, 부가세별도, 현금가격양식)를 모든 기존 업체에 복사
 export async function POST() {
   const supabase = getSupabase();
 
@@ -11,9 +13,14 @@ export async function POST() {
   const { data: pwindowCompany } = await supabase.from("companies").select("id").eq("company_id", "pwindow").maybeSingle();
   if (!pwindowCompany) return NextResponse.json({ error: "pwindow 업체를 찾을 수 없습니다." }, { status: 404 });
 
-  // pwindow의 모든 양식 가져오기
-  const { data: pwindowTemplates } = await supabase.from("form_templates").select("name, columns, formulas, is_default, sort_order").eq("company_id", pwindowCompany.id).order("sort_order");
-  if (!pwindowTemplates || pwindowTemplates.length === 0) return NextResponse.json({ error: "pwindow에 양식이 없습니다." }, { status: 404 });
+  // pwindow의 지정 양식만 가져오기
+  const { data: pwindowTemplates } = await supabase.from("form_templates").select("name, columns, formulas").eq("company_id", pwindowCompany.id).in("name", TARGET_TEMPLATES);
+  if (!pwindowTemplates || pwindowTemplates.length === 0) return NextResponse.json({ error: "pwindow에 지정 양식이 없습니다." }, { status: 404 });
+
+  // 지정된 순서대로 정렬
+  const sorted = TARGET_TEMPLATES
+    .map(name => pwindowTemplates.find(t => t.name === name))
+    .filter((t): t is NonNullable<typeof t> => !!t);
 
   // 모든 업체 가져오기 (pwindow 제외)
   const { data: companies } = await supabase.from("companies").select("id, company_id").neq("id", pwindowCompany.id);
@@ -27,7 +34,7 @@ export async function POST() {
     const existingNames = new Set((existing || []).map(e => e.name));
 
     // 없는 양식만 복사
-    const toInsert = pwindowTemplates
+    const toInsert = sorted
       .filter(t => !existingNames.has(t.name))
       .map((t, i) => ({
         company_id: company.id,
@@ -35,7 +42,7 @@ export async function POST() {
         columns: t.columns,
         formulas: t.formulas,
         is_default: existingNames.size === 0 && i === 0,
-        sort_order: t.sort_order ?? i,
+        sort_order: i,
       }));
 
     if (toInsert.length > 0) {
