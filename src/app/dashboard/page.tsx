@@ -18,6 +18,7 @@ export default function DashboardPage() {
   const [fontSize, setFontSize] = useState("text-base");
   const [year, setYear] = useState("전체");
   const [month, setMonth] = useState("전체");
+  const [statusFilter, setStatusFilter] = useState("전체");
 
   useEffect(() => {
     const saved = typeof window !== "undefined" ? localStorage.getItem("listFontSize") : null;
@@ -94,12 +95,22 @@ export default function DashboardPage() {
       <div className="overflow-x-auto">
         <table className={`w-full border-collapse border border-gray-300 ${fontSize}`}>
           <thead><tr className="bg-[#3b4b5b] text-white">
-            <th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap">순번</th><th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap">거래처</th><th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap">주문자</th><th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap">연락처</th><th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap">제목</th><th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap">금액</th><th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap">제품형태</th><th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap">결제</th><th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap">진행상태</th><th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap" style={{minWidth:"60px"}}>거래명세서</th><th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap" style={{minWidth:"60px"}}>견적서</th>
+            <th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap">순번</th><th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap">거래처</th><th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap">주문자</th><th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap">연락처</th><th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap">제목</th><th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap">금액</th><th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap">제품형태</th><th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap">결제</th>
+            <th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap">
+              <div className="flex gap-1 justify-center">
+                <button onClick={() => setStatusFilter("전체")} className={`px-1.5 py-0.5 rounded text-[10px] ${statusFilter === "전체" ? "bg-white text-[#3b4b5b] font-bold" : "bg-transparent text-white border border-white"}`}>전체</button>
+                <button onClick={() => setStatusFilter("progress")} className={`px-1.5 py-0.5 rounded text-[10px] ${statusFilter === "progress" ? "bg-blue-500 text-white font-bold" : "bg-transparent text-white border border-white"}`}>진행중</button>
+                <button onClick={() => setStatusFilter("complete")} className={`px-1.5 py-0.5 rounded text-[10px] ${statusFilter === "complete" ? "bg-red-500 text-white font-bold" : "bg-transparent text-white border border-white"}`}>완료</button>
+              </div>
+            </th>
+            <th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap" style={{minWidth:"60px"}}>거래명세서</th><th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap" style={{minWidth:"60px"}}>견적서</th>
           </tr></thead>
           <tbody>
-            {loading ? <tr><td colSpan={11} className="text-center py-8 text-gray-300 text-sm">불러오는 중...</td></tr> :
-            orders.length === 0 ? <tr><td colSpan={11} className="text-center py-8 text-gray-400">등록된 작업이 없습니다. 작업등록 버튼을 눌러 새 작업을 등록하세요.</td></tr> :
-            orders.map((o, i) => (
+            {(() => {
+              const filtered = statusFilter === "전체" ? orders : orders.filter(o => o.status === statusFilter);
+              if (loading) return <tr><td colSpan={11} className="text-center py-8 text-gray-300 text-sm">불러오는 중...</td></tr>;
+              if (filtered.length === 0) return <tr><td colSpan={11} className="text-center py-8 text-gray-400">{statusFilter === "전체" ? "등록된 작업이 없습니다. 작업등록 버튼을 눌러 새 작업을 등록하세요." : "해당 상태의 작업이 없습니다."}</td></tr>;
+              return filtered.map((o, i) => (
               <tr key={o.id} className={`${i % 2 === 1 ? "bg-gray-50" : ""} hover:bg-blue-50`} style={{animation: `fadeIn 0.3s ease ${i * 0.02}s both`}}>
                 <td className="border border-gray-200 px-1.5 py-[7px] text-center whitespace-nowrap"><a href={`/dashboard/write?id=${o.id}`} className="hover:text-blue-600 hover:underline">{o.order_no}</a></td>
                 <td className="border border-gray-200 px-1.5 py-[7px] text-left"><a href={`/dashboard/write?id=${o.id}`} className="hover:text-blue-600 hover:underline">{o.client_name}</a></td>
@@ -115,7 +126,8 @@ export default function DashboardPage() {
                 <td className="border border-gray-200 px-1.5 py-[7px] text-center whitespace-nowrap"><a href={`/print/statement?id=${o.id}`} target="_blank" className="px-2 py-0.5 border border-gray-300 rounded text-xs hover:text-blue-600">명세서</a></td>
                 <td className="border border-gray-200 px-1.5 py-[7px] text-center whitespace-nowrap"><a href={`/print/estimate?id=${o.id}`} target="_blank" className="px-2 py-0.5 border border-gray-300 rounded text-xs hover:text-red-600">견적서</a></td>
               </tr>
-            ))}
+              ));
+            })()}
           </tbody>
         </table>
       </div>
