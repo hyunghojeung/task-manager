@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 
 interface OrderData {
   id: string; order_no: string; client_name: string; orderer: string; contact: string;
@@ -58,6 +58,27 @@ export default function DashboardPage() {
     fetchOrders();
   }
 
+  // 검색어 하이라이트: 매칭되는 부분을 빨간색으로 표시
+  function highlight(text: string | null | undefined, field: string): React.ReactNode {
+    const t = text || "";
+    if (!keyword || !t) return t;
+    // searchField가 "전체"이거나 현재 필드와 일치할 때만 하이라이트
+    if (searchField !== "전체" && searchField !== field) return t;
+    const lowerKw = keyword.toLowerCase();
+    const parts: React.ReactNode[] = [];
+    let lastIdx = 0;
+    const lowerT = t.toLowerCase();
+    let idx = lowerT.indexOf(lowerKw);
+    while (idx !== -1) {
+      if (idx > lastIdx) parts.push(t.slice(lastIdx, idx));
+      parts.push(<span key={idx} className="text-red-600 font-bold">{t.slice(idx, idx + keyword.length)}</span>);
+      lastIdx = idx + keyword.length;
+      idx = lowerT.indexOf(lowerKw, lastIdx);
+    }
+    if (lastIdx < t.length) parts.push(t.slice(lastIdx));
+    return parts.length > 0 ? <>{parts}</> : t;
+  }
+
   const totalPages = Math.ceil(total / 40);
 
   return (
@@ -113,10 +134,10 @@ export default function DashboardPage() {
               return filtered.map((o, i) => (
               <tr key={o.id} className={`${i % 2 === 1 ? "bg-gray-50" : ""} hover:bg-blue-50`} style={{animation: `fadeIn 0.3s ease ${i * 0.02}s both`}}>
                 <td className="border border-gray-200 px-1.5 py-[7px] text-center whitespace-nowrap"><a href={`/dashboard/write?id=${o.id}`} className="hover:text-blue-600 hover:underline">{o.order_no}</a></td>
-                <td className="border border-gray-200 px-1.5 py-[7px] text-left"><a href={`/dashboard/write?id=${o.id}`} className="hover:text-blue-600 hover:underline">{o.client_name}</a></td>
-                <td className="border border-gray-200 px-1.5 py-[7px] text-left"><a href={`/dashboard/write?id=${o.id}`} className="hover:text-blue-600 hover:underline">{o.orderer}</a></td>
-                <td className="border border-gray-200 px-1.5 py-[7px] text-left"><a href={`/dashboard/write?id=${o.id}`} className="hover:text-blue-600 hover:underline">{o.contact}</a></td>
-                <td className="border border-gray-200 px-1.5 py-[7px] text-left max-w-[400px]"><a href={`/dashboard/write?id=${o.id}`} title={o.title} className="hover:text-blue-600 hover:underline block truncate">{o.title}</a></td>
+                <td className="border border-gray-200 px-1.5 py-[7px] text-left"><a href={`/dashboard/write?id=${o.id}`} className="hover:text-blue-600 hover:underline">{highlight(o.client_name, "거래처")}</a></td>
+                <td className="border border-gray-200 px-1.5 py-[7px] text-left"><a href={`/dashboard/write?id=${o.id}`} className="hover:text-blue-600 hover:underline">{highlight(o.orderer, "주문자")}</a></td>
+                <td className="border border-gray-200 px-1.5 py-[7px] text-left"><a href={`/dashboard/write?id=${o.id}`} className="hover:text-blue-600 hover:underline">{highlight(o.contact, "연락처")}</a></td>
+                <td className="border border-gray-200 px-1.5 py-[7px] text-left max-w-[400px]"><a href={`/dashboard/write?id=${o.id}`} title={o.title} className="hover:text-blue-600 hover:underline block truncate">{highlight(o.title, "제목")}</a></td>
                 <td className="border border-gray-200 px-1.5 py-[7px] text-right">{((o.total_amount||0) - (o.discount||0)).toLocaleString()}</td>
                 <td className="border border-gray-200 px-1.5 py-[7px] text-center">{o.product_type}</td>
                 <td className="border border-gray-200 px-1.5 py-[7px] text-center">{o.payment}</td>
