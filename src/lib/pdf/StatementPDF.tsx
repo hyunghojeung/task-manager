@@ -107,10 +107,8 @@ export default function StatementPDF({ order, company, type = "statement", colOr
 
         {isEstimate && (
           <View style={{ border: "2px solid #c00", padding: 8, marginBottom: 8, flexDirection: "row", justifyContent: "space-between" }}>
-            <Text style={[s.bold, { fontSize: 11 }]}>금 액 : ₩ {fmt(grandTotal)}</Text>
-            {order.trade_type !== "cash" && (
-              <Text style={{ fontSize: 11, color: "#c00", fontWeight: 700 }}>(VAT포함)</Text>
-            )}
+            <Text style={[s.bold, { fontSize: 11 }]}>금 액</Text>
+            <Text style={{ fontSize: 11, color: "#c00", fontWeight: 700 }}>공급가액(₩ {fmt(grandTotal)}원){order.trade_type !== "cash" ? " / VAT포함" : ""}</Text>
           </View>
         )}
 
