@@ -662,24 +662,6 @@ export default function WritePage() {
               </select>
             </div>
           ))}
-          <div className="flex items-start gap-2 md:col-span-2">
-            <label className="w-16 text-xs font-bold text-[#3b4b5b] shrink-0 pt-1">후가공</label>
-            <div className="flex-1 flex flex-wrap gap-x-3 gap-y-1 px-2 py-1.5 border border-gray-300 rounded">
-              {["재단","1줄오시","2줄오시","3줄오시","기타오시","접지","금박","에폭시","스코딕스"].map(opt => {
-                const selected = (formData.finishing || "").split(",").filter(Boolean);
-                const checked = selected.includes(opt);
-                return (
-                  <label key={opt} className="inline-flex items-center gap-1 text-xs cursor-pointer">
-                    <input type="checkbox" checked={checked} style={{width:"14px",height:"14px"}} onChange={e => {
-                      const next = e.target.checked ? [...selected, opt] : selected.filter(v => v !== opt);
-                      handleChange("finishing", next.join(","));
-                    }} />
-                    {opt}
-                  </label>
-                );
-              })}
-            </div>
-          </div>
           <div className="flex items-center gap-2">
             <label className="w-16 text-xs font-bold text-[#3b4b5b] shrink-0">부수</label>
             <input type="text" placeholder="부수 입력" value={formData.copies} onChange={e => handleChange("copies", e.target.value)} className="flex-1 px-2 py-1.5 border border-gray-300 rounded text-sm" />
