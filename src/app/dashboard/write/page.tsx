@@ -128,7 +128,9 @@ export default function WritePage() {
       const nonAutoCols = templateCols.filter(tc => tc.type !== "auto" && tc.type !== "자동계산");
       const allEmpty = nonAutoCols.every(tc => !newData[rowIdx][tc.name] || newData[rowIdx][tc.name].trim() === "");
       if (allEmpty) {
-        newData[rowIdx] = {};
+        // _bold 플래그는 유지
+        const bold = newData[rowIdx]._bold;
+        newData[rowIdx] = bold ? { _bold: bold } : {};
       } else if (templateFormulas.length > 0) {
         newData[rowIdx] = calcFormulas(newData[rowIdx], templateFormulas);
       }
@@ -728,6 +730,7 @@ export default function WritePage() {
           <table className="w-full border-collapse border border-gray-300 text-xs">
             <thead>
               <tr className="bg-[#3b4b5b] text-white">
+                <th className="border border-[#2d3a47] px-1 py-2.5 font-semibold" style={{width:"30px"}} title="체크 시 거래명세서/견적서에서 해당 품목명이 굵게 표시됩니다"><span className="text-[10px]">굵게</span></th>
                 {templateCols.map((c, i) => (
                   <th key={i} className={`border border-[#2d3a47] px-2 py-2.5 font-semibold ${c.type === "자동계산" ? "bg-[#4a5a6b]" : ""}`} style={{width: (c as Record<string,string>).width ? `${(c as Record<string,string>).width}px` : c.name === "순번" ? "35px" : "auto", minWidth: 40}}>{c.name}</th>
                 ))}
@@ -736,6 +739,15 @@ export default function WritePage() {
             <tbody>
               {Array.from({ length: itemRows }, (_, i) => i).map((rowIdx) => (
                 <tr key={rowIdx}>
+                  <td className="border border-gray-200 px-1 py-1 text-center">
+                    <input type="checkbox" checked={itemData[rowIdx]?._bold === "1"} onChange={e => {
+                      setItemData(prev => {
+                        const newData = [...prev];
+                        newData[rowIdx] = {...newData[rowIdx], _bold: e.target.checked ? "1" : ""};
+                        return newData;
+                      });
+                    }} style={{width:"14px",height:"14px"}} />
+                  </td>
                   {templateCols.map((c, ci) => (
                     <td key={ci} className={`border border-gray-200 px-1 py-1 ${c.type === "자동계산" ? "bg-amber-50" : ""}`}>
                       {c.type === "auto" ? <span className="text-center block">{rowIdx + 1}</span> :
@@ -777,6 +789,7 @@ export default function WritePage() {
                 return (
                   <>
                     <tr className="bg-gray-50 font-bold">
+                      <td className="border border-gray-200"></td>
                       {templateCols.map((c, ci) => {
                         if (ci === 0) return <td key={ci} colSpan={Math.max(nonCalcCount, 1)} className="border border-gray-200 px-2 py-2 text-right">합 계</td>;
                         if (ci < nonCalcCount) return null;
@@ -784,7 +797,7 @@ export default function WritePage() {
                       })}
                     </tr>
                     <tr className="bg-blue-50 font-bold">
-                      <td colSpan={Math.max(nonCalcCount, 1)} className="border border-gray-200 px-2 py-2 text-right text-blue-700">총 액</td>
+                      <td colSpan={Math.max(nonCalcCount, 1) + 1} className="border border-gray-200 px-2 py-2 text-right text-blue-700">총 액</td>
                       <td colSpan={Math.max(calcCols.length, 1)} className="border border-gray-200 px-2 py-2 text-right text-blue-700 text-sm">{grandTotal.toLocaleString()}</td>
                     </tr>
                   </>
