@@ -826,6 +826,8 @@ export default function WritePage() {
         <button onClick={() => router.push("/dashboard")} className="px-6 py-2 bg-white text-gray-600 border border-gray-300 rounded text-sm">리스트</button>
         <button onClick={() => window.print()} className="px-6 py-2 bg-gray-700 text-white rounded text-sm">프린트</button>
         {editId && <button onClick={handleCopy} className="px-6 py-2 bg-amber-500 text-white rounded text-sm">복사</button>}
+        {editId && <a href={`/print/statement?id=${editId}`} target="_blank" className="px-6 py-2 bg-indigo-600 text-white rounded text-sm">거래명세서</a>}
+        {editId && <a href={`/print/estimate?id=${editId}`} target="_blank" className="px-6 py-2 bg-purple-600 text-white rounded text-sm">견적서</a>}
         {editId && <button onClick={handleDelete} className="px-6 py-2 bg-red-600 text-white rounded text-sm">삭제</button>}
       </div>
       {/* 거래처 검색 모달 */}
