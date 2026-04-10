@@ -21,7 +21,7 @@ export default function WritePage() {
     orderer: "", contact: "", email: "", client_name: "",
     product_type: "", title: "", category_id: "",
     trade_type: "vat", tax_invoice: "", payment: "",
-    paper_type: "", paper_weight: "", color: "", print_side: "", copies: "",
+    paper_type: "", paper_weight: "", color: "", print_side: "", copies: "", page_count: "",
     binding: "", paper_size: "", coating: "", finishing: "",
     cover_paper_size: "", cover_orientation: "", cover_paper_type: "", cover_paper_weight: "",
     cover_print_side: "", cover_color: "",
@@ -194,7 +194,7 @@ export default function WritePage() {
             trade_type: data.trade_type || "vat", tax_invoice: data.tax_invoice || "",
             payment: data.payment || "", paper_type: data.paper_type || "", paper_weight: data.paper_weight || "",
             color: data.color || "", print_side: data.print_side || "",
-            copies: data.copies || "", binding: data.binding || "",
+            copies: data.copies || "", page_count: data.page_count || "", binding: data.binding || "",
             paper_size: data.paper_size || "", coating: data.coating || "",
             finishing: data.finishing || "",
             cover_paper_size: data.cover_paper_size || "", cover_orientation: data.cover_orientation || "",
@@ -622,7 +622,7 @@ export default function WritePage() {
         </div>
 
         <hr className="my-4 border-t-2 border-gray-300" />
-        <div className="font-bold text-sm text-emerald-700 mb-3 px-3 py-2 border-l-4 border-emerald-700">📗 작업내용2</div>
+        <div className="font-bold text-sm text-emerald-700 mb-3 px-3 py-2 border-l-4 border-emerald-700">📗 내지</div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2 text-sm">
           <div className="flex items-center gap-2">
             <label className="w-16 text-xs font-bold text-[#3b4b5b] shrink-0">용지</label>
@@ -684,6 +684,8 @@ export default function WritePage() {
           <div className="flex items-center gap-2">
             <label className="w-16 text-xs font-bold text-[#3b4b5b] shrink-0">부수</label>
             <input type="text" placeholder="부수 입력" value={formData.copies} onChange={e => handleChange("copies", e.target.value)} className="flex-1 px-2 py-1.5 border border-gray-300 rounded text-sm" />
+            <label className="w-16 text-xs font-bold text-[#3b4b5b] shrink-0 text-center">페이지수</label>
+            <input type="text" placeholder="페이지수 입력" value={formData.page_count} onChange={e => handleChange("page_count", e.target.value)} className="flex-1 px-2 py-1.5 border border-gray-300 rounded text-sm" />
           </div>
           <div className="flex items-center gap-2">
             <label className="w-16 text-xs font-bold text-[#3b4b5b] shrink-0">사이즈</label>
