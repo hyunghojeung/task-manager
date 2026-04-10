@@ -38,7 +38,7 @@ const s = StyleSheet.create({
 function fmt(n: number) { return (n || 0).toLocaleString(); }
 
 export interface StatementPDFProps {
-  order: { order_no: string; client_name: string; title: string; total_amount: number; total_supply: number; total_vat: number; discount: number; created_at: string; order_items?: Array<{ sort_order: number; data: Record<string, string> }> };
+  order: { order_no: string; client_name: string; title: string; total_amount: number; total_supply: number; total_vat: number; discount: number; trade_type?: string; created_at: string; order_items?: Array<{ sort_order: number; data: Record<string, string> }> };
   company: { company_name: string; business_number: string; representative: string; address: string; business_type: string; business_category: string; phone: string; email: string };
   type?: "statement" | "estimate";
   colOrder?: string[];
@@ -107,8 +107,10 @@ export default function StatementPDF({ order, company, type = "statement", colOr
 
         {isEstimate && (
           <View style={{ border: "2px solid #c00", padding: 8, marginBottom: 8, flexDirection: "row", justifyContent: "space-between" }}>
-            <Text style={[s.bold, { fontSize: 11 }]}>금 액 : {fmt(grandTotal)}원</Text>
-            <Text style={{ fontSize: 11, color: "#c00", fontWeight: 700 }}>(VAT포함)</Text>
+            <Text style={[s.bold, { fontSize: 11 }]}>금 액 : ₩ {fmt(grandTotal)}</Text>
+            {order.trade_type !== "cash" && (
+              <Text style={{ fontSize: 11, color: "#c00", fontWeight: 700 }}>(VAT포함)</Text>
+            )}
           </View>
         )}
 

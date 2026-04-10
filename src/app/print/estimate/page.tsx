@@ -4,7 +4,7 @@ import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 
 interface OrderItemRow { sort_order: number; data: Record<string, string> }
-interface OrderData { id: string; order_no: string; client_name: string; title: string; total_amount: number; total_supply: number; total_vat: number; discount: number; template_name?: string; created_at: string; order_items?: OrderItemRow[] }
+interface OrderData { id: string; order_no: string; client_name: string; title: string; total_amount: number; total_supply: number; total_vat: number; discount: number; template_name?: string; trade_type?: string; created_at: string; order_items?: OrderItemRow[] }
 interface CompanyData { company_name: string; business_number: string; representative: string; address: string; business_type: string; business_category: string; phone: string; email: string; seal_image?: string }
 
 function fmt(n: number) { return (n || 0).toLocaleString(); }
@@ -130,7 +130,7 @@ function EstimateContent() {
 
         <div className="flex justify-between items-center my-4 px-4 py-3 border-2 border-red-600 text-base font-bold">
           <span>금 액 : {numToKorean(grandTotal)}</span>
-          <span className="text-red-600">(# {fmt(grandTotal)} / VAT포함)</span>
+          <span className="text-red-600">(₩ {fmt(grandTotal)}{order.trade_type !== "cash" && " / VAT포함"})</span>
         </div>
 
         <p className="text-lg font-extrabold text-gray-800 my-4">작업명: {order.title}</p>
