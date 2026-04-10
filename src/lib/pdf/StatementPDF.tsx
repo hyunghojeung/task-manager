@@ -135,8 +135,10 @@ export default function StatementPDF({ order, company, type = "statement", colOr
                 {allKeys.map((k, j) => {
                   const val = d[k] || "";
                   const isNum = /^\d+$/.test(val);
+                  const num = isNum ? parseInt(val) : NaN;
+                  const displayVal = isNum ? (num === 0 ? "" : fmt(num)) : val;
                   const isNameCol = k.includes("품목") || k.includes("품명") || k.includes("작업");
-                  return <Text key={k} style={[s.td, isNum ? s.tdRight : {}, j === 0 ? { flex: 1 } : { width: colCount > 7 ? 50 : 60 }, isBold && isNameCol ? { fontWeight: 700 } : {}]}>{isNum ? fmt(parseInt(val)) : val}</Text>;
+                  return <Text key={k} style={[s.td, isNum ? s.tdRight : {}, j === 0 ? { flex: 1 } : { width: colCount > 7 ? 50 : 60 }, isNameCol ? { fontSize: 10 } : {}, isBold && isNameCol ? { fontWeight: 700 } : {}]}>{displayVal}</Text>;
                 })}
               </View>
             );

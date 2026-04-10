@@ -132,8 +132,10 @@ function StatementContent() {
                   {allKeys.map(k => {
                     const val = d[k] || "";
                     const isNum = /^\d+$/.test(val);
+                    const num = isNum ? parseInt(val) : NaN;
+                    const displayVal = isNum ? (num === 0 ? "" : num.toLocaleString()) : val;
                     const isNameCol = k.includes("품목") || k.includes("품명") || k.includes("작업");
-                    return <td key={k} className={`border border-gray-300 px-2 py-2 ${isNum ? "text-right" : "text-left"} ${isBold && isNameCol ? "font-bold" : ""}`}>{isNum ? parseInt(val).toLocaleString() : val}</td>;
+                    return <td key={k} className={`border border-gray-300 px-2 py-2 ${isNum ? "text-right" : "text-left"} ${isNameCol ? "text-sm" : ""} ${isBold && isNameCol ? "font-bold" : ""}`}>{displayVal}</td>;
                   })}
                 </tr>
               );
