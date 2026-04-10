@@ -62,7 +62,13 @@ function StatementContent() {
   if (!order || !company) return <div className="p-10 text-center text-gray-400">로딩중...</div>;
 
   const rawItems = (order.order_items || []).sort((a, b) => a.sort_order - b.sort_order).map(it => it.data);
-  const items = rawItems.filter(d => Object.values(d).some(v => v));
+  // 마지막 비어있지 않은 행까지 유지 (중간 빈 행 보존)
+  let lastNonEmptyIdx = -1;
+  rawItems.forEach((d, i) => {
+    const hasContent = Object.entries(d).some(([k, v]) => k !== "_bold" && v);
+    if (hasContent) lastNonEmptyIdx = i;
+  });
+  const items = rawItems.slice(0, lastNonEmptyIdx + 1);
 
   // 템플릿 컬럼 순서에 맞춰 정렬 (작업등록 양식과 동일)
   const rawKeys = items.length > 0 ? Object.keys(items[0]) : [];
@@ -117,16 +123,21 @@ function StatementContent() {
             </tr>
           </thead>
           <tbody>
-            {items.map((d, i) => (
-              <tr key={i}>
-                <td className="border border-gray-300 px-2 py-2 text-center">{i + 1}</td>
-                {allKeys.map(k => {
-                  const val = d[k] || "";
-                  const isNum = /^\d+$/.test(val);
-                  return <td key={k} className={`border border-gray-300 px-2 py-2 ${isNum ? "text-right" : "text-left"}`}>{isNum ? parseInt(val).toLocaleString() : val}</td>;
-                })}
-              </tr>
-            ))}
+            {items.map((d, i) => {
+              const isBold = d._bold === "1";
+              const isEmpty = !Object.entries(d).some(([k, v]) => k !== "_bold" && v);
+              return (
+                <tr key={i}>
+                  <td className="border border-gray-300 px-2 py-2 text-center">{isEmpty ? <>&nbsp;</> : i + 1}</td>
+                  {allKeys.map(k => {
+                    const val = d[k] || "";
+                    const isNum = /^\d+$/.test(val);
+                    const isNameCol = k.includes("품목") || k.includes("품명") || k.includes("작업");
+                    return <td key={k} className={`border border-gray-300 px-2 py-2 ${isNum ? "text-right" : "text-left"} ${isBold && isNameCol ? "font-bold" : ""}`}>{isNum ? parseInt(val).toLocaleString() : val}</td>;
+                  })}
+                </tr>
+              );
+            })}
             {Array.from({ length: emptyRows }, (_, i) => (
               <tr key={`e${i}`}>
                 <td className="border border-gray-300 px-2 py-2 text-center">&nbsp;</td>

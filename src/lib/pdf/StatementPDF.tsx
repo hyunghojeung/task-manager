@@ -46,7 +46,12 @@ export interface StatementPDFProps {
 
 export default function StatementPDF({ order, company, type = "statement", colOrder = [] }: StatementPDFProps) {
   const rawItems = (order.order_items || []).sort((a, b) => a.sort_order - b.sort_order).map(it => it.data);
-  const items = rawItems.filter(d => Object.values(d).some(v => v));
+  let lastNonEmptyIdx = -1;
+  rawItems.forEach((d, i) => {
+    const hasContent = Object.entries(d).some(([k, v]) => k !== "_bold" && v);
+    if (hasContent) lastNonEmptyIdx = i;
+  });
+  const items = rawItems.slice(0, lastNonEmptyIdx + 1);
   const rawKeys = items.length > 0 ? Object.keys(items[0]) : [];
   const allKeys = colOrder.length > 0 ? colOrder.filter(k => rawKeys.includes(k)) : rawKeys;
   const supplyKey = allKeys.find(k => k.includes("공급")) || "";
@@ -121,16 +126,21 @@ export default function StatementPDF({ order, company, type = "statement", colOr
               <Text key={k} style={[s.th, i === 0 ? { flex: 1 } : { width: colCount > 7 ? 50 : 60 }]}>{k}</Text>
             ))}
           </View>
-          {items.map((d, i) => (
-            <View key={i} style={s.tableRow}>
-              <Text style={[s.td, s.tdCenter, { width: 25 }]}>{i + 1}</Text>
-              {allKeys.map((k, j) => {
-                const val = d[k] || "";
-                const isNum = /^\d+$/.test(val);
-                return <Text key={k} style={[s.td, isNum ? s.tdRight : {}, j === 0 ? { flex: 1 } : { width: colCount > 7 ? 50 : 60 }]}>{isNum ? fmt(parseInt(val)) : val}</Text>;
-              })}
-            </View>
-          ))}
+          {items.map((d, i) => {
+            const isBold = d._bold === "1";
+            const isEmpty = !Object.entries(d).some(([k, v]) => k !== "_bold" && v);
+            return (
+              <View key={i} style={s.tableRow}>
+                <Text style={[s.td, s.tdCenter, { width: 25 }]}>{isEmpty ? " " : i + 1}</Text>
+                {allKeys.map((k, j) => {
+                  const val = d[k] || "";
+                  const isNum = /^\d+$/.test(val);
+                  const isNameCol = k.includes("품목") || k.includes("품명") || k.includes("작업");
+                  return <Text key={k} style={[s.td, isNum ? s.tdRight : {}, j === 0 ? { flex: 1 } : { width: colCount > 7 ? 50 : 60 }, isBold && isNameCol ? { fontWeight: 700 } : {}]}>{isNum ? fmt(parseInt(val)) : val}</Text>;
+                })}
+              </View>
+            );
+          })}
           {Array.from({ length: emptyRows }, (_, i) => (
             <View key={`e${i}`} style={s.tableRow}>
               <Text style={[s.td, { width: 25 }]}> </Text>
