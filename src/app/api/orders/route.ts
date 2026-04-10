@@ -22,7 +22,6 @@ export async function GET(request: NextRequest) {
     .from("orders")
     .select("id, order_no, client_name, orderer, contact, title, total_amount, discount, product_type, payment, status, created_by, order_date, created_at", { count: "exact" })
     .eq("company_id", session.company.id)
-    .not("title", "eq", "")
     .order("order_date", { ascending: false })
     .order("created_at", { ascending: false });
 
@@ -47,7 +46,12 @@ export async function GET(request: NextRequest) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  const rows = data || [];
+  // 빈 제목 주문 필터링 (제목 검색 아닐 때만)
+  const rows = (data || []).filter((o: Record<string, unknown>) => {
+    const title = (o.title || "").toString().trim();
+    if (title === "") return false;
+    return true;
+  });
 
   // 작성자 정보 조회
   const createdByIds = [...new Set(rows.map((o: Record<string, unknown>) => o.created_by).filter(Boolean))];
