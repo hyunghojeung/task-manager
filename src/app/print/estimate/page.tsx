@@ -130,7 +130,7 @@ function EstimateContent() {
 
         <div className="flex justify-between items-center my-4 px-4 py-3 border-2 border-red-600 text-base font-bold">
           <span>금 액 : {numToKorean(grandTotal)}</span>
-          <span className="text-red-600">(₩ {fmt(grandTotal)}{order.trade_type !== "cash" && " / VAT포함"})</span>
+          <span className="text-red-600">공급가액(₩ {fmt(grandTotal)}원){order.trade_type !== "cash" && " / VAT포함"}</span>
         </div>
 
         <p className="text-lg font-extrabold text-gray-800 my-4">작업명: {order.title}</p>
