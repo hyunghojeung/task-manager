@@ -659,8 +659,9 @@ export default function WritePage() {
           {[
             ["색상", "color", ["칼라","흑백"]],
             ["인쇄면", "print_side", ["양면","단면"]],
+            ["코팅", "coating", ["무광","유광"]],
           ].map(([label, key, options]) => (
-            <div key={key as string} className="flex items-center gap-2">
+            <div key={key as string} className={`flex items-center gap-2 ${key === "coating" ? "hidden" : ""}`}>
               <label className="w-16 text-xs font-bold text-[#3b4b5b] shrink-0">{label as string}</label>
               <select value={formData[key as keyof typeof formData]} onChange={e => handleChange(key as string, e.target.value)} className="flex-1 px-2 py-1.5 border border-gray-300 rounded text-sm">
                 <option value="">선택</option>
@@ -668,9 +669,54 @@ export default function WritePage() {
               </select>
             </div>
           ))}
+          <div className="hidden items-start gap-2 md:col-span-2">
+            <label className="w-16 text-xs font-bold text-[#3b4b5b] shrink-0 pt-1">후가공</label>
+            <div className="flex-1 flex flex-wrap gap-x-3 gap-y-1 px-2 py-1.5 border border-gray-300 rounded">
+              {["재단","1줄오시","2줄오시","3줄오시","기타오시","접지","금박","에폭시","스코딕스"].map(opt => {
+                const selected = (formData.finishing || "").split(",").filter(Boolean);
+                const checked = selected.includes(opt);
+                return (
+                  <label key={opt} className="inline-flex items-center gap-1 text-xs cursor-pointer">
+                    <input type="checkbox" checked={checked} style={{width:"14px",height:"14px"}} onChange={e => {
+                      const next = e.target.checked ? [...selected, opt] : selected.filter(v => v !== opt);
+                      handleChange("finishing", next.join(","));
+                    }} />
+                    {opt}
+                  </label>
+                );
+              })}
+            </div>
+          </div>
+          <div className="hidden items-center gap-2">
+            <label className="w-16 text-xs font-bold text-[#3b4b5b] shrink-0">부수</label>
+            <input type="text" placeholder="부수 입력" value={formData.copies} onChange={e => handleChange("copies", e.target.value)} className="flex-1 px-2 py-1.5 border border-gray-300 rounded text-sm" />
+          </div>
           <div className="flex items-center gap-2">
             <label className="w-16 text-xs font-bold text-[#3b4b5b] shrink-0">페이지수</label>
             <input type="text" placeholder="페이지수 입력" value={formData.page_count} onChange={e => handleChange("page_count", e.target.value)} className="flex-1 px-2 py-1.5 border border-gray-300 rounded text-sm" />
+          </div>
+          <div className="hidden items-center gap-2">
+            <label className="w-16 text-xs font-bold text-[#3b4b5b] shrink-0">사이즈</label>
+            {(() => {
+              const sizeOptions = ["A4","A3","A2","190x260","465x315","A5","B4"];
+              const isCustom = sizeCustom || (formData.paper_size !== "" && !sizeOptions.includes(formData.paper_size));
+              const selectValue = isCustom ? "__custom__" : formData.paper_size;
+              return (
+                <div className="flex-1 flex gap-2">
+                  <select value={selectValue} onChange={e => {
+                    if (e.target.value === "__custom__") { setSizeCustom(true); handleChange("paper_size", ""); }
+                    else { setSizeCustom(false); handleChange("paper_size", e.target.value); }
+                  }} className="flex-1 px-2 py-1.5 border border-gray-300 rounded text-sm">
+                    <option value="">선택</option>
+                    {sizeOptions.map(s => <option key={s}>{s}</option>)}
+                    <option value="__custom__">직접입력</option>
+                  </select>
+                  {isCustom && (
+                    <input type="text" placeholder="사이즈 입력" value={formData.paper_size} onChange={e => handleChange("paper_size", e.target.value)} className="flex-1 px-2 py-1.5 border border-gray-300 rounded text-sm" autoFocus />
+                  )}
+                </div>
+              );
+            })()}
           </div>
         </div>
         </>}
