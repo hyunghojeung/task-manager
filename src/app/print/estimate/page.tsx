@@ -167,18 +167,25 @@ function EstimateContent() {
         <div className="flex justify-end">
           <table className="border-collapse text-sm">
             <tbody>
-              <tr>
-                <th className="border border-gray-800 bg-gray-100 px-3 py-2">공급가액 합계</th>
-                <td className="border border-gray-800 px-3 py-2 text-right">{fmt(supplyTotal)}</td>
-                <th className="border border-gray-800 bg-gray-100 px-3 py-2">부가세 합계</th>
-                <td className="border border-gray-800 px-3 py-2 text-right">{fmt(vatTotal)}</td>
-                {discount > 0 && <>
-                  <th className="border border-gray-800 bg-gray-100 px-3 py-2 text-red-700">할인</th>
-                  <td className="border border-gray-800 px-3 py-2 text-right text-red-700">-{fmt(discount)}</td>
-                </>}
-                <th className="border border-gray-800 bg-gray-100 px-3 py-2">총 합계</th>
-                <td className="border border-gray-800 px-3 py-2 text-right font-bold">{fmt(grandTotal)}</td>
-              </tr>
+              {order.trade_type === "cash" ? (
+                <tr>
+                  <th className="border border-gray-800 bg-gray-100 px-3 py-2">공급가액 합계</th>
+                  <td className="border border-gray-800 px-3 py-2 text-right font-bold">{fmt(supplyTotal)}</td>
+                </tr>
+              ) : (
+                <tr>
+                  <th className="border border-gray-800 bg-gray-100 px-3 py-2">공급가액 합계</th>
+                  <td className="border border-gray-800 px-3 py-2 text-right">{fmt(supplyTotal)}</td>
+                  <th className="border border-gray-800 bg-gray-100 px-3 py-2">부가세 합계</th>
+                  <td className="border border-gray-800 px-3 py-2 text-right">{fmt(vatTotal)}</td>
+                  {discount > 0 && <>
+                    <th className="border border-gray-800 bg-gray-100 px-3 py-2 text-red-700">할인</th>
+                    <td className="border border-gray-800 px-3 py-2 text-right text-red-700">-{fmt(discount)}</td>
+                  </>}
+                  <th className="border border-gray-800 bg-gray-100 px-3 py-2">총 합계</th>
+                  <td className="border border-gray-800 px-3 py-2 text-right font-bold">{fmt(grandTotal)}</td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>

@@ -4,7 +4,7 @@ import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 
 interface OrderItemRow { sort_order: number; data: Record<string, string> }
-interface OrderData { id: string; order_no: string; client_name: string; title: string; total_amount: number; total_supply: number; total_vat: number; discount: number; template_name?: string; created_at: string; order_items?: OrderItemRow[] }
+interface OrderData { id: string; order_no: string; client_name: string; title: string; total_amount: number; total_supply: number; total_vat: number; discount: number; template_name?: string; trade_type?: string; created_at: string; order_items?: OrderItemRow[] }
 interface CompanyData { company_name: string; business_number: string; representative: string; address: string; business_type: string; business_category: string; phone: string; email: string; seal_image?: string }
 
 function fmt(n: number) { return (n || 0).toLocaleString(); }
@@ -139,18 +139,25 @@ function StatementContent() {
         <div className="flex justify-end">
           <table className="border-collapse text-sm">
             <tbody>
-              <tr>
-                <th className="border border-gray-800 bg-gray-100 px-3 py-2">공급가액 합계</th>
-                <td className="border border-gray-800 px-3 py-2 text-right">{fmt(supplyTotal)}</td>
-                <th className="border border-gray-800 bg-gray-100 px-3 py-2">부가세 합계</th>
-                <td className="border border-gray-800 px-3 py-2 text-right">{fmt(vatTotal)}</td>
-                {discount > 0 && <>
-                  <th className="border border-gray-800 bg-gray-100 px-3 py-2 text-red-700">할인</th>
-                  <td className="border border-gray-800 px-3 py-2 text-right text-red-700">-{fmt(discount)}</td>
-                </>}
-                <th className="border border-gray-800 bg-gray-100 px-3 py-2">총 합계</th>
-                <td className="border border-gray-800 px-3 py-2 text-right font-bold">{fmt(grandTotal)}</td>
-              </tr>
+              {order.trade_type === "cash" ? (
+                <tr>
+                  <th className="border border-gray-800 bg-gray-100 px-3 py-2">공급가액 합계</th>
+                  <td className="border border-gray-800 px-3 py-2 text-right font-bold">{fmt(supplyTotal)}</td>
+                </tr>
+              ) : (
+                <tr>
+                  <th className="border border-gray-800 bg-gray-100 px-3 py-2">공급가액 합계</th>
+                  <td className="border border-gray-800 px-3 py-2 text-right">{fmt(supplyTotal)}</td>
+                  <th className="border border-gray-800 bg-gray-100 px-3 py-2">부가세 합계</th>
+                  <td className="border border-gray-800 px-3 py-2 text-right">{fmt(vatTotal)}</td>
+                  {discount > 0 && <>
+                    <th className="border border-gray-800 bg-gray-100 px-3 py-2 text-red-700">할인</th>
+                    <td className="border border-gray-800 px-3 py-2 text-right text-red-700">-{fmt(discount)}</td>
+                  </>}
+                  <th className="border border-gray-800 bg-gray-100 px-3 py-2">총 합계</th>
+                  <td className="border border-gray-800 px-3 py-2 text-right font-bold">{fmt(grandTotal)}</td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
