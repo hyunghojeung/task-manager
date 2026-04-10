@@ -676,29 +676,6 @@ export default function WritePage() {
             <label className="w-16 text-xs font-bold text-[#3b4b5b] shrink-0">페이지수</label>
             <input type="text" placeholder="페이지수 입력" value={formData.page_count} onChange={e => handleChange("page_count", e.target.value)} className="flex-1 px-2 py-1.5 border border-gray-300 rounded text-sm" />
           </div>
-          <div className="flex items-center gap-2">
-            <label className="w-16 text-xs font-bold text-[#3b4b5b] shrink-0">사이즈</label>
-            {(() => {
-              const sizeOptions = ["A4","A3","A2","190x260","465x315","A5","B4"];
-              const isCustom = sizeCustom || (formData.paper_size !== "" && !sizeOptions.includes(formData.paper_size));
-              const selectValue = isCustom ? "__custom__" : formData.paper_size;
-              return (
-                <div className="flex-1 flex gap-2">
-                  <select value={selectValue} onChange={e => {
-                    if (e.target.value === "__custom__") { setSizeCustom(true); handleChange("paper_size", ""); }
-                    else { setSizeCustom(false); handleChange("paper_size", e.target.value); }
-                  }} className="flex-1 px-2 py-1.5 border border-gray-300 rounded text-sm">
-                    <option value="">선택</option>
-                    {sizeOptions.map(s => <option key={s}>{s}</option>)}
-                    <option value="__custom__">직접입력</option>
-                  </select>
-                  {isCustom && (
-                    <input type="text" placeholder="사이즈 입력" value={formData.paper_size} onChange={e => handleChange("paper_size", e.target.value)} className="flex-1 px-2 py-1.5 border border-gray-300 rounded text-sm" autoFocus />
-                  )}
-                </div>
-              );
-            })()}
-          </div>
         </div>
         </>}
       </div>
