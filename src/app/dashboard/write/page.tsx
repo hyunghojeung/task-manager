@@ -445,7 +445,7 @@ export default function WritePage() {
             <td className="text-[#3b4b5b] font-bold text-xs py-2 px-2 border border-gray-200 text-center">거래유형</td>
             <td className="py-1.5 px-2 border border-gray-200">
               <select value={formData.trade_type} onChange={e => handleChange("trade_type", e.target.value)} className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm">
-                <option value="vat">부가세율 적용</option><option value="novat">부가세율 미적용</option>
+                <option value="vat">부가세율 적용</option><option value="novat">부가세율 미적용</option><option value="cash">현금가격 적용</option>
               </select>
             </td>
           </tr>
