@@ -124,7 +124,12 @@ export default function WritePage() {
       const stripped = value.replace(/,/g, "");
       const raw = (col?.type === "숫자" || /^-?\d+$/.test(stripped)) ? stripped.replace(/[^0-9\-]/g, "") : value;
       newData[rowIdx] = {...newData[rowIdx], [colName]: raw};
-      if (templateFormulas.length > 0) {
+      // 일반 입력 필드가 모두 비어있으면 자동계산 필드도 모두 삭제
+      const nonAutoCols = templateCols.filter(tc => tc.type !== "auto" && tc.type !== "자동계산");
+      const allEmpty = nonAutoCols.every(tc => !newData[rowIdx][tc.name] || newData[rowIdx][tc.name].trim() === "");
+      if (allEmpty) {
+        newData[rowIdx] = {};
+      } else if (templateFormulas.length > 0) {
         newData[rowIdx] = calcFormulas(newData[rowIdx], templateFormulas);
       }
       return newData;
@@ -734,7 +739,7 @@ export default function WritePage() {
                   {templateCols.map((c, ci) => (
                     <td key={ci} className={`border border-gray-200 px-1 py-1 ${c.type === "자동계산" ? "bg-amber-50" : ""}`}>
                       {c.type === "auto" ? <span className="text-center block">{rowIdx + 1}</span> :
-                       c.type === "자동계산" ? <span className="block text-right text-xs px-1 py-1">{formatNumber(itemData[rowIdx]?.[c.name] || "")}</span> :
+                       c.type === "자동계산" ? <span className="block text-right text-xs px-1 py-1">{(() => { const v = itemData[rowIdx]?.[c.name] || ""; const n = parseInt(v); return !v || isNaN(n) || n === 0 ? "" : n.toLocaleString(); })()}</span> :
                        <input type="text" value={(c.type === "숫자" || /^\d+$/.test(itemData[rowIdx]?.[c.name] || "")) ? formatNumber(itemData[rowIdx]?.[c.name] || "") : (itemData[rowIdx]?.[c.name] || "")} onChange={e => handleItemChange(rowIdx, c.name, e.target.value)} className={`w-full px-1 py-1 border border-gray-200 rounded text-xs ${(c.type === "숫자" || /^\d+$/.test(itemData[rowIdx]?.[c.name] || "")) ? "text-right" : ""}`} />}
                     </td>
                   ))}
