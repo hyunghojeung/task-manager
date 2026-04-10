@@ -368,6 +368,20 @@ export default function WritePage() {
     router.push("/dashboard");
   }
 
+  function handleCopy() {
+    if (!editId) return;
+    if (!confirm("현재 작업을 복사하여 새 작업으로 등록합니다. 계속하시겠습니까?")) return;
+    // editId 제거 → 저장 시 새 작업으로 등록됨
+    setEditId(null);
+    setOrderNo("자동생성");
+    setAttachments([]);
+    // 작성일을 오늘로 초기화
+    setFormData(prev => ({ ...prev, order_date: new Date().toISOString().slice(0, 10), tax_invoice: "" }));
+    // URL에서 id 파라미터 제거
+    window.history.replaceState(null, "", "/dashboard/write");
+    alert("복사되었습니다. 내용을 수정한 후 저장 버튼을 눌러주세요.");
+  }
+
   return (
     <div className="max-w-5xl mx-auto">
       <h2 className="text-base font-bold text-gray-800 mb-3">주문서입력</h2>
@@ -811,6 +825,7 @@ export default function WritePage() {
         <button onClick={handleSave} disabled={saving} className="px-6 py-2 bg-blue-600 text-white rounded text-sm font-medium disabled:opacity-50">{saving ? "저장중..." : "저장"}</button>
         <button onClick={() => router.push("/dashboard")} className="px-6 py-2 bg-white text-gray-600 border border-gray-300 rounded text-sm">리스트</button>
         <button onClick={() => window.print()} className="px-6 py-2 bg-gray-700 text-white rounded text-sm">프린트</button>
+        {editId && <button onClick={handleCopy} className="px-6 py-2 bg-amber-500 text-white rounded text-sm">복사</button>}
         {editId && <button onClick={handleDelete} className="px-6 py-2 bg-red-600 text-white rounded text-sm">삭제</button>}
       </div>
       {/* 거래처 검색 모달 */}
