@@ -144,15 +144,17 @@ export default function StatementPDF({ order, company, type = "statement", colOr
         <View style={s.summaryRow}>
           <View style={s.summaryTable}>
             <Text style={s.sumTh}>공급가액 합계</Text>
-            <Text style={s.sumTd}>{fmt(supplyTotal)}</Text>
-            <Text style={s.sumTh}>부가세 합계</Text>
-            <Text style={s.sumTd}>{fmt(vatTotal)}</Text>
-            {discount > 0 && <>
-              <Text style={[s.sumTh, { color: "#c00" }]}>할인</Text>
-              <Text style={[s.sumTd, { color: "#c00" }]}>-{fmt(discount)}</Text>
+            <Text style={[s.sumTd, order.trade_type === "cash" ? { fontWeight: 700 } : {}]}>{fmt(supplyTotal)}</Text>
+            {order.trade_type !== "cash" && <>
+              <Text style={s.sumTh}>부가세 합계</Text>
+              <Text style={s.sumTd}>{fmt(vatTotal)}</Text>
+              {discount > 0 && <>
+                <Text style={[s.sumTh, { color: "#c00" }]}>할인</Text>
+                <Text style={[s.sumTd, { color: "#c00" }]}>-{fmt(discount)}</Text>
+              </>}
+              <Text style={s.sumTh}>총 합계</Text>
+              <Text style={[s.sumTd, { fontWeight: 700 }]}>{fmt(grandTotal)}</Text>
             </>}
-            <Text style={s.sumTh}>총 합계</Text>
-            <Text style={[s.sumTd, { fontWeight: 700 }]}>{fmt(grandTotal)}</Text>
           </View>
         </View>
       </Page>
