@@ -516,7 +516,7 @@ export default function WritePage() {
       {/* 세부내역 */}
       <div className="bg-white border border-gray-300 rounded p-4 mb-3">
         <div className="flex items-center justify-between mb-3 pb-2 border-b-2 border-[#3b4b5b]">
-          <p className="font-bold text-sm text-gray-800">세부내역</p>
+          <p className="font-bold text-sm text-gray-800">작업내용2</p>
           <div className="flex items-center gap-3 print:hidden">
             <label className="flex items-center gap-1 text-xs text-gray-600 cursor-pointer">
               <input type="checkbox" checked={alwaysCollapse} onChange={toggleAlwaysCollapse} style={{width:"14px",height:"14px"}} />
