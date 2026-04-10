@@ -684,7 +684,9 @@ export default function WritePage() {
           <div className="flex items-center gap-2">
             <label className="w-16 text-xs font-bold text-[#3b4b5b] shrink-0">부수</label>
             <input type="text" placeholder="부수 입력" value={formData.copies} onChange={e => handleChange("copies", e.target.value)} className="flex-1 px-2 py-1.5 border border-gray-300 rounded text-sm" />
-            <label className="w-16 text-xs font-bold text-[#3b4b5b] shrink-0 text-center">페이지수</label>
+          </div>
+          <div className="flex items-center gap-2">
+            <label className="w-16 text-xs font-bold text-[#3b4b5b] shrink-0">페이지수</label>
             <input type="text" placeholder="페이지수 입력" value={formData.page_count} onChange={e => handleChange("page_count", e.target.value)} className="flex-1 px-2 py-1.5 border border-gray-300 rounded text-sm" />
           </div>
           <div className="flex items-center gap-2">
