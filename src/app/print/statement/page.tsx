@@ -178,9 +178,9 @@ function StatementContent() {
 
         {(() => {
           const suffix = bankIdx === 1 ? "" : `_${bankIdx}`;
-          const name = (company as Record<string,string>)[`bank_name${suffix}`];
-          const acc = (company as Record<string,string>)[`bank_account${suffix}`];
-          const holder = (company as Record<string,string>)[`bank_holder${suffix}`];
+          const name = (company as unknown as Record<string,string>)[`bank_name${suffix}`];
+          const acc = (company as unknown as Record<string,string>)[`bank_account${suffix}`];
+          const holder = (company as unknown as Record<string,string>)[`bank_holder${suffix}`];
           if (!name && !acc && !holder) return null;
           return (
             <div className="mt-6 pt-3 border-t border-gray-300 text-sm text-gray-700">
@@ -210,8 +210,8 @@ function StatementContent() {
           <select value={bankIdx} onChange={e => setBankIdx(parseInt(e.target.value))} className="px-3 py-1.5 border border-gray-300 rounded text-sm">
             {[1, 2, 3].map(idx => {
               const suffix = idx === 1 ? "" : `_${idx}`;
-              const name = (company as Record<string,string>)[`bank_name${suffix}`];
-              const acc = (company as Record<string,string>)[`bank_account${suffix}`];
+              const name = (company as unknown as Record<string,string>)[`bank_name${suffix}`];
+              const acc = (company as unknown as Record<string,string>)[`bank_account${suffix}`];
               if (!name && !acc) return null;
               const isDefault = (company.default_bank || 1) === idx;
               return <option key={idx} value={idx}>계좌{idx}: {name} {acc}{isDefault ? " (기본)" : ""}</option>;
