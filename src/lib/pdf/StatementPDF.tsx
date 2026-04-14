@@ -1,5 +1,5 @@
 import React from "react";
-import { Document, Page, Text, View, StyleSheet, Font } from "@react-pdf/renderer";
+import { Document, Page, Text, View, StyleSheet, Font, Image } from "@react-pdf/renderer";
 
 // 한글 폰트 등록 (Google Fonts - Noto Sans KR)
 Font.register({
@@ -39,7 +39,7 @@ function fmt(n: number) { return (n || 0).toLocaleString(); }
 
 export interface StatementPDFProps {
   order: { order_no: string; client_name: string; title: string; total_amount: number; total_supply: number; total_vat: number; discount: number; trade_type?: string; order_date?: string; created_at: string; order_items?: Array<{ sort_order: number; data: Record<string, string> }> };
-  company: { company_name: string; business_number: string; representative: string; address: string; business_type: string; business_category: string; phone: string; email: string };
+  company: { company_name: string; business_number: string; representative: string; address: string; business_type: string; business_category: string; phone: string; email: string; seal_image?: string; bank_name?: string; bank_account?: string; bank_holder?: string };
   type?: "statement" | "estimate";
   colOrder?: string[];
 }
@@ -91,7 +91,10 @@ export default function StatementPDF({ order, company, type = "statement", colOr
               <Text style={[s.infoTh, { width: 65 }]}>상호</Text>
               <Text style={[s.infoTd, { width: 80 }]}>{company.company_name}</Text>
               <Text style={[s.infoTh, { width: 35 }]}>성명</Text>
-              <Text style={[s.infoTd]}>{company.representative || "-"}</Text>
+              <View style={[s.infoTd, { flexDirection: "row", alignItems: "center" }]}>
+                <Text>{company.representative || "-"}</Text>
+                {company.seal_image && <Image src={company.seal_image} style={{ width: 30, height: 30, marginLeft: 4, objectFit: "contain" }} />}
+              </View>
             </View>
             <View style={s.infoRow}>
               <Text style={[s.infoTh, { width: 65 }]}>주소</Text>
@@ -169,6 +172,15 @@ export default function StatementPDF({ order, company, type = "statement", colOr
             </>}
           </View>
         </View>
+
+        {(company.bank_name || company.bank_account || company.bank_holder) && (
+          <View style={{ marginTop: 20, paddingTop: 8, borderTop: "1px solid #666", flexDirection: "row", fontSize: 9 }}>
+            <Text style={{ fontWeight: 700, marginRight: 6 }}>※ 입금 계좌:</Text>
+            {company.bank_name && <Text style={{ marginRight: 8 }}>{company.bank_name}</Text>}
+            {company.bank_account && <Text style={{ marginRight: 8, fontWeight: 700 }}>{company.bank_account}</Text>}
+            {company.bank_holder && <Text>(예금주: {company.bank_holder})</Text>}
+          </View>
+        )}
       </Page>
     </Document>
   );
