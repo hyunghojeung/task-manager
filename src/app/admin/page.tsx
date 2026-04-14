@@ -730,12 +730,23 @@ function CompanyTab() {
         </div>
       </div>
       <div className="bg-white rounded-lg shadow p-6 mb-5">
-        <h3 className="text-base font-bold text-gray-800 mb-4 pb-2 border-b-2 border-gray-200">입금 계좌 정보</h3>
-        <p className="text-xs text-gray-400 mb-3">거래명세서/견적서 하단에 표시됩니다.</p>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
-          <div className="flex items-center gap-2"><label className="w-20 text-xs font-semibold text-gray-600 shrink-0">입금은행</label><input type="text" value={company.bank_name||""} onChange={e=>set("bank_name",e.target.value)} placeholder="예: 국민은행" className="flex-1 px-2 py-1.5 border border-gray-300 rounded text-sm" /></div>
-          <div className="flex items-center gap-2"><label className="w-20 text-xs font-semibold text-gray-600 shrink-0">계좌번호</label><input type="text" value={company.bank_account||""} onChange={e=>set("bank_account",e.target.value)} placeholder="예: 123-45-6789012" className="flex-1 px-2 py-1.5 border border-gray-300 rounded text-sm" /></div>
-          <div className="flex items-center gap-2"><label className="w-20 text-xs font-semibold text-gray-600 shrink-0">예금주</label><input type="text" value={company.bank_holder||""} onChange={e=>set("bank_holder",e.target.value)} placeholder="예: 홍길동" className="flex-1 px-2 py-1.5 border border-gray-300 rounded text-sm" /></div>
+        <h3 className="text-base font-bold text-gray-800 mb-4 pb-2 border-b-2 border-gray-200">입금 계좌 정보 (최대 3개)</h3>
+        <p className="text-xs text-gray-400 mb-3">거래명세서/견적서 하단에 표시됩니다. 기본값으로 설정한 계좌가 기본 표시되며, 발송/인쇄 시 다른 계좌를 선택할 수 있습니다.</p>
+        <div className="space-y-3">
+          {[1, 2, 3].map(idx => {
+            const suffix = idx === 1 ? "" : `_${idx}`;
+            return (
+              <div key={idx} className="flex items-center gap-2 flex-wrap">
+                <label className="flex items-center gap-1 text-xs font-semibold text-gray-600 shrink-0 w-16">
+                  <input type="radio" name="default_bank" checked={(company.default_bank || "1") === String(idx)} onChange={() => set("default_bank", String(idx))} style={{width:"14px",height:"14px"}} />
+                  계좌{idx}
+                </label>
+                <input type="text" placeholder="은행명" value={company[`bank_name${suffix}`]||""} onChange={e=>set(`bank_name${suffix}`, e.target.value)} className="px-2 py-1.5 border border-gray-300 rounded text-sm w-32" />
+                <input type="text" placeholder="계좌번호" value={company[`bank_account${suffix}`]||""} onChange={e=>set(`bank_account${suffix}`, e.target.value)} className="flex-1 px-2 py-1.5 border border-gray-300 rounded text-sm min-w-[180px]" />
+                <input type="text" placeholder="예금주" value={company[`bank_holder${suffix}`]||""} onChange={e=>set(`bank_holder${suffix}`, e.target.value)} className="px-2 py-1.5 border border-gray-300 rounded text-sm w-32" />
+              </div>
+            );
+          })}
         </div>
       </div>
       <div className="bg-white rounded-lg shadow p-6 mb-5">

@@ -11,6 +11,7 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const orderId = searchParams.get("id");
   const type = searchParams.get("type") || "statement";
+  const bankIdx = parseInt(searchParams.get("bankIdx") || "0") || undefined;
 
   if (!orderId) return NextResponse.json({ error: "주문 ID가 필요합니다." }, { status: 400 });
 
@@ -27,7 +28,7 @@ export async function GET(request: NextRequest) {
 
   const { data: company } = await supabase
     .from("companies")
-    .select("company_name, business_number, representative, address, business_type, business_category, phone, email, seal_image, bank_name, bank_account, bank_holder")
+    .select("company_name, business_number, representative, address, business_type, business_category, phone, email, seal_image, bank_name, bank_account, bank_holder, bank_name_2, bank_account_2, bank_holder_2, bank_name_3, bank_account_3, bank_holder_3, default_bank")
     .eq("id", session.company.id)
     .single();
 
@@ -52,7 +53,7 @@ export async function GET(request: NextRequest) {
     const subject = isEstimate ? "견적서" : "거래명세서";
 
     const pdfBuffer = await renderToBuffer(
-      <StatementPDF order={order} company={company} type={isEstimate ? "estimate" : "statement"} colOrder={colOrder} />
+      <StatementPDF order={order} company={company} type={isEstimate ? "estimate" : "statement"} colOrder={colOrder} bankIdx={bankIdx || company.default_bank || 1} />
     );
 
     return new NextResponse(Buffer.from(pdfBuffer), {

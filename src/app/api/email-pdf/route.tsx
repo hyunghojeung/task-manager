@@ -9,7 +9,7 @@ export async function POST(request: NextRequest) {
   const session = await getApiSession();
   if (!session) return unauthorized();
 
-  const { to, orderId, type, customSubject, customFrom } = await request.json();
+  const { to, orderId, type, customSubject, customFrom, bankIdx } = await request.json();
   if (!to || !orderId) {
     return NextResponse.json({ error: "수신 이메일과 주문 ID를 입력해주세요." }, { status: 400 });
   }
@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
   // 업체 정보 조회
   const { data: company } = await supabase
     .from("companies")
-    .select("company_name, business_number, representative, address, business_type, business_category, phone, email, seal_image, bank_name, bank_account, bank_holder, mail_service, mail_email, mail_id, mail_password")
+    .select("company_name, business_number, representative, address, business_type, business_category, phone, email, seal_image, bank_name, bank_account, bank_holder, bank_name_2, bank_account_2, bank_holder_2, bank_name_3, bank_account_3, bank_holder_3, default_bank, mail_service, mail_email, mail_id, mail_password")
     .eq("id", session.company.id)
     .single();
 
@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const pdfBuffer = await renderToBuffer(
-      <StatementPDF order={order} company={company} type={isEstimate ? "estimate" : "statement"} colOrder={colOrder} />
+      <StatementPDF order={order} company={company} type={isEstimate ? "estimate" : "statement"} colOrder={colOrder} bankIdx={bankIdx || company.default_bank || 1} />
     );
 
     // 이메일 설정

@@ -39,12 +39,13 @@ function fmt(n: number) { return (n || 0).toLocaleString(); }
 
 export interface StatementPDFProps {
   order: { order_no: string; client_name: string; title: string; total_amount: number; total_supply: number; total_vat: number; discount: number; trade_type?: string; order_date?: string; created_at: string; order_items?: Array<{ sort_order: number; data: Record<string, string> }> };
-  company: { company_name: string; business_number: string; representative: string; address: string; business_type: string; business_category: string; phone: string; email: string; seal_image?: string; bank_name?: string; bank_account?: string; bank_holder?: string };
+  company: { company_name: string; business_number: string; representative: string; address: string; business_type: string; business_category: string; phone: string; email: string; seal_image?: string; bank_name?: string; bank_account?: string; bank_holder?: string; bank_name_2?: string; bank_account_2?: string; bank_holder_2?: string; bank_name_3?: string; bank_account_3?: string; bank_holder_3?: string };
   type?: "statement" | "estimate";
   colOrder?: string[];
+  bankIdx?: number;
 }
 
-export default function StatementPDF({ order, company, type = "statement", colOrder = [] }: StatementPDFProps) {
+export default function StatementPDF({ order, company, type = "statement", colOrder = [], bankIdx = 1 }: StatementPDFProps) {
   const rawItems = (order.order_items || []).sort((a, b) => a.sort_order - b.sort_order).map(it => it.data);
   let lastNonEmptyIdx = -1;
   rawItems.forEach((d, i) => {
@@ -173,14 +174,21 @@ export default function StatementPDF({ order, company, type = "statement", colOr
           </View>
         </View>
 
-        {(company.bank_name || company.bank_account || company.bank_holder) && (
-          <View style={{ marginTop: 20, paddingTop: 8, borderTop: "1px solid #666", flexDirection: "row", fontSize: 9 }}>
-            <Text style={{ fontWeight: 700, marginRight: 6 }}>※ 입금 계좌:</Text>
-            {company.bank_name && <Text style={{ marginRight: 8 }}>{company.bank_name}</Text>}
-            {company.bank_account && <Text style={{ marginRight: 8, fontWeight: 700 }}>{company.bank_account}</Text>}
-            {company.bank_holder && <Text>(예금주: {company.bank_holder})</Text>}
-          </View>
-        )}
+        {(() => {
+          const suffix = bankIdx === 1 ? "" : `_${bankIdx}`;
+          const name = (company as Record<string,string>)[`bank_name${suffix}`];
+          const acc = (company as Record<string,string>)[`bank_account${suffix}`];
+          const holder = (company as Record<string,string>)[`bank_holder${suffix}`];
+          if (!name && !acc && !holder) return null;
+          return (
+            <View style={{ marginTop: 20, paddingTop: 8, borderTop: "1px solid #666", flexDirection: "row", fontSize: 9 }}>
+              <Text style={{ fontWeight: 700, marginRight: 6 }}>※ 입금 계좌:</Text>
+              {name && <Text style={{ marginRight: 8 }}>{name}</Text>}
+              {acc && <Text style={{ marginRight: 8, fontWeight: 700 }}>{acc}</Text>}
+              {holder && <Text>(예금주: {holder})</Text>}
+            </View>
+          );
+        })()}
       </Page>
     </Document>
   );
