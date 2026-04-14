@@ -744,6 +744,7 @@ export default function WritePage() {
                 {templateCols.map((c, i) => (
                   <th key={i} className={`border border-[#2d3a47] px-2 py-2.5 font-semibold ${c.type === "자동계산" ? "bg-[#4a5a6b]" : ""}`} style={{width: (c as Record<string,string>).width ? `${(c as Record<string,string>).width}px` : c.name === "순번" ? "35px" : "auto", minWidth: 40}}>{c.name}</th>
                 ))}
+                <th className="border border-[#2d3a47] px-1 py-2.5 font-semibold print:hidden" style={{width:"30px"}}><span className="text-[10px]">삭제</span></th>
               </tr>
             </thead>
             <tbody>
@@ -765,6 +766,12 @@ export default function WritePage() {
                        <input type="text" value={(c.type === "숫자" || /^\d+$/.test(itemData[rowIdx]?.[c.name] || "")) ? formatNumber(itemData[rowIdx]?.[c.name] || "") : (itemData[rowIdx]?.[c.name] || "")} onChange={e => handleItemChange(rowIdx, c.name, e.target.value)} className={`w-full px-1 py-1 border border-gray-200 rounded text-xs ${(c.type === "숫자" || /^\d+$/.test(itemData[rowIdx]?.[c.name] || "")) ? "text-right" : ""}`} />}
                     </td>
                   ))}
+                  <td className="border border-gray-200 px-1 py-1 text-center print:hidden">
+                    <button type="button" onClick={() => {
+                      setItemData(prev => prev.filter((_, i) => i !== rowIdx));
+                      setItemRows(r => Math.max(r - 1, 1));
+                    }} className="text-gray-400 hover:text-red-600 text-sm font-bold w-5 h-5 leading-none" title="이 행 삭제">✕</button>
+                  </td>
                 </tr>
               ))}
               {(() => {
@@ -805,10 +812,12 @@ export default function WritePage() {
                         if (ci < nonCalcCount) return null;
                         return <td key={ci} className="border border-gray-200 px-2 py-2 text-right bg-amber-50">{(sums[c.name] || 0).toLocaleString()}</td>;
                       })}
+                      <td className="border border-gray-200 print:hidden"></td>
                     </tr>
                     <tr className="bg-blue-50 font-bold">
                       <td colSpan={Math.max(nonCalcCount, 1) + 1} className="border border-gray-200 px-2 py-2 text-right text-blue-700">총 액</td>
                       <td colSpan={Math.max(calcCols.length, 1)} className="border border-gray-200 px-2 py-2 text-right text-blue-700 text-sm">{grandTotal.toLocaleString()}</td>
+                      <td className="border border-gray-200 print:hidden"></td>
                     </tr>
                   </>
                 );
