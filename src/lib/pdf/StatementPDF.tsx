@@ -176,9 +176,9 @@ export default function StatementPDF({ order, company, type = "statement", colOr
 
         {(() => {
           const suffix = bankIdx === 1 ? "" : `_${bankIdx}`;
-          const name = (company as Record<string,string>)[`bank_name${suffix}`];
-          const acc = (company as Record<string,string>)[`bank_account${suffix}`];
-          const holder = (company as Record<string,string>)[`bank_holder${suffix}`];
+          const name = (company as unknown as Record<string,string>)[`bank_name${suffix}`];
+          const acc = (company as unknown as Record<string,string>)[`bank_account${suffix}`];
+          const holder = (company as unknown as Record<string,string>)[`bank_holder${suffix}`];
           if (!name && !acc && !holder) return null;
           return (
             <View style={{ marginTop: 20, paddingTop: 8, borderTop: "1px solid #666", flexDirection: "row", fontSize: 9 }}>
