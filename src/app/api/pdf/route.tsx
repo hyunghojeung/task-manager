@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
 
   const { data: company } = await supabase
     .from("companies")
-    .select("company_name, business_number, representative, address, business_type, business_category, phone, email")
+    .select("company_name, business_number, representative, address, business_type, business_category, phone, email, seal_image, bank_name, bank_account, bank_holder")
     .eq("id", session.company.id)
     .single();
 

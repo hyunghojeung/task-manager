@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 
 interface OrderItemRow { sort_order: number; data: Record<string, string> }
 interface OrderData { id: string; order_no: string; client_name: string; title: string; total_amount: number; total_supply: number; total_vat: number; discount: number; template_name?: string; trade_type?: string; order_date: string; created_at: string; order_items?: OrderItemRow[] }
-interface CompanyData { company_name: string; business_number: string; representative: string; address: string; business_type: string; business_category: string; phone: string; email: string; seal_image?: string }
+interface CompanyData { company_name: string; business_number: string; representative: string; address: string; business_type: string; business_category: string; phone: string; email: string; seal_image?: string; bank_name?: string; bank_account?: string; bank_holder?: string }
 
 function fmt(n: number) { return (n || 0).toLocaleString(); }
 function numToKorean(n: number): string {
@@ -201,6 +201,15 @@ function EstimateContent() {
             </tbody>
           </table>
         </div>
+
+        {(company.bank_name || company.bank_account || company.bank_holder) && (
+          <div className="mt-6 pt-3 border-t border-gray-300 text-sm text-gray-700">
+            <span className="font-bold mr-2">※ 입금 계좌:</span>
+            {company.bank_name && <span className="mr-3">{company.bank_name}</span>}
+            {company.bank_account && <span className="mr-3 font-semibold">{company.bank_account}</span>}
+            {company.bank_holder && <span>(예금주: {company.bank_holder})</span>}
+          </div>
+        )}
       </div>
 
       <div className="max-w-[800px] mx-auto mt-3 flex flex-col gap-2 print:hidden">

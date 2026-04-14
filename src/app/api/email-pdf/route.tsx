@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
   // 업체 정보 조회
   const { data: company } = await supabase
     .from("companies")
-    .select("company_name, business_number, representative, address, business_type, business_category, phone, email, mail_service, mail_email, mail_id, mail_password")
+    .select("company_name, business_number, representative, address, business_type, business_category, phone, email, seal_image, bank_name, bank_account, bank_holder, mail_service, mail_email, mail_id, mail_password")
     .eq("id", session.company.id)
     .single();
 

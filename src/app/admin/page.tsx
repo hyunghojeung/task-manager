@@ -730,6 +730,15 @@ function CompanyTab() {
         </div>
       </div>
       <div className="bg-white rounded-lg shadow p-6 mb-5">
+        <h3 className="text-base font-bold text-gray-800 mb-4 pb-2 border-b-2 border-gray-200">입금 계좌 정보</h3>
+        <p className="text-xs text-gray-400 mb-3">거래명세서/견적서 하단에 표시됩니다.</p>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
+          <div className="flex items-center gap-2"><label className="w-20 text-xs font-semibold text-gray-600 shrink-0">입금은행</label><input type="text" value={company.bank_name||""} onChange={e=>set("bank_name",e.target.value)} placeholder="예: 국민은행" className="flex-1 px-2 py-1.5 border border-gray-300 rounded text-sm" /></div>
+          <div className="flex items-center gap-2"><label className="w-20 text-xs font-semibold text-gray-600 shrink-0">계좌번호</label><input type="text" value={company.bank_account||""} onChange={e=>set("bank_account",e.target.value)} placeholder="예: 123-45-6789012" className="flex-1 px-2 py-1.5 border border-gray-300 rounded text-sm" /></div>
+          <div className="flex items-center gap-2"><label className="w-20 text-xs font-semibold text-gray-600 shrink-0">예금주</label><input type="text" value={company.bank_holder||""} onChange={e=>set("bank_holder",e.target.value)} placeholder="예: 홍길동" className="flex-1 px-2 py-1.5 border border-gray-300 rounded text-sm" /></div>
+        </div>
+      </div>
+      <div className="bg-white rounded-lg shadow p-6 mb-5">
         <h3 className="text-base font-bold text-gray-800 mb-4 pb-2 border-b-2 border-gray-200">이메일 발송 설정</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm max-w-2xl">
           <div className="flex items-center gap-2 md:col-span-2"><label className="w-24 text-xs font-semibold text-gray-600 shrink-0">메일 서비스</label><select value={company.mail_service||"naver"} onChange={e=>set("mail_service",e.target.value)} className="flex-1 px-2 py-1.5 border border-gray-300 rounded text-sm"><option value="naver">네이버</option><option value="daum">다음</option></select></div>
