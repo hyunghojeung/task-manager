@@ -4,7 +4,7 @@ import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 
 interface OrderItemRow { sort_order: number; data: Record<string, string> }
-interface OrderData { id: string; order_no: string; client_name: string; title: string; total_amount: number; total_supply: number; total_vat: number; discount: number; template_name?: string; trade_type?: string; created_at: string; order_items?: OrderItemRow[] }
+interface OrderData { id: string; order_no: string; client_name: string; title: string; total_amount: number; total_supply: number; total_vat: number; discount: number; template_name?: string; trade_type?: string; order_date: string; created_at: string; order_items?: OrderItemRow[] }
 interface CompanyData { company_name: string; business_number: string; representative: string; address: string; business_type: string; business_category: string; phone: string; email: string; seal_image?: string }
 
 function fmt(n: number) { return (n || 0).toLocaleString(); }
@@ -104,7 +104,7 @@ function EstimateContent() {
   const vatTotal = items.reduce((acc, d) => acc + (vatKey && d[vatKey] ? parseInt(d[vatKey]) || 0 : 0), 0);
   const discount = order.discount || 0;
   const grandTotal = (order.total_amount || 0) - discount;
-  const orderDate = new Date(order.created_at);
+  const orderDate = new Date(order.order_date || order.created_at);
   const dateStr = `${orderDate.getFullYear()}년 ${String(orderDate.getMonth() + 1).padStart(2, "0")}월 ${String(orderDate.getDate()).padStart(2, "0")}일`;
   const emptyRows = Math.max(8 - items.length, 0);
 
