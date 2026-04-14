@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 
 interface OrderItemRow { sort_order: number; data: Record<string, string> }
 interface OrderData { id: string; order_no: string; client_name: string; title: string; total_amount: number; total_supply: number; total_vat: number; discount: number; template_name?: string; trade_type?: string; order_date: string; created_at: string; order_items?: OrderItemRow[] }
-interface CompanyData { company_name: string; business_number: string; representative: string; address: string; business_type: string; business_category: string; phone: string; email: string; seal_image?: string; bank_name?: string; bank_account?: string; bank_holder?: string }
+interface CompanyData { company_name: string; business_number: string; representative: string; address: string; business_type: string; business_category: string; phone: string; email: string; seal_image?: string; bank_name?: string; bank_account?: string; bank_holder?: string; bank_name_2?: string; bank_account_2?: string; bank_holder_2?: string; bank_name_3?: string; bank_account_3?: string; bank_holder_3?: string; default_bank?: number }
 
 function fmt(n: number) { return (n || 0).toLocaleString(); }
 
@@ -19,12 +19,13 @@ function StatementContent() {
   const [emailTo, setEmailTo] = useState("");
   const [emailSubject, setEmailSubject] = useState("");
   const [emailFrom, setEmailFrom] = useState("");
+  const [bankIdx, setBankIdx] = useState<number>(1);
   const [sending, setSending] = useState(false);
 
   useEffect(() => {
     if (!orderId) return;
     fetch(`/api/orders/${orderId}?_=${Date.now()}`).then(r => r.json()).then(d => setOrder(d));
-    fetch(`/api/company?_=${Date.now()}`).then(r => r.json()).then(d => setCompany(d));
+    fetch(`/api/company?_=${Date.now()}`).then(r => r.json()).then(d => { setCompany(d); if (d?.default_bank) setBankIdx(parseInt(d.default_bank) || 1); });
     fetch(`/api/templates?_=${Date.now()}`).then(r => r.json()).then(d => setTemplates(d || [])).catch(() => {});
   }, [orderId]);
 
@@ -50,7 +51,7 @@ function StatementContent() {
     try {
       const res = await fetch("/api/email-pdf", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ to: emailTo, orderId, type: "statement", customSubject: emailSubject || "", customFrom: emailFrom || "" }),
+        body: JSON.stringify({ to: emailTo, orderId, type: "statement", customSubject: emailSubject || "", customFrom: emailFrom || "", bankIdx }),
       });
       if (res.ok) alert("이메일이 발송되었습니다. (PDF 첨부)");
       else { const d = await res.json().catch(() => ({})); alert("발송 실패: " + (d.error || res.status)); }
@@ -175,14 +176,21 @@ function StatementContent() {
           </table>
         </div>
 
-        {(company.bank_name || company.bank_account || company.bank_holder) && (
-          <div className="mt-6 pt-3 border-t border-gray-300 text-sm text-gray-700">
-            <span className="font-bold mr-2">※ 입금 계좌:</span>
-            {company.bank_name && <span className="mr-3">{company.bank_name}</span>}
-            {company.bank_account && <span className="mr-3 font-semibold">{company.bank_account}</span>}
-            {company.bank_holder && <span>(예금주: {company.bank_holder})</span>}
-          </div>
-        )}
+        {(() => {
+          const suffix = bankIdx === 1 ? "" : `_${bankIdx}`;
+          const name = (company as Record<string,string>)[`bank_name${suffix}`];
+          const acc = (company as Record<string,string>)[`bank_account${suffix}`];
+          const holder = (company as Record<string,string>)[`bank_holder${suffix}`];
+          if (!name && !acc && !holder) return null;
+          return (
+            <div className="mt-6 pt-3 border-t border-gray-300 text-sm text-gray-700">
+              <span className="font-bold mr-2">※ 입금 계좌:</span>
+              {name && <span className="mr-3">{name}</span>}
+              {acc && <span className="mr-3 font-semibold">{acc}</span>}
+              {holder && <span>(예금주: {holder})</span>}
+            </div>
+          );
+        })()}
       </div>
 
       <div className="max-w-[800px] mx-auto mt-3 flex flex-col gap-2 print:hidden">
@@ -197,9 +205,22 @@ function StatementContent() {
           <label className="text-sm shrink-0 ml-2">작성자명:</label>
           <input type="text" placeholder="미입력 시 업체명" value={emailFrom} onChange={e => setEmailFrom(e.target.value)} className="px-3 py-1.5 border border-gray-300 rounded text-sm w-40" />
         </div>
+        <div className="flex flex-wrap gap-2 items-center">
+          <label className="text-sm shrink-0">입금 계좌:</label>
+          <select value={bankIdx} onChange={e => setBankIdx(parseInt(e.target.value))} className="px-3 py-1.5 border border-gray-300 rounded text-sm">
+            {[1, 2, 3].map(idx => {
+              const suffix = idx === 1 ? "" : `_${idx}`;
+              const name = (company as Record<string,string>)[`bank_name${suffix}`];
+              const acc = (company as Record<string,string>)[`bank_account${suffix}`];
+              if (!name && !acc) return null;
+              const isDefault = (company.default_bank || 1) === idx;
+              return <option key={idx} value={idx}>계좌{idx}: {name} {acc}{isDefault ? " (기본)" : ""}</option>;
+            })}
+          </select>
+        </div>
         <div className="flex gap-2">
           <button onClick={() => window.print()} className="px-6 py-2 bg-blue-600 text-white rounded text-sm">인쇄</button>
-          <a href={`/api/pdf?id=${orderId}&type=statement`} className="px-6 py-2 bg-emerald-600 text-white rounded text-sm text-center">PDF 다운로드</a>
+          <a href={`/api/pdf?id=${orderId}&type=statement&bankIdx=${bankIdx}`} className="px-6 py-2 bg-emerald-600 text-white rounded text-sm text-center">PDF 다운로드</a>
           <button onClick={() => window.close()} className="px-6 py-2 bg-white text-gray-600 border border-gray-300 rounded text-sm">닫기</button>
         </div>
       </div>
