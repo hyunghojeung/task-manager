@@ -38,7 +38,7 @@ const s = StyleSheet.create({
 function fmt(n: number) { return (n || 0).toLocaleString(); }
 
 export interface StatementPDFProps {
-  order: { order_no: string; client_name: string; title: string; total_amount: number; total_supply: number; total_vat: number; discount: number; trade_type?: string; created_at: string; order_items?: Array<{ sort_order: number; data: Record<string, string> }> };
+  order: { order_no: string; client_name: string; title: string; total_amount: number; total_supply: number; total_vat: number; discount: number; trade_type?: string; order_date?: string; created_at: string; order_items?: Array<{ sort_order: number; data: Record<string, string> }> };
   company: { company_name: string; business_number: string; representative: string; address: string; business_type: string; business_category: string; phone: string; email: string };
   type?: "statement" | "estimate";
   colOrder?: string[];
@@ -62,7 +62,7 @@ export default function StatementPDF({ order, company, type = "statement", colOr
   const colCount = allKeys.length;
   const discount = order.discount || 0;
   const grandTotal = (order.total_amount || 0) - discount;
-  const orderDate = new Date(order.created_at);
+  const orderDate = new Date(order.order_date || order.created_at);
   const dateStr = `${orderDate.getFullYear()}년 ${String(orderDate.getMonth() + 1).padStart(2, "0")}월 ${String(orderDate.getDate()).padStart(2, "0")}일`;
   const isEstimate = type === "estimate";
   const docTitle = isEstimate ? "견 적 서" : "거 래 명 세 서";
