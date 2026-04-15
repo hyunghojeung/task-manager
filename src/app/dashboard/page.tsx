@@ -91,8 +91,8 @@ export default function DashboardPage() {
           <select value={fontSize} onChange={e => changeFontSize(e.target.value)} className="px-2 py-1.5 border border-gray-300 rounded text-xs" title="글자 크기">
             <option value="text-xs">글자: 작게</option>
             <option value="text-sm">글자: 보통</option>
-            <option value="text-base">글자: 크게</option>
-            <option value="text-lg">글자: 아주 크게</option>
+            <option value="text-base">글자: 노안용</option>
+            <option value="text-lg">글자: 심한 노안용</option>
           </select>
           <select value={year} onChange={e => { setYear(e.target.value); setPage(1); if (e.target.value === "전체") setMonth("전체"); }} className="px-2 py-1.5 border border-gray-300 rounded text-xs" title="연도">
             <option value="전체">연도: 전체</option>
