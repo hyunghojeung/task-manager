@@ -521,7 +521,17 @@ export default function WritePage() {
           <tr>
             <td className="text-[#3b4b5b] font-bold text-xs py-2 px-2 border border-gray-200 align-top">
               작업내용1
-              <button type="button" onClick={() => setShowDetailExpand(true)} className="block mt-1 text-[10px] text-blue-600 hover:underline print:hidden">🔍 확대보기</button>
+              <span className="relative inline-block mt-1 print:hidden" onMouseEnter={() => setShowDetailExpand(true)} onMouseLeave={() => setShowDetailExpand(false)}>
+                <span className="text-[10px] text-blue-600 cursor-help underline">🔍 확대보기</span>
+                {showDetailExpand && (
+                  <div className="absolute left-0 top-full mt-1 z-50 bg-white border-2 border-blue-500 rounded-lg shadow-xl p-4" style={{width:"700px",maxHeight:"500px",overflowY:"auto"}}>
+                    <div className="text-xs font-bold text-gray-700 mb-2 pb-1 border-b border-gray-200">작업내용1 확대보기</div>
+                    <div className="text-sm text-gray-800 whitespace-pre-wrap break-words leading-relaxed" style={{minHeight:"100px"}}>
+                      {formData.detail_spec || <span className="text-gray-400">내용 없음</span>}
+                    </div>
+                  </div>
+                )}
+              </span>
             </td>
             <td colSpan={3} className="py-1.5 px-2 border border-gray-200">
               <textarea placeholder="세부사양 및 후가공, 고객 상담 메모 등을 입력해주세요" value={formData.detail_spec} onChange={e => handleChange("detail_spec", e.target.value)} className="w-full px-2 py-2 border border-gray-300 rounded text-sm min-h-[156px] resize-y" />
@@ -917,21 +927,6 @@ export default function WritePage() {
             </table>
             <div className="flex justify-end mt-3">
               <button onClick={() => setShowClientModal(false)} className="px-5 py-2 bg-gray-700 text-white rounded text-xs">닫기</button>
-            </div>
-          </div>
-        </div>
-      )}
-      {/* 작업내용1 확대보기 모달 */}
-      {showDetailExpand && (
-        <div className="fixed inset-0 bg-black/50 z-[1000] flex items-center justify-center p-4" onClick={e => { if (e.target === e.currentTarget) setShowDetailExpand(false); }}>
-          <div className="bg-white rounded-lg p-6 w-full max-w-4xl max-h-[90vh] flex flex-col shadow-xl">
-            <div className="flex justify-between items-center mb-3 pb-2 border-b-2 border-gray-200">
-              <h4 className="text-base font-bold text-gray-800">작업내용1 확대보기</h4>
-              <button onClick={() => setShowDetailExpand(false)} className="text-gray-500 hover:text-gray-800 text-xl leading-none">✕</button>
-            </div>
-            <textarea value={formData.detail_spec} onChange={e => handleChange("detail_spec", e.target.value)} placeholder="세부사양 및 후가공, 고객 상담 메모 등을 입력해주세요" className="flex-1 w-full px-3 py-2 border border-gray-300 rounded text-base resize-none" style={{minHeight:"60vh"}} autoFocus />
-            <div className="flex justify-end gap-2 mt-3">
-              <button onClick={() => setShowDetailExpand(false)} className="px-5 py-2 bg-blue-600 text-white rounded text-sm">확인</button>
             </div>
           </div>
         </div>
