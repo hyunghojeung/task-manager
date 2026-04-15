@@ -524,7 +524,7 @@ export default function WritePage() {
               <button type="button" onClick={() => setShowDetailExpand(true)} className="block mt-1 text-[10px] text-blue-600 hover:underline print:hidden">🔍 확대보기</button>
             </td>
             <td colSpan={3} className="py-1.5 px-2 border border-gray-200">
-              <textarea placeholder="세부사양 및 후가공, 고객 상담 메모 등을 입력해주세요" value={formData.detail_spec} onChange={e => handleChange("detail_spec", e.target.value)} className="w-full px-2 py-2 border border-gray-300 rounded text-sm min-h-[156px] resize-y" />
+              <textarea placeholder="세부사양 및 후가공, 고객 상담 메모 등을 입력해주세요 (\ 키 입력 시 ₩로 자동 변환)" value={formData.detail_spec} onChange={e => handleChange("detail_spec", e.target.value.replace(/\\/g, "₩"))} className="w-full px-2 py-2 border border-gray-300 rounded text-sm min-h-[156px] resize-y" />
             </td>
           </tr>
         </tbody></table>
@@ -929,7 +929,7 @@ export default function WritePage() {
               <h4 className="text-base font-bold text-gray-800">작업내용1 확대보기</h4>
               <button onClick={() => setShowDetailExpand(false)} className="text-gray-500 hover:text-gray-800 text-xl leading-none">✕</button>
             </div>
-            <textarea value={formData.detail_spec} onChange={e => handleChange("detail_spec", e.target.value)} placeholder="세부사양 및 후가공, 고객 상담 메모 등을 입력해주세요" className="flex-1 w-full px-3 py-2 border border-gray-300 rounded text-base resize-none" style={{minHeight:"60vh"}} autoFocus />
+            <textarea value={formData.detail_spec} onChange={e => handleChange("detail_spec", e.target.value.replace(/\\/g, "₩"))} placeholder="세부사양 및 후가공, 고객 상담 메모 등을 입력해주세요 (\ 키 입력 시 ₩로 자동 변환)" className="flex-1 w-full px-3 py-2 border border-gray-300 rounded text-base resize-none" style={{minHeight:"60vh"}} autoFocus />
             <div className="flex justify-end gap-2 mt-3">
               <button onClick={() => setShowDetailExpand(false)} className="px-5 py-2 bg-blue-600 text-white rounded text-sm">확인</button>
             </div>
