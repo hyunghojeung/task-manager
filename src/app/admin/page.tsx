@@ -370,6 +370,9 @@ function CrudTab({endpoint, title, fields, subtitle}:{endpoint:string; title:str
   const [items, setItems] = useState<Array<Record<string,string>>>([]);
   const [form, setForm] = useState<Record<string,string>>({});
   const [editId, setEditId] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [keyword, setKeyword] = useState("");
+  const PAGE_SIZE = 20;
   const load = useCallback(async () => { const r = await fetch(`/api/${endpoint}?_=${Date.now()}`); if(r.ok) setItems(await r.json()); }, [endpoint]);
   useEffect(() => { load(); }, [load]);
 
@@ -390,33 +393,64 @@ function CrudTab({endpoint, title, fields, subtitle}:{endpoint:string; title:str
     const newForm: Record<string,string> = {};
     fields.forEach(f => { newForm[f.k] = item[f.k] || ""; });
     setForm(newForm);
+    // 수정 폼으로 스크롤
+    setTimeout(() => {
+      document.getElementById(`${endpoint}-form`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 50);
   }
 
   function cancelEdit() { setEditId(null); setForm({}); }
 
   async function remove(id:string) { if(!confirm("정말 삭제할까요?")) return; await fetch(`/api/${endpoint}/${id}`,{method:"DELETE"}); load(); }
 
+  // 검색 필터링
+  const filtered = keyword ? items.filter(item => fields.some(f => (item[f.k] || "").toLowerCase().includes(keyword.toLowerCase()))) : items;
+  // 페이징
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const pageItems = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
   return (
     <div className="bg-white rounded-lg shadow p-6">
       <h3 className="text-base font-bold text-gray-800 mb-2 pb-2 border-b-2 border-gray-200">{title}</h3>
       {subtitle && <p className="text-xs text-gray-500 mb-4">{subtitle}</p>}
+      <div className="mb-3 flex justify-between items-center gap-2">
+        <input type="text" placeholder="검색어 입력" value={keyword} onChange={e => { setKeyword(e.target.value); setPage(1); }} className="px-3 py-1.5 border border-gray-300 rounded text-sm w-64" />
+        <span className="text-xs text-gray-500">총 {filtered.length}건</span>
+      </div>
       <div className="overflow-x-auto">
         <table className="w-full border-collapse text-xs border border-gray-300">
           <thead><tr className="bg-[#3b4b5b] text-white"><th className="border border-[#2d3a47] px-1.5 py-2.5 w-10">순번</th>{fields.map(f=><th key={f.k} className="border border-[#2d3a47] px-1.5 py-2.5">{f.l}</th>)}<th className="border border-[#2d3a47] px-1.5 py-2.5 w-[100px]">관리</th></tr></thead>
-          <tbody>{items.map((item,i) => (
-            <tr key={item.id} className={i%2===1?"bg-gray-50":""}>
-              <td className="border border-gray-200 px-1.5 py-[7px] text-center">{i+1}</td>
+          <tbody>{pageItems.map((item,i) => (
+            <tr key={item.id} className={editId === item.id ? "bg-yellow-50" : (i%2===1?"bg-gray-50":"")}>
+              <td className="border border-gray-200 px-1.5 py-[7px] text-center">{(page - 1) * PAGE_SIZE + i + 1}</td>
               {fields.map(f=><td key={f.k} className="border border-gray-200 px-1.5 py-[7px] text-left">{item[f.k]}</td>)}
               <td className="border border-gray-200 px-1.5 py-[7px] text-center whitespace-nowrap">
                 <button onClick={()=>startEdit(item)} className="text-blue-600 border border-blue-600 px-2 py-0.5 rounded text-xs mr-1">수정</button>
                 <button onClick={()=>remove(item.id)} className="text-red-600 border border-red-600 px-2 py-0.5 rounded text-xs">삭제</button>
               </td>
             </tr>
-          ))}</tbody>
+          ))}
+          {pageItems.length === 0 && <tr><td colSpan={fields.length + 2} className="text-center py-6 text-gray-400">등록된 항목이 없습니다.</td></tr>}
+          </tbody>
         </table>
       </div>
-      {/* 등록 폼 - 미리보기 HTML과 동일한 grid 레이아웃 */}
-      <div className="bg-gray-50 border border-gray-200 rounded-md p-4 mt-4">
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-1 mt-3">
+          <button onClick={() => setPage(1)} disabled={page === 1} className="px-2 py-1 text-xs border border-gray-300 rounded disabled:opacity-30">≪</button>
+          <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="px-2 py-1 text-xs border border-gray-300 rounded disabled:opacity-30">&lt;</button>
+          {Array.from({length: totalPages}, (_, i) => i + 1).filter(n => Math.abs(n - page) <= 2 || n === 1 || n === totalPages).map((n, idx, arr) => (
+            <React.Fragment key={n}>
+              {idx > 0 && arr[idx - 1] !== n - 1 && <span className="text-xs text-gray-400">...</span>}
+              <button onClick={() => setPage(n)} className={`px-2.5 py-1 text-xs rounded ${n === page ? "bg-blue-600 text-white" : "border border-gray-300"}`}>{n}</button>
+            </React.Fragment>
+          ))}
+          <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} className="px-2 py-1 text-xs border border-gray-300 rounded disabled:opacity-30">&gt;</button>
+          <button onClick={() => setPage(totalPages)} disabled={page === totalPages} className="px-2 py-1 text-xs border border-gray-300 rounded disabled:opacity-30">≫</button>
+        </div>
+      )}
+      {/* 등록 폼 */}
+      <div id={`${endpoint}-form`} className={`border rounded-md p-4 mt-4 ${editId ? "bg-yellow-50 border-yellow-400" : "bg-gray-50 border-gray-200"}`}>
+        {editId && <p className="text-xs text-yellow-700 font-bold mb-2">✏️ 수정 중입니다</p>}
         <div className="grid grid-cols-[70px_1fr_70px_1fr] gap-2 items-center text-sm">
           {fields.map((f, idx) => {
             const isLast = idx === fields.length - 1 && fields.length % 2 !== 0;
@@ -428,7 +462,7 @@ function CrudTab({endpoint, title, fields, subtitle}:{endpoint:string; title:str
             );
           })}
         </div>
-        <div className="mt-3">
+        <div className="mt-3 flex gap-2">
           <button onClick={save} className="px-4 py-1.5 bg-blue-600 text-white rounded text-sm">{editId ? "수정 저장" : `+ ${title.replace(" 관리","")} 등록`}</button>
           {editId && <button onClick={cancelEdit} className="px-4 py-1.5 border border-gray-300 rounded text-sm">취소</button>}
         </div>
