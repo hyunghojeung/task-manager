@@ -457,8 +457,8 @@ export default function WritePage() {
           <tr>
             <td className="text-[#3b4b5b] font-bold text-xs py-2 px-2 border border-gray-200">세금계산서</td>
             <td className="py-1.5 px-2 border border-gray-200"><input type="text" placeholder="발행일 직접 입력" value={formData.tax_invoice} onChange={e => handleChange("tax_invoice", e.target.value)} className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm" /></td>
-            <td className="text-[#3b4b5b] font-bold text-xs py-2 px-2 border border-gray-200 text-center">결제</td>
-            <td className="py-1.5 px-2 border border-gray-200"><input type="text" placeholder="결제 정보" value={formData.payment} onChange={e => handleChange("payment", e.target.value)} className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm" /></td>
+            <td className="text-[#3b4b5b] font-bold text-xs py-2 px-2 border border-gray-200 text-center">MEMO</td>
+            <td className="py-1.5 px-2 border border-gray-200"><input type="text" placeholder="MEMO" value={formData.payment} onChange={e => handleChange("payment", e.target.value)} className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm" /></td>
           </tr>
           <tr>
             <td className="text-[#3b4b5b] font-bold text-xs py-2 px-2 border border-gray-200">제목</td>
