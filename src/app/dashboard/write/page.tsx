@@ -290,7 +290,13 @@ export default function WritePage() {
   }
 
   function selectClient(c: {name:string;contact_person:string;phone:string;mobile:string;email:string}) {
-    setFormData(prev => ({ ...prev, client_name: c.name, orderer: c.contact_person || prev.orderer, contact: c.mobile || c.phone || prev.contact, email: c.email || prev.email }));
+    setFormData(prev => ({
+      ...prev,
+      client_name: c.name,
+      orderer: c.contact_person || "",
+      contact: c.mobile || c.phone || "",
+      email: c.email || "",
+    }));
     setShowClientModal(false);
   }
 
