@@ -363,7 +363,14 @@ export default function WritePage() {
         // 품목 데이터 저장
         if (orderId) {
           // 기존 품목 삭제 후 새로 저장
-          await fetch(`/api/orders/${orderId}/items`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ items: itemData.filter(d => Object.keys(d).length > 0).map((d, i) => ({ sort_order: i, data: d })) }) });
+          const itemsBody = { items: itemData.filter(d => Object.keys(d).filter(k => k !== "_bold" || d[k]).length > 0).map((d, i) => ({ sort_order: i, data: d })) };
+          const itemsRes = await fetch(`/api/orders/${orderId}/items`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(itemsBody) });
+          if (!itemsRes.ok) {
+            const err = await itemsRes.json().catch(() => ({}));
+            alert("품목 저장 실패: " + (err.error || itemsRes.status));
+            setSaving(false);
+            return;
+          }
         }
         alert(editId ? "수정되었습니다." : "저장되었습니다.");
         router.push("/dashboard");
