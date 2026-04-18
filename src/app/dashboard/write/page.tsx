@@ -396,6 +396,18 @@ export default function WritePage() {
     router.push("/dashboard");
   }
 
+  async function handleMoveToEstimate() {
+    if (!editId) return;
+    if (!confirm("이 작업을 견적서 리스트로 이동하시겠습니까?")) return;
+    const res = await fetch(`/api/orders/${editId}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ is_estimate: true }) });
+    if (res.ok) {
+      alert("견적서로 이동되었습니다.");
+      router.push("/dashboard/estimates");
+    } else {
+      alert("이동 실패");
+    }
+  }
+
   function handleCopy() {
     if (!editId) return;
     if (!confirm("현재 작업을 복사하여 새 작업으로 등록합니다. 계속하시겠습니까?")) return;
@@ -889,6 +901,7 @@ export default function WritePage() {
         {editId && <button onClick={handleCopy} className="px-6 py-2 bg-amber-500 text-white rounded text-sm">복사</button>}
         {editId && <a href={`/print/statement?id=${editId}`} target="_blank" className="px-6 py-2 bg-indigo-600 text-white rounded text-sm">거래명세서</a>}
         {editId && <a href={`/print/estimate?id=${editId}`} target="_blank" className="px-6 py-2 bg-purple-600 text-white rounded text-sm">견적서</a>}
+        {editId && <button onClick={handleMoveToEstimate} className="px-6 py-2 bg-pink-600 text-white rounded text-sm">견적으로 이동</button>}
         {editId && <button onClick={handleDelete} className="px-6 py-2 bg-red-600 text-white rounded text-sm">삭제</button>}
       </div>
       {/* 거래처 검색 모달 */}

@@ -16,14 +16,22 @@ export async function GET(request: NextRequest) {
   const keyword = searchParams.get("keyword");
   const startDate = searchParams.get("startDate");
   const endDate = searchParams.get("endDate");
+  const mode = searchParams.get("mode") || "list"; // list: 견적서 이동된 것 제외, estimates: 견적서로 이동된 것만
 
   const supabase = getSupabase();
   let query = supabase
     .from("orders")
-    .select("id, order_no, client_name, orderer, contact, title, total_amount, discount, product_type, payment, status, created_by, order_date, created_at", { count: "exact" })
+    .select("id, order_no, client_name, orderer, contact, title, total_amount, discount, product_type, payment, status, is_estimate, created_by, order_date, created_at", { count: "exact" })
     .eq("company_id", session.company.id)
     .order("order_date", { ascending: false })
     .order("created_at", { ascending: false });
+
+  // 견적서 이동 여부 필터
+  if (mode === "estimates") {
+    query = query.eq("is_estimate", true);
+  } else {
+    query = query.or("is_estimate.is.null,is_estimate.eq.false");
+  }
 
   if (category && category !== "전체") {
     query = query.eq("categories.name", category);
