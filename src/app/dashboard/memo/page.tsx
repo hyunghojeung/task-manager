@@ -53,29 +53,27 @@ export default function MemoPage() {
 
   async function handlePaste(e: React.ClipboardEvent<HTMLTextAreaElement>) {
     if (!isPwindow) return;
-    const items = e.clipboardData.items;
-    for (const item of items) {
-      if (item.type.startsWith("image/")) {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].type.startsWith("image/")) {
         e.preventDefault();
-        const file = item.getAsFile();
+        const file = items[i].getAsFile();
         if (!file) continue;
         setUploading(true);
         const result = await uploadFile(file);
         setUploading(false);
-        if (result) {
-          const marker = `\n[이미지 ${images.length + 1}: ${result.url}]\n`;
-          const textarea = contentRef.current;
-          if (textarea) {
-            const start = textarea.selectionStart;
-            const newContent = content.slice(0, start) + marker + content.slice(textarea.selectionEnd);
-            setContent(newContent);
-          } else {
-            setContent(content + marker);
-          }
-          setImages(prev => [...prev, result.url]);
-        }
+        if (result) setImages(prev => [...prev, result.url]);
       }
     }
+  }
+
+  async function handleImageAttach(file: File) {
+    if (!isPwindow) return;
+    setUploading(true);
+    const result = await uploadFile(file);
+    setUploading(false);
+    if (result) setImages(prev => [...prev, result.url]);
   }
 
   async function handleFileAttach(files: FileList | null) {
@@ -121,17 +119,7 @@ export default function MemoPage() {
 
   const totalPages = Math.ceil(total / 15);
 
-  // 본문에서 [이미지 N: url] 마커를 이미지로 변환하여 렌더링
-  function renderContent(text: string) {
-    const parts = text.split(/(\[이미지 \d+: [^\]]+\])/g);
-    return parts.map((part, i) => {
-      const m = part.match(/\[이미지 \d+: ([^\]]+)\]/);
-      if (m) {
-        return <img key={i} src={m[1]} alt="" className="max-w-full my-2 rounded border border-gray-200" />;
-      }
-      return <span key={i} style={{whiteSpace:"pre-wrap"}}>{part}</span>;
-    });
-  }
+
 
   if (view === "write" || view === "edit") {
     return (
@@ -142,42 +130,57 @@ export default function MemoPage() {
           <input type="text" value={currentUser} readOnly className="w-full px-3 py-2 border border-gray-200 rounded text-sm mb-3 bg-gray-50 text-gray-500" />
           <label className="block text-xs font-semibold text-gray-600 mb-1">제목</label>
           <input type="text" placeholder="제목" value={title} onChange={e => setTitle(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded text-sm mb-3" />
-          <label className="block text-xs font-semibold text-gray-600 mb-1">
-            내용
-            {isPwindow && <span className="ml-2 text-[10px] text-blue-600">(이미지 복사 후 붙여넣기(Ctrl+V) 가능)</span>}
-          </label>
+          <label className="block text-xs font-semibold text-gray-600 mb-1">내용</label>
           <textarea
             ref={contentRef}
-            placeholder={isPwindow ? "내용 (이미지 복사 붙여넣기 가능)" : "내용"}
+            placeholder={isPwindow ? "내용을 입력하세요. 이미지를 붙여넣기(Ctrl+V)할 수 있습니다." : "내용"}
             value={content}
             onChange={e => setContent(e.target.value)}
             onPaste={handlePaste}
-            className="w-full px-3 py-2 border border-gray-300 rounded text-sm min-h-[200px] resize-y mb-3"
+            className="w-full px-3 py-2 border border-gray-300 rounded text-sm min-h-[200px] resize-y"
           />
+          {isPwindow && (
+            <div className="mt-2 flex items-center gap-2 mb-3">
+              <label className="px-3 py-1 bg-gray-600 text-white rounded text-xs cursor-pointer hover:bg-gray-700">
+                이미지 첨부
+                <input type="file" accept="image/*" className="hidden" onChange={e => { if (e.target.files?.[0]) handleImageAttach(e.target.files[0]); e.target.value = ""; }} />
+              </label>
+              <label className="px-3 py-1 bg-blue-600 text-white rounded text-xs cursor-pointer hover:bg-blue-700">
+                파일 첨부
+                <input type="file" multiple className="hidden" onChange={e => { handleFileAttach(e.target.files); e.target.value = ""; }} />
+              </label>
+              {uploading && <span className="text-xs text-gray-400">업로드 중...</span>}
+              <span className="text-[10px] text-gray-400">Ctrl+V로 캡처 이미지 붙여넣기 가능</span>
+            </div>
+          )}
           {!isPwindow && (
-            <div className="mb-3 p-3 bg-amber-50 border border-amber-200 rounded text-xs text-amber-800">
+            <div className="mt-2 mb-3 p-3 bg-amber-50 border border-amber-200 rounded text-xs text-amber-800">
               ⓘ 첨부파일 기능과 게시판 본문의 이미지 복사붙혀넣기 기능은 현재 준비중입니다
             </div>
           )}
-          {isPwindow && (
-            <>
-              <label className="block text-xs font-semibold text-gray-600 mb-1">첨부파일</label>
-              <div className="mb-3">
-                <input type="file" multiple onChange={e => { handleFileAttach(e.target.files); e.target.value = ""; }} className="text-xs" disabled={uploading} />
-                {uploading && <span className="ml-2 text-xs text-blue-600">업로드 중...</span>}
-                {attachments.length > 0 && (
-                  <ul className="mt-2 space-y-1">
-                    {attachments.map((a, i) => (
-                      <li key={i} className="flex items-center justify-between text-xs bg-gray-50 px-2 py-1 rounded">
-                        <a href={`/api/memo/download?url=${encodeURIComponent(a.url)}&name=${encodeURIComponent(a.name)}`} className="text-blue-600 hover:underline truncate flex-1">{a.name}</a>
-                        <span className="text-gray-400 mx-2">{(a.size / 1024).toFixed(1)} KB</span>
-                        <button type="button" onClick={() => setAttachments(prev => prev.filter((_, j) => j !== i))} className="text-red-500 hover:text-red-700">삭제</button>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-            </>
+          {images.length > 0 && (
+            <div className="mb-3 flex flex-wrap gap-2">
+              {images.map((url, i) => (
+                <div key={i} className="relative group">
+                  <img src={url} alt={`첨부${i+1}`} className="w-24 h-24 object-cover rounded border border-gray-300" />
+                  <button type="button" onClick={() => setImages(prev => prev.filter((_, idx) => idx !== i))} className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-4 h-4 text-xs leading-4 text-center opacity-0 group-hover:opacity-100 transition">×</button>
+                </div>
+              ))}
+            </div>
+          )}
+          {attachments.length > 0 && (
+            <div className="mb-3">
+              <p className="text-xs font-semibold text-gray-600 mb-1">첨부파일</p>
+              <ul className="space-y-1">
+                {attachments.map((a, i) => (
+                  <li key={i} className="flex items-center justify-between text-xs bg-gray-50 px-2 py-1 rounded">
+                    <a href={`/api/memo/download?url=${encodeURIComponent(a.url)}&name=${encodeURIComponent(a.name)}`} className="text-blue-600 hover:underline truncate flex-1">{a.name}</a>
+                    <span className="text-gray-400 mx-2">{(a.size / 1024).toFixed(1)} KB</span>
+                    <button type="button" onClick={() => setAttachments(prev => prev.filter((_, j) => j !== i))} className="text-red-500 hover:text-red-700">삭제</button>
+                  </li>
+                ))}
+              </ul>
+            </div>
           )}
           <div className="flex gap-2">
             <button onClick={handleSave} disabled={uploading} className="px-6 py-2 bg-emerald-600 text-white rounded text-sm disabled:opacity-50">저장</button>
@@ -194,7 +197,14 @@ export default function MemoPage() {
         <div className="bg-white rounded-lg shadow p-6">
           <h3 className="text-lg font-bold text-gray-800 mb-2">{current.title}</h3>
           <p className="text-xs text-gray-400 mb-4 pb-3 border-b border-gray-200">작성자: {current.users ? `${current.users.name}(${current.users.user_id})` : "-"} | 작성일: {current.created_at?.slice(0, 16).replace("T", " ")}</p>
-          <div className="text-sm text-gray-700 leading-7 min-h-[150px] mb-5">{renderContent(current.content || "")}</div>
+          <div className="text-sm text-gray-700 leading-7 min-h-[150px] mb-5 whitespace-pre-wrap">{current.content}</div>
+          {current.images && current.images.length > 0 && (
+            <div className="mb-5">
+              {current.images.map((url, i) => (
+                <img key={i} src={url} alt={`첨부이미지${i+1}`} className="max-w-full my-2 rounded border border-gray-200" />
+              ))}
+            </div>
+          )}
           {current.attachments && current.attachments.length > 0 && (
             <div className="mb-5 pt-3 border-t border-gray-200">
               <p className="text-xs font-semibold text-gray-600 mb-2">첨부파일</p>
