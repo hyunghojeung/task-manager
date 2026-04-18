@@ -31,6 +31,7 @@ export default function WritePage() {
     detail_spec: "", order_date: new Date().toISOString().slice(0, 10),
   });
   const [orderNo, setOrderNo] = useState("자동생성");
+  const [isEstimate, setIsEstimate] = useState(false);
   const [itemRows, setItemRows] = useState(5);
   const [templateList, setTemplateList] = useState<Array<{id:string;name:string;columns:Array<{name:string;type:string}>;formulas:Array<{target:string;expression:string}>}>>([]);
   const [selectedTemplate, setSelectedTemplate] = useState("");
@@ -215,6 +216,7 @@ export default function WritePage() {
             order_date: data.order_date || new Date().toISOString().slice(0, 10),
           });
           setOrderNo(data.order_no || "");
+          setIsEstimate(!!data.is_estimate);
           // 품목 데이터 복원
           if (data.order_items && data.order_items.length > 0) {
             const restored = data.order_items
@@ -398,9 +400,13 @@ export default function WritePage() {
 
   async function handleMoveToEstimate() {
     if (editId) {
-      if (!confirm("이 작업을 견적서 리스트로 이동하시겠습니까?")) return;
-      const res = await fetch(`/api/orders/${editId}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ is_estimate: true }) });
-      if (res.ok) { alert("견적서로 이동되었습니다."); router.push("/dashboard/estimates"); }
+      const toEstimate = !isEstimate;
+      const msg = toEstimate ? "이 작업을 견적서 리스트로 이동하시겠습니까?" : "이 항목을 작업리스트로 이동하시겠습니까?";
+      const okMsg = toEstimate ? "견적서로 이동되었습니다." : "작업리스트로 이동되었습니다.";
+      const redirectTo = toEstimate ? "/dashboard/estimates" : "/dashboard";
+      if (!confirm(msg)) return;
+      const res = await fetch(`/api/orders/${editId}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ is_estimate: toEstimate }) });
+      if (res.ok) { alert(okMsg); router.push(redirectTo); }
       else alert("이동 실패");
     } else {
       if (!formData.title) { alert("제목을 입력해주세요."); return; }
@@ -436,6 +442,7 @@ export default function WritePage() {
     // editId 제거 → 저장 시 새 작업으로 등록됨
     setEditId(null);
     setOrderNo("자동생성");
+    setIsEstimate(false);
     setAttachments([]);
     // 작성일을 오늘로 초기화
     setFormData(prev => ({ ...prev, order_date: new Date().toISOString().slice(0, 10), tax_invoice: "" }));
@@ -923,7 +930,7 @@ export default function WritePage() {
         {editId && <button onClick={handleCopy} className="px-6 py-2 bg-amber-500 text-white rounded text-sm">복사</button>}
         {editId && <a href={`/print/statement?id=${editId}`} target="_blank" className="px-6 py-2 bg-indigo-600 text-white rounded text-sm">거래명세서</a>}
         {editId && <a href={`/print/estimate?id=${editId}`} target="_blank" className="px-6 py-2 bg-purple-600 text-white rounded text-sm">견적서</a>}
-        <button onClick={handleMoveToEstimate} className="px-6 py-2 bg-pink-600 text-white rounded text-sm">견적으로 이동</button>
+        <button onClick={handleMoveToEstimate} className={`px-6 py-2 text-white rounded text-sm ${isEstimate ? "bg-amber-500" : "bg-pink-600"}`}>{isEstimate ? "작업리스트로 이동" : "견적으로 이동"}</button>
         {editId && <button onClick={handleDelete} className="px-6 py-2 bg-red-600 text-white rounded text-sm">삭제</button>}
       </div>
       {/* 거래처 검색 모달 */}
