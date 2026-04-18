@@ -85,6 +85,25 @@ export default function EstimatesListPage() {
     return parts.length > 0 ? <>{parts}</> : t;
   }
 
+  function enlargeSymbols(node: React.ReactNode): React.ReactNode {
+    if (typeof node !== "string") return node;
+    const symbolRegex = /([●○◉★☆▶▷■□◆◇▲△▼▽※◎♠♣♥♦])/g;
+    const parts = node.split(symbolRegex);
+    if (parts.length === 1) return node;
+    return parts.map((p, i) => symbolRegex.test(p) ? <span key={i} style={{fontSize:"1.3em",verticalAlign:"middle",display:"inline-block"}}>{p}</span> : p);
+  }
+
+  function renderTitle(text: string | null | undefined): React.ReactNode {
+    const highlighted = highlight(text, "제목");
+    if (typeof highlighted === "string") return enlargeSymbols(highlighted);
+    if (Array.isArray(highlighted) || (highlighted && typeof highlighted === "object" && "props" in highlighted)) {
+      const arr = Array.isArray(highlighted) ? highlighted :
+        (highlighted as { props: { children: React.ReactNode[] } }).props?.children || [highlighted];
+      return <>{(arr as React.ReactNode[]).map((p, i) => <span key={i}>{enlargeSymbols(p)}</span>)}</>;
+    }
+    return highlighted;
+  }
+
   const totalPages = Math.ceil(total / 40);
 
   return (
@@ -137,7 +156,7 @@ export default function EstimatesListPage() {
                 <td className="border border-gray-200 px-1.5 py-[7px] text-left"><a href={`/dashboard/write?id=${o.id}`} className="hover:text-blue-600 hover:underline">{highlight(o.client_name, "거래처")}</a></td>
                 <td className="border border-gray-200 px-1.5 py-[7px] text-left"><a href={`/dashboard/write?id=${o.id}`} className="hover:text-blue-600 hover:underline">{highlight(o.orderer, "주문자")}</a></td>
                 <td className="border border-gray-200 px-1.5 py-[7px] text-left"><a href={`/dashboard/write?id=${o.id}`} className="hover:text-blue-600 hover:underline">{highlight(o.contact, "연락처")}</a></td>
-                <td className="border border-gray-200 px-1.5 py-[7px] text-left max-w-[400px]"><a href={`/dashboard/write?id=${o.id}`} title={o.title} className="hover:text-blue-600 hover:underline block truncate">{highlight(o.title, "제목")}</a></td>
+                <td className="border border-gray-200 px-1.5 py-[7px] text-left max-w-[400px]"><a href={`/dashboard/write?id=${o.id}`} title={o.title} className="hover:text-blue-600 hover:underline block truncate">{renderTitle(o.title)}</a></td>
                 <td className="border border-gray-200 px-1.5 py-[7px] text-right">{((o.total_amount||0) - (o.discount||0)).toLocaleString()}</td>
                 <td className="border border-gray-200 px-1.5 py-[7px] text-center">{o.product_type}</td>
                 <td className="border border-gray-200 px-1.5 py-[7px] text-center">{o.payment}</td>
