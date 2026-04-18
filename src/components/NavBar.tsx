@@ -8,6 +8,7 @@ export default function NavBar() {
   const links = [
     { href: "/dashboard", label: "작업리스트", color: "bg-blue-600 hover:bg-blue-700" },
     { href: "/dashboard/write", label: "작업등록", color: "bg-blue-600 hover:bg-blue-700" },
+    { href: "/dashboard/estimates", label: "견적서", color: "bg-purple-600 hover:bg-purple-700" },
     { href: "/dashboard/orders", label: "발주서", color: "bg-gray-700 hover:bg-gray-800" },
     { href: "/dashboard/memo", label: "업무용메모", color: "bg-emerald-600 hover:bg-emerald-700" },
   ];
