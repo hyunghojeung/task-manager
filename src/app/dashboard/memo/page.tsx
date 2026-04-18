@@ -3,8 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 
 type View = "list" | "write" | "view" | "edit";
-interface AttachmentInfo { name: string; url: string; size: number }
-interface MemoData { id: string; title: string; content: string; created_at: string; images?: string[]; attachments?: AttachmentInfo[]; users?: { name: string; user_id: string } }
+interface MemoData { id: string; title: string; content: string; created_at: string; images?: string[]; users?: { name: string; user_id: string } }
 
 export default function MemoPage() {
   const [view, setView] = useState<View>("list");
@@ -13,7 +12,6 @@ export default function MemoPage() {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [images, setImages] = useState<string[]>([]);
-  const [attachments, setAttachments] = useState<AttachmentInfo[]>([]);
   const [uploading, setUploading] = useState(false);
   const [currentUser, setCurrentUser] = useState("");
   const [isPwindow, setIsPwindow] = useState(false);
@@ -76,24 +74,13 @@ export default function MemoPage() {
     if (result) setImages(prev => [...prev, result.url]);
   }
 
-  async function handleFileAttach(files: FileList | null) {
-    if (!files || files.length === 0) return;
-    if (!isPwindow) return;
-    setUploading(true);
-    for (const file of Array.from(files)) {
-      const result = await uploadFile(file);
-      if (result) setAttachments(prev => [...prev, { name: result.name, url: result.url, size: result.size }]);
-    }
-    setUploading(false);
-  }
-
   async function handleSave() {
     if (!title) { alert("제목을 입력해주세요."); return; }
     const isEdit = view === "edit" && current;
     const url = isEdit ? `/api/memos/${current!.id}` : "/api/memos";
     const method = isEdit ? "PUT" : "POST";
-    const res = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify({ title, content, images, attachments }) });
-    if (res.ok) { setTitle(""); setContent(""); setImages([]); setAttachments([]); setView("list"); setRefreshKey(k => k + 1); }
+    const res = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify({ title, content, images }) });
+    if (res.ok) { setTitle(""); setContent(""); setImages([]); setView("list"); setRefreshKey(k => k + 1); }
     else alert("저장 실패");
   }
 
@@ -109,12 +96,11 @@ export default function MemoPage() {
       setTitle(current.title);
       setContent(current.content || "");
       setImages(current.images || []);
-      setAttachments(current.attachments || []);
       setView("edit");
     }
   }
   function openWrite() {
-    setTitle(""); setContent(""); setImages([]); setAttachments([]); setCurrent(null); setView("write");
+    setTitle(""); setContent(""); setImages([]); setCurrent(null); setView("write");
   }
 
   const totalPages = Math.ceil(total / 15);
@@ -137,17 +123,13 @@ export default function MemoPage() {
             value={content}
             onChange={e => setContent(e.target.value)}
             onPaste={handlePaste}
-            className="w-full px-3 py-2 border border-gray-300 rounded text-sm min-h-[200px] resize-y"
+            className="w-full px-3 py-2 border border-gray-300 rounded text-sm min-h-[250px] resize-y"
           />
           {isPwindow && (
-            <div className="mt-2 flex items-center gap-2 mb-3">
+            <div className="mt-2 flex items-center gap-2">
               <label className="px-3 py-1 bg-gray-600 text-white rounded text-xs cursor-pointer hover:bg-gray-700">
                 이미지 첨부
                 <input type="file" accept="image/*" className="hidden" onChange={e => { if (e.target.files?.[0]) handleImageAttach(e.target.files[0]); e.target.value = ""; }} />
-              </label>
-              <label className="px-3 py-1 bg-blue-600 text-white rounded text-xs cursor-pointer hover:bg-blue-700">
-                파일 첨부
-                <input type="file" multiple className="hidden" onChange={e => { handleFileAttach(e.target.files); e.target.value = ""; }} />
               </label>
               {uploading && <span className="text-xs text-gray-400">업로드 중...</span>}
               <span className="text-[10px] text-gray-400">Ctrl+V로 캡처 이미지 붙여넣기 가능</span>
@@ -155,31 +137,17 @@ export default function MemoPage() {
           )}
           {!isPwindow && (
             <div className="mt-2 mb-3 p-3 bg-amber-50 border border-amber-200 rounded text-xs text-amber-800">
-              ⓘ 첨부파일 기능과 게시판 본문의 이미지 복사붙혀넣기 기능은 현재 준비중입니다
+              ⓘ 이미지 첨부 및 본문 이미지 복사붙혀넣기 기능은 현재 준비중입니다
             </div>
           )}
           {images.length > 0 && (
-            <div className="mb-3 flex flex-wrap gap-2">
+            <div className="mt-2 mb-3 flex flex-wrap gap-2">
               {images.map((url, i) => (
                 <div key={i} className="relative group">
                   <img src={url} alt={`첨부${i+1}`} className="w-24 h-24 object-cover rounded border border-gray-300" />
                   <button type="button" onClick={() => setImages(prev => prev.filter((_, idx) => idx !== i))} className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-4 h-4 text-xs leading-4 text-center opacity-0 group-hover:opacity-100 transition">×</button>
                 </div>
               ))}
-            </div>
-          )}
-          {attachments.length > 0 && (
-            <div className="mb-3">
-              <p className="text-xs font-semibold text-gray-600 mb-1">첨부파일</p>
-              <ul className="space-y-1">
-                {attachments.map((a, i) => (
-                  <li key={i} className="flex items-center justify-between text-xs bg-gray-50 px-2 py-1 rounded">
-                    <a href={`/api/memo/download?url=${encodeURIComponent(a.url)}&name=${encodeURIComponent(a.name)}`} className="text-blue-600 hover:underline truncate flex-1">{a.name}</a>
-                    <span className="text-gray-400 mx-2">{(a.size / 1024).toFixed(1)} KB</span>
-                    <button type="button" onClick={() => setAttachments(prev => prev.filter((_, j) => j !== i))} className="text-red-500 hover:text-red-700">삭제</button>
-                  </li>
-                ))}
-              </ul>
             </div>
           )}
           <div className="flex gap-2">
@@ -203,19 +171,6 @@ export default function MemoPage() {
               {current.images.map((url, i) => (
                 <img key={i} src={url} alt={`첨부이미지${i+1}`} className="max-w-full my-2 rounded border border-gray-200" />
               ))}
-            </div>
-          )}
-          {current.attachments && current.attachments.length > 0 && (
-            <div className="mb-5 pt-3 border-t border-gray-200">
-              <p className="text-xs font-semibold text-gray-600 mb-2">첨부파일</p>
-              <ul className="space-y-1">
-                {current.attachments.map((a, i) => (
-                  <li key={i} className="flex items-center gap-2 text-xs bg-gray-50 px-2 py-1 rounded">
-                    <a href={`/api/memo/download?url=${encodeURIComponent(a.url)}&name=${encodeURIComponent(a.name)}`} className="text-blue-600 hover:underline">{a.name}</a>
-                    <span className="text-gray-400">{(a.size / 1024).toFixed(1)} KB</span>
-                  </li>
-                ))}
-              </ul>
             </div>
           )}
           <div className="flex gap-2">
@@ -249,7 +204,7 @@ export default function MemoPage() {
                 <td className="border border-gray-200 px-2 py-2 text-center">{(page - 1) * 15 + i + 1}</td>
                 <td className="border border-gray-200 px-2 py-2 text-left">
                   {m.title}
-                  {m.attachments && m.attachments.length > 0 && <span className="ml-1 text-[10px] text-gray-500">📎{m.attachments.length}</span>}
+                  {m.images && m.images.length > 0 && <span className="ml-1 text-[10px] text-gray-500">🖼️{m.images.length}</span>}
                 </td>
                 <td className="border border-gray-200 px-2 py-2 text-center">{m.users ? `${m.users.name}(${m.users.user_id})` : "-"}</td>
                 <td className="border border-gray-200 px-2 py-2 text-center whitespace-nowrap">{m.created_at?.slice(0, 16).replace("T", " ")}</td>
