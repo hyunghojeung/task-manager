@@ -397,14 +397,36 @@ export default function WritePage() {
   }
 
   async function handleMoveToEstimate() {
-    if (!editId) return;
-    if (!confirm("이 작업을 견적서 리스트로 이동하시겠습니까?")) return;
-    const res = await fetch(`/api/orders/${editId}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ is_estimate: true }) });
-    if (res.ok) {
-      alert("견적서로 이동되었습니다.");
-      router.push("/dashboard/estimates");
+    if (editId) {
+      if (!confirm("이 작업을 견적서 리스트로 이동하시겠습니까?")) return;
+      const res = await fetch(`/api/orders/${editId}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ is_estimate: true }) });
+      if (res.ok) { alert("견적서로 이동되었습니다."); router.push("/dashboard/estimates"); }
+      else alert("이동 실패");
     } else {
-      alert("이동 실패");
+      if (!formData.title) { alert("제목을 입력해주세요."); return; }
+      if (!confirm("이 작업을 저장한 후 견적서 리스트로 이동하시겠습니까?")) return;
+      // 먼저 저장
+      setSaving(true);
+      try {
+        const supplyCol = templateCols.find(c => c.name.includes("공급") && (c.type === "자동계산" || c.type === "숫자"));
+        const vatCol = templateCols.find(c => c.name.includes("부가") && (c.type === "자동계산" || c.type === "숫자"));
+        const totalCol = templateCols.find(c => (c.name === "합계" || c.name === "합계금액" || c.name === "총액") && (c.type === "자동계산" || c.type === "숫자"));
+        let totalSupply = 0, totalVat = 0;
+        itemData.forEach(row => { if (supplyCol) totalSupply += parseInt(row[supplyCol.name]) || 0; if (vatCol) totalVat += parseInt(row[vatCol.name]) || 0; });
+        let totalAmount = totalSupply + totalVat;
+        if (totalCol) { const ct = itemData.reduce((a, r) => a + (parseInt(r[totalCol.name]) || 0), 0); if (ct > 0) totalAmount = ct; }
+        const discountAmount = parseInt(formData.discount) || 0;
+        const res = await fetch("/api/orders", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...formData, discount: discountAmount, total_supply: totalSupply, total_vat: totalVat, total_amount: totalAmount, template_name: selectedTemplate, is_estimate: true }) });
+        if (res.ok) {
+          const saved = await res.json();
+          if (saved?.id) {
+            await fetch(`/api/orders/${saved.id}/items`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ items: itemData.filter(d => Object.keys(d).filter(k => k !== "_bold" || d[k]).length > 0).map((d, i) => ({ sort_order: i, data: d })) }) });
+          }
+          alert("견적서로 저장 및 이동되었습니다.");
+          router.push("/dashboard/estimates");
+        } else alert("저장 실패");
+      } catch { alert("서버 연결 실패"); }
+      finally { setSaving(false); }
     }
   }
 
@@ -900,8 +922,7 @@ export default function WritePage() {
         <button onClick={() => window.print()} className="px-6 py-2 bg-gray-700 text-white rounded text-sm">프린트</button>
         {editId && <button onClick={handleCopy} className="px-6 py-2 bg-amber-500 text-white rounded text-sm">복사</button>}
         {editId && <a href={`/print/statement?id=${editId}`} target="_blank" className="px-6 py-2 bg-indigo-600 text-white rounded text-sm">거래명세서</a>}
-        {editId && <a href={`/print/estimate?id=${editId}`} target="_blank" className="px-6 py-2 bg-purple-600 text-white rounded text-sm">견적서</a>}
-        {editId && <button onClick={handleMoveToEstimate} className="px-6 py-2 bg-pink-600 text-white rounded text-sm">견적으로 이동</button>}
+        <button onClick={handleMoveToEstimate} className="px-6 py-2 bg-pink-600 text-white rounded text-sm">견적으로 이동</button>
         {editId && <button onClick={handleDelete} className="px-6 py-2 bg-red-600 text-white rounded text-sm">삭제</button>}
       </div>
       {/* 거래처 검색 모달 */}
