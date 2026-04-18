@@ -40,9 +40,13 @@ export async function POST(request: NextRequest) {
 
     const accessToken = await getDropboxAccessToken(company.dropbox_access_token, company.dropbox_app_key, company.dropbox_app_secret);
 
+    // 한글 파일명 유지 (Dropbox는 Unicode 파일명 지원)
     const timestamp = Date.now();
-    const ext = file.name?.split(".").pop() || "bin";
-    const safeName = `memo_${timestamp}_${Math.random().toString(36).slice(2, 8)}.${ext}`;
+    const origName = file.name || "file.bin";
+    // 파일명에 사용할 수 없는 문자만 제거 (한글은 유지)
+    const cleanName = origName.replace(/[\/\\:*?"<>|]/g, "_");
+    // 타임스탬프 접두어로 중복 방지
+    const safeName = `${timestamp}_${cleanName}`;
     const uploadPath = `/bcount-momo/${safeName}`;
     const fileBuffer = await file.arrayBuffer();
 

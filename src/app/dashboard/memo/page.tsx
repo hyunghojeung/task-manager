@@ -169,7 +169,7 @@ export default function MemoPage() {
                   <ul className="mt-2 space-y-1">
                     {attachments.map((a, i) => (
                       <li key={i} className="flex items-center justify-between text-xs bg-gray-50 px-2 py-1 rounded">
-                        <a href={a.url} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline truncate flex-1">{a.name}</a>
+                        <a href={`/api/memo/download?url=${encodeURIComponent(a.url)}&name=${encodeURIComponent(a.name)}`} className="text-blue-600 hover:underline truncate flex-1">{a.name}</a>
                         <span className="text-gray-400 mx-2">{(a.size / 1024).toFixed(1)} KB</span>
                         <button type="button" onClick={() => setAttachments(prev => prev.filter((_, j) => j !== i))} className="text-red-500 hover:text-red-700">삭제</button>
                       </li>
@@ -201,7 +201,7 @@ export default function MemoPage() {
               <ul className="space-y-1">
                 {current.attachments.map((a, i) => (
                   <li key={i} className="flex items-center gap-2 text-xs bg-gray-50 px-2 py-1 rounded">
-                    <a href={a.url} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline">{a.name}</a>
+                    <a href={`/api/memo/download?url=${encodeURIComponent(a.url)}&name=${encodeURIComponent(a.name)}`} className="text-blue-600 hover:underline">{a.name}</a>
                     <span className="text-gray-400">{(a.size / 1024).toFixed(1)} KB</span>
                   </li>
                 ))}
