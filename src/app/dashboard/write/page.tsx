@@ -11,7 +11,7 @@ export default function WritePage() {
   const [saving, setSaving] = useState(false);
   const [showClientModal, setShowClientModal] = useState(false);
   const [clients, setClients] = useState<Array<{id:string;name:string;contact_person:string;phone:string;mobile:string;email:string}>>([]);
-  const [categoryList, setCategoryList] = useState<Array<{id:string;name:string}>>([]);
+  const [categoryList, setCategoryList] = useState<Array<{id:string;name:string;is_default?:boolean}>>([]);
   const [clientSearch, setClientSearch] = useState("");
   const [showAutoComplete, setShowAutoComplete] = useState(false);
   const [autoClients, setAutoClients] = useState<Array<{id:string;name:string;contact_person:string;phone:string;mobile:string;email:string}>>([]);
@@ -141,7 +141,14 @@ export default function WritePage() {
 
   useEffect(() => {
     fetch(`/api/categories?_=${Date.now()}`).then(r => r.json()).then(d => {
-      if (Array.isArray(d)) setCategoryList(d);
+      if (Array.isArray(d)) {
+        setCategoryList(d);
+        // 기본 카테고리 자동 선택 (신규 등록 시에만)
+        if (!urlId) {
+          const defaultCat = d.find((c: {is_default?: boolean}) => c.is_default);
+          if (defaultCat) setFormData(prev => ({ ...prev, category_id: defaultCat.id }));
+        }
+      }
     }).catch(() => {});
     fetch(`/api/templates?_=${Date.now()}`).then(r => r.json()).then(d => {
       if (Array.isArray(d) && d.length > 0) {
