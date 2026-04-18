@@ -19,6 +19,13 @@ export default function DashboardPage() {
   const [year, setYear] = useState("전체");
   const [month, setMonth] = useState("전체");
   const [statusFilter, setStatusFilter] = useState("전체");
+  const [categoryList, setCategoryList] = useState<Array<{id:string;name:string;is_default?:boolean}>>([]);
+
+  useEffect(() => {
+    fetch(`/api/categories?_=${Date.now()}`).then(r => r.json()).then(d => {
+      if (Array.isArray(d)) setCategoryList(d);
+    }).catch(() => {});
+  }, []);
 
   useEffect(() => {
     const saved = typeof window !== "undefined" ? localStorage.getItem("listFontSize") : null;
@@ -108,7 +115,8 @@ export default function DashboardPage() {
     <div>
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 mb-4">
         <select value={category} onChange={e => setCategory(e.target.value)} className="px-3 py-1.5 border border-gray-300 rounded text-sm">
-          <option>전체</option><option>블랙카피</option><option>출력실</option><option>디자인실</option>
+          <option value="전체">전체</option>
+          {categoryList.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
         </select>
         <div className="flex flex-wrap gap-2 items-center">
           <select value={fontSize} onChange={e => changeFontSize(e.target.value)} className="px-2 py-1.5 border border-gray-300 rounded text-xs" title="글자 크기">
