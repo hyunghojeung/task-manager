@@ -37,17 +37,15 @@ export async function POST(request: NextRequest) {
     const formData = await request.formData();
     const file = formData.get("file") as File;
     if (!file) return NextResponse.json({ error: "파일이 없습니다." }, { status: 400 });
+    const folder = formData.get("folder") as string || "file";
 
     const accessToken = await getDropboxAccessToken(company.dropbox_access_token, company.dropbox_app_key, company.dropbox_app_secret);
 
-    // 한글 파일명 유지 (Dropbox는 Unicode 파일명 지원)
     const timestamp = Date.now();
     const origName = file.name || "file.bin";
-    // 파일명에 사용할 수 없는 문자만 제거 (한글은 유지)
     const cleanName = origName.replace(/[\/\\:*?"<>|]/g, "_");
-    // 타임스탬프 접두어로 중복 방지
     const safeName = `${timestamp}_${cleanName}`;
-    const uploadPath = `/bcount-momo/${safeName}`;
+    const uploadPath = `/bcountmemo/${folder}/${safeName}`;
     const fileBuffer = await file.arrayBuffer();
 
     const argJson = JSON.stringify({ path: uploadPath, mode: "add", autorename: true, mute: false });

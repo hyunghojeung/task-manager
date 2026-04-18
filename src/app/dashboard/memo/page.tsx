@@ -3,7 +3,8 @@
 import { useState, useEffect, useRef } from "react";
 
 type View = "list" | "write" | "view" | "edit";
-interface MemoData { id: string; title: string; content: string; created_at: string; images?: string[]; users?: { name: string; user_id: string } }
+interface FileInfo { name: string; url: string; size: number }
+interface MemoData { id: string; title: string; content: string; created_at: string; images?: string[]; attachments?: FileInfo[]; users?: { name: string; user_id: string } }
 
 export default function MemoPage() {
   const [view, setView] = useState<View>("list");
@@ -12,7 +13,9 @@ export default function MemoPage() {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [images, setImages] = useState<string[]>([]);
+  const [attachments, setAttachments] = useState<FileInfo[]>([]);
   const [uploading, setUploading] = useState(false);
+  const [dragOver, setDragOver] = useState(false);
   const [currentUser, setCurrentUser] = useState("");
   const [isPwindow, setIsPwindow] = useState(false);
   const contentRef = useRef<HTMLTextAreaElement>(null);
@@ -40,15 +43,17 @@ export default function MemoPage() {
     });
   }, [page, refreshKey]);
 
-  async function uploadFile(file: File): Promise<{ url: string; name: string; size: number } | null> {
+  async function uploadToDropbox(file: File, folder: string): Promise<{ url: string; name: string; size: number } | null> {
     const fd = new FormData();
     fd.append("file", file);
+    fd.append("folder", folder);
     const res = await fetch("/api/memo/upload", { method: "POST", body: fd });
     const data = await res.json();
     if (!res.ok) { alert("업로드 실패: " + (data.error || res.status)); return null; }
-    return { url: data.url, name: data.file_name || file.name, size: data.file_size || file.size };
+    return { url: data.url, name: file.name, size: file.size };
   }
 
+  // 본문 이미지 붙여넣기 (pwindow만)
   async function handlePaste(e: React.ClipboardEvent<HTMLTextAreaElement>) {
     if (!isPwindow) return;
     const items = e.clipboardData?.items;
@@ -59,19 +64,31 @@ export default function MemoPage() {
         const file = items[i].getAsFile();
         if (!file) continue;
         setUploading(true);
-        const result = await uploadFile(file);
+        const result = await uploadToDropbox(file, "body");
         setUploading(false);
         if (result) setImages(prev => [...prev, result.url]);
       }
     }
   }
 
+  // 이미지 첨부 버튼 (본문 이미지)
   async function handleImageAttach(file: File) {
     if (!isPwindow) return;
     setUploading(true);
-    const result = await uploadFile(file);
+    const result = await uploadToDropbox(file, "body");
     setUploading(false);
     if (result) setImages(prev => [...prev, result.url]);
+  }
+
+  // 파일 첨부 (모든 파일)
+  async function handleFileAttach(files: FileList | File[]) {
+    if (!isPwindow) return;
+    setUploading(true);
+    for (const file of Array.from(files)) {
+      const result = await uploadToDropbox(file, "file");
+      if (result) setAttachments(prev => [...prev, result]);
+    }
+    setUploading(false);
   }
 
   async function handleSave() {
@@ -79,8 +96,8 @@ export default function MemoPage() {
     const isEdit = view === "edit" && current;
     const url = isEdit ? `/api/memos/${current!.id}` : "/api/memos";
     const method = isEdit ? "PUT" : "POST";
-    const res = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify({ title, content, images }) });
-    if (res.ok) { setTitle(""); setContent(""); setImages([]); setView("list"); setRefreshKey(k => k + 1); }
+    const res = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify({ title, content, images, attachments }) });
+    if (res.ok) { resetForm(); setView("list"); setRefreshKey(k => k + 1); }
     else alert("저장 실패");
   }
 
@@ -90,23 +107,20 @@ export default function MemoPage() {
     setView("list"); setRefreshKey(k => k + 1);
   }
 
+  function resetForm() { setTitle(""); setContent(""); setImages([]); setAttachments([]); }
   function openView(m: MemoData) { setCurrent(m); setView("view"); }
   function openEdit() {
     if (current) {
-      setTitle(current.title);
-      setContent(current.content || "");
-      setImages(current.images || []);
+      setTitle(current.title); setContent(current.content || "");
+      setImages(current.images || []); setAttachments(current.attachments || []);
       setView("edit");
     }
   }
-  function openWrite() {
-    setTitle(""); setContent(""); setImages([]); setCurrent(null); setView("write");
-  }
+  function openWrite() { resetForm(); setCurrent(null); setView("write"); }
 
   const totalPages = Math.ceil(total / 15);
 
-
-
+  // 글쓰기/수정
   if (view === "write" || view === "edit") {
     return (
       <div className="max-w-4xl mx-auto">
@@ -135,13 +149,8 @@ export default function MemoPage() {
               <span className="text-[10px] text-gray-400">Ctrl+V로 캡처 이미지 붙여넣기 가능</span>
             </div>
           )}
-          {!isPwindow && (
-            <div className="mt-2 mb-3 p-3 bg-amber-50 border border-amber-200 rounded text-xs text-amber-800">
-              ⓘ 이미지 첨부 및 본문 이미지 복사붙혀넣기 기능은 현재 준비중입니다
-            </div>
-          )}
           {images.length > 0 && (
-            <div className="mt-2 mb-3 flex flex-wrap gap-2">
+            <div className="mt-2 flex flex-wrap gap-2">
               {images.map((url, i) => (
                 <div key={i} className="relative group">
                   <img src={url} alt={`첨부${i+1}`} className="w-24 h-24 object-cover rounded border border-gray-300" />
@@ -150,7 +159,37 @@ export default function MemoPage() {
               ))}
             </div>
           )}
-          <div className="flex gap-2">
+          {/* 첨부파일 영역 */}
+          {isPwindow ? (
+            <div className="mt-4">
+              <label className="block text-xs font-semibold text-gray-600 mb-1">첨부파일</label>
+              <label
+                onDragOver={e => { e.preventDefault(); setDragOver(true); }}
+                onDragLeave={() => setDragOver(false)}
+                onDrop={e => { e.preventDefault(); setDragOver(false); if (e.dataTransfer.files.length > 0) handleFileAttach(e.dataTransfer.files); }}
+                className={`block border-2 border-dashed rounded p-3 text-center text-xs cursor-pointer transition ${dragOver ? "border-blue-500 bg-blue-50" : "border-gray-300 text-gray-400 hover:border-blue-500"}`}
+              >
+                <input type="file" multiple className="hidden" onChange={e => { if (e.target.files) handleFileAttach(e.target.files); e.target.value = ""; }} />
+                {uploading ? "업로드 중..." : "+ 파일을 드래그하여 놓거나 클릭하여 첨부"}
+              </label>
+              {attachments.length > 0 && (
+                <ul className="mt-2 space-y-1">
+                  {attachments.map((a, i) => (
+                    <li key={i} className="flex items-center justify-between text-xs bg-gray-50 px-2 py-1 rounded">
+                      <a href={`/api/memo/download?url=${encodeURIComponent(a.url)}&name=${encodeURIComponent(a.name)}`} className="text-blue-600 hover:underline truncate flex-1">{a.name}</a>
+                      <span className="text-gray-400 mx-2">{(a.size / 1024).toFixed(1)} KB</span>
+                      <button type="button" onClick={() => setAttachments(prev => prev.filter((_, j) => j !== i))} className="text-red-500 hover:text-red-700">삭제</button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          ) : (
+            <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded text-xs text-amber-800">
+              ⓘ 첨부파일 기능과 본문 이미지 복사붙혀넣기 기능은 현재 준비중입니다
+            </div>
+          )}
+          <div className="flex gap-2 mt-4">
             <button onClick={handleSave} disabled={uploading} className="px-6 py-2 bg-emerald-600 text-white rounded text-sm disabled:opacity-50">저장</button>
             <button onClick={() => setView("list")} className="px-6 py-2 border border-gray-300 rounded text-sm">취소</button>
           </div>
@@ -159,6 +198,7 @@ export default function MemoPage() {
     );
   }
 
+  // 글 상세
   if (view === "view" && current) {
     return (
       <div className="max-w-4xl mx-auto">
@@ -173,6 +213,19 @@ export default function MemoPage() {
               ))}
             </div>
           )}
+          {current.attachments && current.attachments.length > 0 && (
+            <div className="mb-5 pt-3 border-t border-gray-200">
+              <p className="text-xs font-semibold text-gray-600 mb-2">첨부파일</p>
+              <ul className="space-y-1">
+                {current.attachments.map((a, i) => (
+                  <li key={i} className="flex items-center gap-2 text-xs bg-gray-50 px-2 py-1 rounded">
+                    <a href={`/api/memo/download?url=${encodeURIComponent(a.url)}&name=${encodeURIComponent(a.name)}`} className="text-blue-600 hover:underline">{a.name}</a>
+                    <span className="text-gray-400">{(a.size / 1024).toFixed(1)} KB</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
           <div className="flex gap-2">
             <button onClick={() => setView("list")} className="px-6 py-2 border border-gray-300 rounded text-sm">목록</button>
             <button onClick={openEdit} className="px-6 py-2 bg-emerald-600 text-white rounded text-sm">수정</button>
@@ -183,6 +236,7 @@ export default function MemoPage() {
     );
   }
 
+  // 글 목록
   return (
     <div className="max-w-4xl mx-auto">
       <div className="flex justify-between items-center mb-4">
@@ -205,6 +259,7 @@ export default function MemoPage() {
                 <td className="border border-gray-200 px-2 py-2 text-left">
                   {m.title}
                   {m.images && m.images.length > 0 && <span className="ml-1 text-[10px] text-gray-500">🖼️{m.images.length}</span>}
+                  {m.attachments && m.attachments.length > 0 && <span className="ml-1 text-[10px] text-gray-500">📎{m.attachments.length}</span>}
                 </td>
                 <td className="border border-gray-200 px-2 py-2 text-center">{m.users ? `${m.users.name}(${m.users.user_id})` : "-"}</td>
                 <td className="border border-gray-200 px-2 py-2 text-center whitespace-nowrap">{m.created_at?.slice(0, 16).replace("T", " ")}</td>
