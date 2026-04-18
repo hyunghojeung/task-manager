@@ -339,9 +339,9 @@ function UsersTab() {
 
 // ===== 카테고리관리 =====
 function CategoryTab() {
-  const [items, setItems] = useState<Array<{id:string;name:string}>>([]);
+  const [items, setItems] = useState<Array<{id:string;name:string;is_default?:boolean}>>([]);
   const [name, setName] = useState("");
-  const load = useCallback(async () => { const r = await fetch("/api/categories"); if(r.ok) setItems(await r.json()); }, []);
+  const load = useCallback(async () => { const r = await fetch(`/api/categories?_=${Date.now()}`); if(r.ok) setItems(await r.json()); }, []);
   useEffect(() => { load(); }, [load]);
   async function create() { if(!name) return; await fetch("/api/categories",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({name})}); setName(""); load(); }
   async function remove(id:string) {
@@ -350,14 +350,31 @@ function CategoryTab() {
     if (res.ok) load();
     else { const d = await res.json().catch(() => ({})); alert("삭제 실패: " + (d.error || res.status)); }
   }
+  async function setDefault(id: string) {
+    // 낙관적 업데이트
+    setItems(prev => prev.map(c => ({ ...c, is_default: c.id === id })));
+    await fetch("/api/categories/default", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }) });
+    load();
+  }
 
   return (
     <div className="bg-white rounded-lg shadow p-6">
       <h3 className="text-base font-bold text-gray-800 mb-4 pb-2 border-b-2 border-gray-200">카테고리 관리</h3>
+      <p className="text-xs text-gray-500 mb-3">라디오 버튼을 선택하여 기본 카테고리를 지정할 수 있습니다.</p>
       <table className="w-full border-collapse text-xs border border-gray-300 max-w-md">
-        <thead><tr className="bg-[#3b4b5b] text-white"><th className="border border-[#2d3a47] px-2 py-2.5 w-10">순번</th><th className="border border-[#2d3a47] px-2 py-2.5">카테고리명</th><th className="border border-[#2d3a47] px-2 py-2.5 w-20">관리</th></tr></thead>
+        <thead><tr className="bg-[#3b4b5b] text-white"><th className="border border-[#2d3a47] px-2 py-2.5 w-14">기본값</th><th className="border border-[#2d3a47] px-2 py-2.5 w-10">순번</th><th className="border border-[#2d3a47] px-2 py-2.5">카테고리명</th><th className="border border-[#2d3a47] px-2 py-2.5 w-20">관리</th></tr></thead>
         <tbody>{items.map((c,i) => (
-          <tr key={c.id} className={i%2===1?"bg-gray-50":""}><td className="border border-gray-200 px-2 py-2 text-center">{i+1}</td><td className="border border-gray-200 px-2 py-2 text-center">{c.name}</td><td className="border border-gray-200 px-2 py-2 text-center"><button onClick={()=>remove(c.id)} className="text-red-600 border border-red-600 px-2 py-0.5 rounded text-xs">삭제</button></td></tr>
+          <tr key={c.id} className={i%2===1?"bg-gray-50":""}>
+            <td className="border border-gray-200 px-2 py-2 text-center">
+              <input type="radio" name="defaultCategory" checked={!!c.is_default} onChange={() => setDefault(c.id)} style={{width:"16px",height:"16px",accentColor:"#2563eb",cursor:"pointer"}} />
+            </td>
+            <td className="border border-gray-200 px-2 py-2 text-center">{i+1}</td>
+            <td className="border border-gray-200 px-2 py-2 text-center">
+              {c.name}
+              {c.is_default && <span className="ml-2 text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded">DEFAULT</span>}
+            </td>
+            <td className="border border-gray-200 px-2 py-2 text-center"><button onClick={()=>remove(c.id)} className="text-red-600 border border-red-600 px-2 py-0.5 rounded text-xs">삭제</button></td>
+          </tr>
         ))}</tbody>
       </table>
       <div className="flex gap-2 mt-4"><input type="text" placeholder="카테고리명" value={name} onChange={e=>setName(e.target.value)} className="px-3 py-1.5 border border-gray-300 rounded text-sm" /><button onClick={create} className="px-4 py-1.5 bg-blue-600 text-white rounded text-sm">+ 추가</button></div>
