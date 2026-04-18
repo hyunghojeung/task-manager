@@ -90,7 +90,7 @@ export default function EstimatesListPage() {
     const symbolRegex = /([●○◉★☆▶▷■□◆◇▲△▼▽※◎♠♣♥♦])/g;
     const parts = node.split(symbolRegex);
     if (parts.length === 1) return node;
-    return parts.map((p, i) => symbolRegex.test(p) ? <span key={i} style={{fontSize:"1.3em",verticalAlign:"middle",display:"inline-block"}}>{p}</span> : p);
+    return parts.map((p, i) => symbolRegex.test(p) ? <span key={i} style={{fontSize:"2em",verticalAlign:"middle",display:"inline-block",lineHeight:"1"}}>{p}</span> : p);
   }
 
   function renderTitle(text: string | null | undefined): React.ReactNode {
