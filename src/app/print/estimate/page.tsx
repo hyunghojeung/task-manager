@@ -248,7 +248,6 @@ function EstimateContent() {
         <div className="flex gap-2">
           <button onClick={() => window.print()} className="px-6 py-2 bg-blue-600 text-white rounded text-sm">인쇄</button>
           <a href={`/api/pdf?id=${orderId}&type=estimate&bankIdx=${bankIdx}`} className="px-6 py-2 bg-emerald-600 text-white rounded text-sm text-center">PDF 다운로드</a>
-          <button onClick={async () => { if (!confirm("이 항목을 작업리스트로 이동하시겠습니까?")) return; const r = await fetch(`/api/orders/${orderId}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ is_estimate: false }) }); if (r.ok) { alert("작업리스트로 이동되었습니다."); window.close(); } else alert("이동 실패"); }} className="px-6 py-2 bg-amber-500 text-white rounded text-sm">작업리스트로 이동</button>
           <button onClick={() => window.close()} className="px-6 py-2 bg-white text-gray-600 border border-gray-300 rounded text-sm">닫기</button>
         </div>
       </div>
