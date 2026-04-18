@@ -34,7 +34,10 @@ export async function GET(request: NextRequest) {
   }
 
   if (category && category !== "전체") {
-    query = query.eq("categories.name", category);
+    // 카테고리명으로 ID 조회 후 필터
+    const { data: catData } = await supabase.from("categories").select("id").eq("company_id", session.company.id).eq("name", category).maybeSingle();
+    if (catData) query = query.eq("category_id", catData.id);
+    else query = query.eq("category_id", "00000000-0000-0000-0000-000000000000"); // 없는 카테고리면 결과 없음
   }
   if (startDate) query = query.gte("order_date", startDate);
   if (endDate) query = query.lte("order_date", endDate);
