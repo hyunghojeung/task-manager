@@ -549,8 +549,9 @@ function TemplateTab() {
   }
   async function saveTemplate() {
     if (!editTmpl) return;
+    if (!editTmpl.name.trim()) { alert("양식 이름을 입력해주세요."); return; }
     const saveCols = cols.map(({_id, ...rest}) => rest);
-    await fetch(`/api/templates/${editTmpl.id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ columns: saveCols, formulas }) });
+    await fetch(`/api/templates/${editTmpl.id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: editTmpl.name, columns: saveCols, formulas }) });
     setEditTmpl(null); load(); alert("양식이 저장되었습니다.");
   }
   function addCol() { setCols(p => [...p, {name:"",type:"텍스트",_id:`col_${Date.now()}_${Math.random()}`}]); }
@@ -604,7 +605,10 @@ function TemplateTab() {
       {/* 편집 영역 */}
       {editTmpl && (
         <div className="bg-gray-50 border border-gray-200 rounded-md p-5 mt-4">
-          <h4 className="text-sm font-bold text-gray-800 mb-3">양식 편집: <span className="text-blue-600">{editTmpl.name}</span></h4>
+          <div className="flex items-center gap-2 mb-3">
+            <h4 className="text-sm font-bold text-gray-800 shrink-0">양식 편집:</h4>
+            <input type="text" value={editTmpl.name} onChange={e => setEditTmpl(prev => prev ? {...prev, name: e.target.value} : prev)} className="flex-1 max-w-xs px-2 py-1 border border-gray-300 rounded text-sm text-blue-600 font-bold" placeholder="양식 이름" />
+          </div>
 
           {/* 1. 컬럼 설정 */}
           <div className="mb-4">
@@ -684,6 +688,16 @@ function TemplateTab() {
           <div className="mb-4 p-3 bg-white border border-gray-200 rounded">
             <p className="text-xs font-bold text-gray-700 mb-1">사용 가능한 컬럼명 관리</p>
             <p className="text-[10px] text-gray-500 mb-2">양식 편집 시 선택 가능한 컬럼명 리스트입니다. 원하는 항목을 추가/삭제/수정하세요.</p>
+            <div className="mb-3 p-3 border-2 border-red-500 bg-red-50 rounded">
+              <p className="text-sm font-bold text-red-700 mb-1">⚠️ 경고</p>
+              <p className="text-sm text-red-700 leading-relaxed">
+                컬럼 명은 <span className="font-bold">사용 초기에 수정하는 것은 문제가 없으나</span> Bcount 사용 중에 변경하는 것은 <span className="font-bold underline">심각한 데이터 오류</span>를 발생시킬 수 있습니다.
+              </p>
+              <p className="text-sm text-red-700 mt-2 leading-relaxed">
+                사용 초기 칼럼 세팅할 때 이외에는 <span className="font-bold">컬럼명을 수정하지 마시기 바랍니다.</span>
+                Bcount 사용 중에 컬럼명을 수정하면 기존 데이터와 충돌로 <span className="font-bold underline">돌이킬 수 없는 문제</span>가 발생할 수 있습니다.
+              </p>
+            </div>
             <div className="flex flex-wrap gap-2 mb-2">
               {(colOptions.length > 0 ? colOptions : defaultColNames.map((n, i) => ({ id: `default-${i}`, name: n, sort_order: i }))).map(o => (
                 <div key={o.id} className="flex items-center gap-1 px-2 py-0.5 bg-gray-50 border border-gray-300 rounded text-xs">
