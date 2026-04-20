@@ -23,6 +23,7 @@ export async function GET(request: NextRequest) {
     .from("orders")
     .select("id, order_no, client_name, orderer, contact, title, total_amount, discount, product_type, payment, status, is_estimate, is_highlighted, created_by, order_date, created_at", { count: "exact" })
     .eq("company_id", session.company.id)
+    .order("is_highlighted", { ascending: false, nullsFirst: false })
     .order("order_date", { ascending: false })
     .order("created_at", { ascending: false });
 
