@@ -27,11 +27,9 @@ export async function GET(request: NextRequest) {
     .order("order_date", { ascending: false })
     .order("created_at", { ascending: false });
 
-  // 견적서 이동 여부 필터
+  // 견적서 이동 여부 필터 (DB 필터, .or() 사용하지 않음)
   if (mode === "estimates") {
     query = query.eq("is_estimate", true);
-  } else {
-    query = query.or("is_estimate.is.null,is_estimate.eq.false");
   }
 
   if (category && category !== "전체") {
@@ -58,10 +56,12 @@ export async function GET(request: NextRequest) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  // 빈 제목 주문 필터링 (제목 검색 아닐 때만)
+  // 빈 제목 + 견적서 필터링
   const rows = (data || []).filter((o: Record<string, unknown>) => {
     const title = (o.title || "").toString().trim();
     if (title === "") return false;
+    // 견적서 모드가 아닌 경우 is_estimate=true 항목 제외
+    if (mode !== "estimates" && o.is_estimate === true) return false;
     return true;
   });
 
