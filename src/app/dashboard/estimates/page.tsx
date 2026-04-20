@@ -53,7 +53,16 @@ export default function EstimatesListPage() {
       }
     }
     const res = await fetch(`/api/orders?${params}`);
-    if (res.ok) { const data = await res.json(); setOrders(data.data || []); setTotal(data.total || 0); }
+    if (res.ok) {
+      const data = await res.json();
+      const sorted = (data.data || []).sort((a: OrderData, b: OrderData) => {
+        const ha = a.is_highlighted ? 1 : 0;
+        const hb = b.is_highlighted ? 1 : 0;
+        return hb - ha;
+      });
+      setOrders(sorted);
+      setTotal(data.total || 0);
+    }
     setLoading(false);
   }, [page, keyword, searchField, year, month]);
 
