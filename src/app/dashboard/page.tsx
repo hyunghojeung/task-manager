@@ -67,9 +67,19 @@ export default function DashboardPage() {
   }
 
   async function toggleHighlight(id: string, currentValue: boolean) {
-    // 낙관적 업데이트
-    setOrders(prev => prev.map(o => o.id === id ? { ...o, is_highlighted: !currentValue } : o));
-    await fetch(`/api/orders/${id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ is_highlighted: !currentValue }) });
+    const newValue = !currentValue;
+    // 낙관적 업데이트 + 즉시 재정렬 (★ 항목을 최상단으로)
+    setOrders(prev => {
+      const updated = prev.map(o => o.id === id ? { ...o, is_highlighted: newValue } : o);
+      return [...updated].sort((a, b) => {
+        const ha = a.is_highlighted ? 1 : 0;
+        const hb = b.is_highlighted ? 1 : 0;
+        if (hb !== ha) return hb - ha;
+        return 0; // 원래 순서 유지
+      });
+    });
+    await fetch(`/api/orders/${id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ is_highlighted: newValue }) });
+    fetchOrders();
   }
 
   // 검색어 하이라이트: 매칭되는 부분을 빨간색으로 표시
