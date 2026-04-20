@@ -39,7 +39,7 @@ export default function DashboardPage() {
 
   const fetchOrders = useCallback(async () => {
     setLoading(true);
-    const params = new URLSearchParams({ page: String(page), limit: "20" });
+    const params = new URLSearchParams({ page: String(page), limit: "20", _: String(Date.now()) });
     if (category !== "전체") params.set("category", category);
     if (keyword) { params.set("keyword", keyword); params.set("searchField", searchField); }
     if (year !== "전체") {
