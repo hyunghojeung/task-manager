@@ -54,7 +54,17 @@ export default function DashboardPage() {
       }
     }
     const res = await fetch(`/api/orders?${params}`);
-    if (res.ok) { const data = await res.json(); setOrders(data.data || []); setTotal(data.total || 0); }
+    if (res.ok) {
+      const data = await res.json();
+      // 별표 항목 최상단 정렬 (서버 정렬이 누락될 경우 대비)
+      const sorted = (data.data || []).sort((a: OrderData, b: OrderData) => {
+        const ha = a.is_highlighted ? 1 : 0;
+        const hb = b.is_highlighted ? 1 : 0;
+        return hb - ha;
+      });
+      setOrders(sorted);
+      setTotal(data.total || 0);
+    }
     setLoading(false);
   }, [page, keyword, searchField, year, month, category]);
 
