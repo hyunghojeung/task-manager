@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback } from "react";
 
 interface OrderData {
   id: string; order_no: string; client_name: string; orderer: string; contact: string;
-  title: string; total_amount: number; discount: number; product_type: string; payment: string; status: string; author: string;
+  title: string; total_amount: number; discount: number; product_type: string; payment: string; status: string; is_highlighted?: boolean; author: string;
 }
 
 export default function DashboardPage() {
@@ -64,6 +64,12 @@ export default function DashboardPage() {
     const newStatus = currentStatus === "progress" ? "complete" : "progress";
     await fetch(`/api/orders/${id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status: newStatus }) });
     fetchOrders();
+  }
+
+  async function toggleHighlight(id: string, currentValue: boolean) {
+    // 낙관적 업데이트
+    setOrders(prev => prev.map(o => o.id === id ? { ...o, is_highlighted: !currentValue } : o));
+    await fetch(`/api/orders/${id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ is_highlighted: !currentValue }) });
   }
 
   // 검색어 하이라이트: 매칭되는 부분을 빨간색으로 표시
@@ -164,11 +170,14 @@ export default function DashboardPage() {
               if (filtered.length === 0) return <tr><td colSpan={11} className="text-center py-8 text-gray-400">{statusFilter === "전체" ? "등록된 작업이 없습니다. 작업등록 버튼을 눌러 새 작업을 등록하세요." : "해당 상태의 작업이 없습니다."}</td></tr>;
               return filtered.map((o, i) => (
               <tr key={o.id} className={`${i % 2 === 1 ? "bg-gray-50" : ""} hover:bg-blue-50`} style={{animation: `fadeIn 0.3s ease ${i * 0.02}s both`}}>
-                <td className="border border-gray-200 px-1.5 py-[7px] text-center whitespace-nowrap"><a href={`/dashboard/write?id=${o.id}`} className="hover:text-blue-600 hover:underline">{o.order_no}</a></td>
+                <td className="border border-gray-200 px-1.5 py-[7px] text-center whitespace-nowrap">
+                  <button onClick={() => toggleHighlight(o.id, !!o.is_highlighted)} className={`mr-1 text-sm leading-none ${o.is_highlighted ? "text-red-500" : "text-gray-300 hover:text-red-400"}`} title={o.is_highlighted ? "강조 해제" : "제목 강조 (빨간색 볼드)"}>★</button>
+                  <a href={`/dashboard/write?id=${o.id}`} className="hover:text-blue-600 hover:underline">{o.order_no}</a>
+                </td>
                 <td className="border border-gray-200 px-1.5 py-[7px] text-left"><a href={`/dashboard/write?id=${o.id}`} className="hover:text-blue-600 hover:underline">{highlight(o.client_name, "거래처")}</a></td>
                 <td className="border border-gray-200 px-1.5 py-[7px] text-left"><a href={`/dashboard/write?id=${o.id}`} className="hover:text-blue-600 hover:underline">{highlight(o.orderer, "주문자")}</a></td>
                 <td className="border border-gray-200 px-1.5 py-[7px] text-left"><a href={`/dashboard/write?id=${o.id}`} className="hover:text-blue-600 hover:underline">{highlight(o.contact, "연락처")}</a></td>
-                <td className="border border-gray-200 px-1.5 py-[7px] text-left max-w-[400px]"><a href={`/dashboard/write?id=${o.id}`} title={o.title} className="hover:text-blue-600 hover:underline block truncate">{renderTitle(o.title)}</a></td>
+                <td className="border border-gray-200 px-1.5 py-[7px] text-left max-w-[400px]"><a href={`/dashboard/write?id=${o.id}`} title={o.title} className={`hover:underline block truncate ${o.is_highlighted ? "text-red-600 font-bold" : "hover:text-blue-600"}`}>{renderTitle(o.title)}</a></td>
                 <td className="border border-gray-200 px-1.5 py-[7px] text-right">{((o.total_amount||0) - (o.discount||0)).toLocaleString()}</td>
                 <td className="border border-gray-200 px-1.5 py-[7px] text-center">{o.product_type}</td>
                 <td className="border border-gray-200 px-1.5 py-[7px] text-center">{o.payment}</td>
