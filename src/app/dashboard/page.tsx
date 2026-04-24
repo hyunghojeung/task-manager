@@ -195,7 +195,7 @@ export default function DashboardPage() {
                   <a href={`/dashboard/write?id=${o.id}`} className="hover:text-blue-600 hover:underline">{o.order_no}</a>
                 </td>
                 <td className="border border-gray-200 px-1.5 py-[7px] text-left"><button onClick={() => { setSearchField("거래처"); setKeyword(o.client_name || ""); setPage(1); }} className="hover:text-blue-600 hover:underline text-left" title="이 거래처 글만 보기">{highlight(o.client_name, "거래처")}</button></td>
-                <td className="border border-gray-200 px-1.5 py-[7px] text-left"><a href={`/dashboard/write?id=${o.id}`} className="hover:text-blue-600 hover:underline">{highlight(o.orderer, "주문자")}</a></td>
+                <td className="border border-gray-200 px-1.5 py-[7px] text-left"><button onClick={() => { setSearchField("주문자"); setKeyword(o.orderer || ""); setPage(1); }} className="hover:text-blue-600 hover:underline text-left" title="이 주문자 글만 보기">{highlight(o.orderer, "주문자")}</button></td>
                 <td className="border border-gray-200 px-1.5 py-[7px] text-left"><a href={`/dashboard/write?id=${o.id}`} className="hover:text-blue-600 hover:underline">{highlight(o.contact, "연락처")}</a></td>
                 <td className="border border-gray-200 px-1.5 py-[7px] text-left max-w-[400px]"><a href={`/dashboard/write?id=${o.id}`} title={o.title} className={`hover:underline block truncate ${o.is_highlighted ? "text-red-600 font-bold" : "hover:text-blue-600"}`}>{renderTitle(o.title)}</a></td>
                 <td className="border border-gray-200 px-1.5 py-[7px] text-right">{((o.total_amount||0) - (o.discount||0)).toLocaleString()}</td>
