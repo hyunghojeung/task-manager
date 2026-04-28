@@ -135,7 +135,7 @@ export default function DashboardPage() {
     return highlighted;
   }
 
-  const totalPages = Math.ceil(total / 40);
+  const totalPages = Math.ceil(total / 20);
 
   return (
     <div>
