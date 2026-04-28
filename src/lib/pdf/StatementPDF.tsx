@@ -94,7 +94,7 @@ export default function StatementPDF({ order, company, type = "statement", colOr
               <Text style={[s.infoTh, { width: 35 }]}>성명</Text>
               <View style={[s.infoTd, { flexDirection: "row", alignItems: "center" }]}>
                 <Text>{company.representative || "-"}</Text>
-                {company.seal_image && <Image src={company.seal_image} style={{ width: 30, height: 30, marginLeft: 4, objectFit: "contain" }} />}
+                {company.seal_image && <Image src={company.seal_image} style={{ width: 42, height: 42, marginLeft: 4, objectFit: "contain" }} />}
               </View>
             </View>
             <View style={s.infoRow}>
