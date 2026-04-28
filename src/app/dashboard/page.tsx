@@ -212,15 +212,27 @@ export default function DashboardPage() {
           </tbody>
         </table>
       </div>
-      {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-1 mt-4">
-          <span className="text-xs text-gray-400 mr-2">20개씩</span>
-          {Array.from({length:Math.min(totalPages,10)},(_,i)=>i+1).map(p=>(
-            <button key={p} onClick={()=>setPage(p)} className={`px-2.5 py-1 rounded border text-xs ${p===page?"bg-blue-600 text-white border-blue-600":"border-gray-300 text-gray-500"}`}>{p}</button>
-          ))}
-          <span className="ml-2 text-xs text-gray-400">/ {totalPages} 페이지</span>
-        </div>
-      )}
+      {totalPages > 1 && (() => {
+        const groupSize = 10;
+        const currentGroup = Math.ceil(page / groupSize);
+        const groupStart = (currentGroup - 1) * groupSize + 1;
+        const groupEnd = Math.min(groupStart + groupSize - 1, totalPages);
+        const hasPrevGroup = groupStart > 1;
+        const hasNextGroup = groupEnd < totalPages;
+        return (
+          <div className="flex items-center justify-center gap-1 mt-4">
+            <span className="text-xs text-gray-400 mr-2">20개씩</span>
+            <button onClick={() => setPage(1)} disabled={page === 1} className="px-2 py-1 rounded border border-gray-300 text-xs text-gray-500 disabled:opacity-30 disabled:cursor-not-allowed" title="첫 페이지">«</button>
+            <button onClick={() => setPage(Math.max(1, groupStart - 1))} disabled={!hasPrevGroup} className="px-2 py-1 rounded border border-gray-300 text-xs text-gray-500 disabled:opacity-30 disabled:cursor-not-allowed" title="이전 10페이지">‹</button>
+            {Array.from({length: groupEnd - groupStart + 1}, (_, i) => groupStart + i).map(p => (
+              <button key={p} onClick={() => setPage(p)} className={`px-2.5 py-1 rounded border text-xs ${p === page ? "bg-blue-600 text-white border-blue-600" : "border-gray-300 text-gray-500"}`}>{p}</button>
+            ))}
+            <button onClick={() => setPage(Math.min(totalPages, groupEnd + 1))} disabled={!hasNextGroup} className="px-2 py-1 rounded border border-gray-300 text-xs text-gray-500 disabled:opacity-30 disabled:cursor-not-allowed" title="다음 10페이지">›</button>
+            <button onClick={() => setPage(totalPages)} disabled={page === totalPages} className="px-2 py-1 rounded border border-gray-300 text-xs text-gray-500 disabled:opacity-30 disabled:cursor-not-allowed" title="마지막 페이지">»</button>
+            <span className="ml-2 text-xs text-gray-400">/ {totalPages} 페이지</span>
+          </div>
+        );
+      })()}
     </div>
   );
 }
