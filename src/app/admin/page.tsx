@@ -225,9 +225,23 @@ function ImportTab() {
 function NoticeTab() {
   const [notices, setNotices] = useState<Array<{id:string;title:string;content?:string;created_at:string;users?:{name:string}}>>([]);
   const [title, setTitle] = useState(""); const [content, setContent] = useState("");
+  const [editId, setEditId] = useState<string | null>(null);
   const load = useCallback(async () => { const r = await fetch("/api/notices"); if(r.ok) setNotices(await r.json()); }, []);
   useEffect(() => { load(); }, [load]);
-  async function create() { if(!title) return; await fetch("/api/notices",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({title,content})}); setTitle(""); setContent(""); load(); }
+  async function save() {
+    if(!title) return;
+    if (editId) {
+      await fetch(`/api/notices/${editId}`,{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify({title,content})});
+    } else {
+      await fetch("/api/notices",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({title,content})});
+    }
+    setTitle(""); setContent(""); setEditId(null); load();
+  }
+  function startEdit(n: {id:string;title:string;content?:string}) {
+    setEditId(n.id); setTitle(n.title); setContent(n.content || "");
+    if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+  function cancelEdit() { setEditId(null); setTitle(""); setContent(""); }
   async function remove(id:string) { if(!confirm("정말 삭제할까요?")) return; await fetch(`/api/notices/${id}`,{method:"DELETE"}); load(); }
 
   return (
@@ -235,19 +249,28 @@ function NoticeTab() {
       <h3 className="text-base font-bold text-gray-800 mb-2 pb-2 border-b-2 border-gray-200">작업전달</h3>
       <p className="text-xs text-gray-500 mb-1">작성된 글은 리스트 화면 상단에 빨간색으로 깜빡이며 표시됩니다.</p>
       <p className="text-xs text-gray-500 mb-4">작업을 완료한 누군가가 작업완료 버튼을 클릭해야 작업표시가 사라집니다.</p>
-      <div className="bg-gray-50 border border-gray-200 rounded-md p-4 mb-5">
+      <div className={`bg-gray-50 border ${editId ? "border-blue-400" : "border-gray-200"} rounded-md p-4 mb-5`}>
+        {editId && <p className="text-xs text-blue-600 font-semibold mb-2">수정 중...</p>}
         <input type="text" placeholder="작업전달 제목" value={title} onChange={e=>setTitle(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded text-sm mb-2" />
         <textarea placeholder="작업전달 내용" value={content} onChange={e=>setContent(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded text-sm min-h-[80px] resize-y mb-2" />
-        <button onClick={create} className="px-5 py-2 bg-blue-600 text-white rounded text-sm">작업전달 등록</button>
+        <div className="flex gap-2">
+          <button onClick={save} className="px-5 py-2 bg-blue-600 text-white rounded text-sm">{editId ? "수정 저장" : "작업전달 등록"}</button>
+          {editId && <button onClick={cancelEdit} className="px-5 py-2 bg-gray-500 text-white rounded text-sm">취소</button>}
+        </div>
       </div>
       <table className="w-full border-collapse text-xs border border-gray-300">
-        <thead><tr className="bg-[#3b4b5b] text-white"><th className="border border-[#2d3a47] px-2 py-2.5 w-10">순번</th><th className="border border-[#2d3a47] px-2 py-2.5">제목</th><th className="border border-[#2d3a47] px-2 py-2.5 w-24">작성일</th><th className="border border-[#2d3a47] px-2 py-2.5 w-20">관리</th></tr></thead>
+        <thead><tr className="bg-[#3b4b5b] text-white"><th className="border border-[#2d3a47] px-2 py-2.5 w-10">순번</th><th className="border border-[#2d3a47] px-2 py-2.5">제목</th><th className="border border-[#2d3a47] px-2 py-2.5 w-24">작성일</th><th className="border border-[#2d3a47] px-2 py-2.5 w-32">관리</th></tr></thead>
         <tbody>{notices.map((n,i) => (
           <tr key={n.id} className={i%2===1?"bg-gray-50":""}>
             <td className="border border-gray-200 px-2 py-2 text-center">{i+1}</td>
             <td className="border border-gray-200 px-2 py-2 text-left">{n.title}</td>
             <td className="border border-gray-200 px-2 py-2 text-center">{n.created_at?.slice(0,10)}</td>
-            <td className="border border-gray-200 px-2 py-2 text-center"><button onClick={()=>remove(n.id)} className="text-red-600 border border-red-600 px-2 py-0.5 rounded text-xs">삭제</button></td>
+            <td className="border border-gray-200 px-2 py-2 text-center">
+              <div className="flex gap-1 justify-center">
+                <button onClick={()=>startEdit(n)} className="text-blue-600 border border-blue-600 px-2 py-0.5 rounded text-xs">수정</button>
+                <button onClick={()=>remove(n.id)} className="text-red-600 border border-red-600 px-2 py-0.5 rounded text-xs">삭제</button>
+              </div>
+            </td>
           </tr>
         ))}</tbody>
       </table>
