@@ -453,7 +453,10 @@ export default function WritePage() {
 
   return (
     <div className="max-w-5xl mx-auto">
-      <h2 className="text-base font-bold text-gray-800 mb-3">주문서입력</h2>
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="text-base font-bold text-gray-800">주문서입력</h2>
+        <button onClick={handleSave} disabled={saving} className="px-6 py-2 bg-blue-600 text-white rounded text-sm font-medium disabled:opacity-50 print:hidden">{saving ? "저장중..." : "저장"}</button>
+      </div>
       <div className="bg-white rounded mb-3 overflow-hidden">
         <table className="w-full border-collapse text-sm"><tbody>
           <tr>
