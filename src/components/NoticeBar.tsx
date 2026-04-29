@@ -64,7 +64,7 @@ export default function NoticeBar({ notices, onComplete }: NoticeBarProps) {
             <div className="text-sm text-gray-700 leading-7 whitespace-pre-wrap mb-6">
               {viewNotice.content}
             </div>
-            <div className="flex gap-2">
+            <div className="flex justify-between items-center">
               <button
                 onClick={() => setViewId(null)}
                 className="px-6 py-2 bg-gray-700 text-white rounded text-sm"
