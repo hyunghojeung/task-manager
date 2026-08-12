@@ -200,7 +200,7 @@ export default function DashboardPage() {
                 <td className="border border-gray-200 px-1.5 py-[7px] text-left max-w-[400px]"><a href={`/dashboard/write?id=${o.id}`} title={o.title} className={`hover:underline block truncate ${o.is_highlighted ? "text-red-600 font-bold" : "hover:text-blue-600"}`}>{renderTitle(o.title)}</a></td>
                 <td className="border border-gray-200 px-1.5 py-[7px] text-right">{((o.total_amount||0) - (o.discount||0)).toLocaleString()}</td>
                 <td className="border border-gray-200 px-1.5 py-[7px] text-center">{o.product_type}</td>
-                <td className="border border-gray-200 px-1.5 py-[7px] text-center whitespace-nowrap text-xs">{o.tax_invoice}</td>
+                <td className="border border-gray-200 px-1.5 py-[7px] text-center whitespace-nowrap text-xs"><span className={o.tax_invoice === "세금계산서 작성요망" ? "blink" : ""}>{o.tax_invoice}</span></td>
                 <td className="border border-gray-200 px-1.5 py-[7px] text-center">{o.payment}</td>
                 <td className="border border-gray-200 px-1.5 py-[7px] text-center">
                   <button onClick={()=>toggleStatus(o.id,o.status)} className={`text-xs font-semibold cursor-pointer ${o.status==="progress"?"text-blue-600":"text-red-600"}`}>{o.status==="progress"?"진행중":"완료"}</button>

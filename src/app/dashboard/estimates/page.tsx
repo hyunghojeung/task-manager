@@ -196,7 +196,7 @@ export default function EstimatesListPage() {
                 <td className="border border-gray-200 px-1.5 py-[7px] text-right">{((o.total_amount||0) - (o.discount||0)).toLocaleString()}</td>
                 <td className="border border-gray-200 px-1.5 py-[7px] text-center">{o.product_type}</td>
                 <td className="border border-gray-200 px-1.5 py-[7px] text-center">{o.payment}</td>
-                <td className="border border-gray-200 px-1.5 py-[7px] text-center whitespace-nowrap text-xs">{o.tax_invoice}</td>
+                <td className="border border-gray-200 px-1.5 py-[7px] text-center whitespace-nowrap text-xs"><span className={o.tax_invoice === "세금계산서 작성요망" ? "blink" : ""}>{o.tax_invoice}</span></td>
                 <td className="border border-gray-200 px-1.5 py-[7px] text-center">
                   <button onClick={() => moveToList(o.id)} className="px-2 py-0.5 border border-blue-500 text-blue-600 rounded text-xs hover:bg-blue-50">← 복귀</button>
                 </td>
