@@ -504,7 +504,35 @@ export default function WritePage() {
           </tr>
           <tr>
             <td className="text-[#3b4b5b] font-bold text-xs py-2 px-2 border border-gray-200">세금계산서</td>
-            <td className="py-1.5 px-2 border border-gray-200"><input type="text" placeholder="발행일 직접 입력" value={formData.tax_invoice} onChange={e => handleChange("tax_invoice", e.target.value)} className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm" /></td>
+            <td className="py-1.5 px-2 border border-gray-200">
+              {(() => {
+                const today = new Date();
+                const dateStr = `${today.getMonth() + 1}/${today.getDate()}`;
+                const options = [
+                  { value: `${dateStr} 거래명세서 발송완료`, label: "거래명세서 발송완료" },
+                  { value: "세금계산서 작성요망", label: "세금계산서 작성요망" },
+                  { value: `${dateStr} 세금계산서 발송완료`, label: "세금계산서 발송완료" },
+                ];
+                const cur = formData.tax_invoice || "";
+                const isMatched = options.some(o => cur === o.value) || cur.includes("거래명세서 발송완료") || cur.includes("세금계산서 발송완료") || cur === "세금계산서 작성요망";
+                return (
+                  <div className="flex flex-wrap gap-3 items-center">
+                    {options.map(o => {
+                      // 이미 저장된 값이 이 옵션 타입인지 확인 (날짜만 다를 수 있음)
+                      const checked = cur === o.value || (o.label === "거래명세서 발송완료" && cur.includes("거래명세서 발송완료")) || (o.label === "세금계산서 발송완료" && cur.includes("세금계산서 발송완료")) || (o.label === "세금계산서 작성요망" && cur === "세금계산서 작성요망");
+                      return (
+                        <label key={o.label} className="inline-flex items-center gap-1 text-xs cursor-pointer">
+                          <input type="radio" name="tax_invoice" checked={checked} onChange={() => handleChange("tax_invoice", o.value)} style={{width:"14px",height:"14px",accentColor:"#2563eb"}} />
+                          <span>{o.label}</span>
+                        </label>
+                      );
+                    })}
+                    {cur && <button type="button" onClick={() => handleChange("tax_invoice", "")} className="text-xs text-gray-400 hover:text-red-500 ml-auto">해제</button>}
+                    {cur && !isMatched && <span className="text-xs text-gray-500 ml-2">({cur})</span>}
+                  </div>
+                );
+              })()}
+            </td>
             <td className="text-[#3b4b5b] font-bold text-xs py-2 px-2 border border-gray-200 text-center">MEMO</td>
             <td className="py-1.5 px-2 border border-gray-200"><input type="text" placeholder="MEMO" value={formData.payment} onChange={e => handleChange("payment", e.target.value)} className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm" /></td>
           </tr>
