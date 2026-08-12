@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback } from "react";
 
 interface OrderData {
   id: string; order_no: string; client_name: string; orderer: string; contact: string;
-  title: string; total_amount: number; discount: number; product_type: string; payment: string; status: string; is_highlighted?: boolean; author: string;
+  title: string; total_amount: number; discount: number; product_type: string; payment: string; tax_invoice?: string; status: string; is_highlighted?: boolean; author: string;
 }
 
 export default function DashboardPage() {
@@ -173,7 +173,7 @@ export default function DashboardPage() {
       <div className="overflow-x-auto">
         <table className={`w-full border-collapse border border-gray-300 ${fontSize}`}>
           <thead><tr className="bg-[#3b4b5b] text-white">
-            <th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap">순번</th><th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap">거래처</th><th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap">주문자</th><th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap">연락처</th><th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap">제목</th><th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap">금액</th><th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap">제품형태</th><th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap">MEMO</th>
+            <th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap">순번</th><th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap">거래처</th><th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap">주문자</th><th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap">연락처</th><th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap">제목</th><th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap">금액</th><th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap">제품형태</th><th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap">세금계산서</th><th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap">MEMO</th>
             <th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap">
               <div className="flex gap-1 justify-center">
                 <button onClick={() => setStatusFilter("전체")} className={`px-1.5 py-0.5 rounded text-[10px] ${statusFilter === "전체" ? "bg-white text-[#3b4b5b] font-bold" : "bg-transparent text-white border border-white"}`}>전체</button>
@@ -186,8 +186,8 @@ export default function DashboardPage() {
           <tbody>
             {(() => {
               const filtered = statusFilter === "전체" ? orders : orders.filter(o => o.status === statusFilter);
-              if (loading) return <tr><td colSpan={11} className="text-center py-8 text-gray-300 text-sm">불러오는 중...</td></tr>;
-              if (filtered.length === 0) return <tr><td colSpan={11} className="text-center py-8 text-gray-400">{statusFilter === "전체" ? "등록된 작업이 없습니다. 작업등록 버튼을 눌러 새 작업을 등록하세요." : "해당 상태의 작업이 없습니다."}</td></tr>;
+              if (loading) return <tr><td colSpan={12} className="text-center py-8 text-gray-300 text-sm">불러오는 중...</td></tr>;
+              if (filtered.length === 0) return <tr><td colSpan={12} className="text-center py-8 text-gray-400">{statusFilter === "전체" ? "등록된 작업이 없습니다. 작업등록 버튼을 눌러 새 작업을 등록하세요." : "해당 상태의 작업이 없습니다."}</td></tr>;
               return filtered.map((o, i) => (
               <tr key={o.id} className={`${i % 2 === 1 ? "bg-gray-50" : ""} hover:bg-blue-50`} style={{animation: `fadeIn 0.3s ease ${i * 0.02}s both`}}>
                 <td className="border border-gray-200 px-1.5 py-[7px] text-center whitespace-nowrap">
@@ -200,6 +200,7 @@ export default function DashboardPage() {
                 <td className="border border-gray-200 px-1.5 py-[7px] text-left max-w-[400px]"><a href={`/dashboard/write?id=${o.id}`} title={o.title} className={`hover:underline block truncate ${o.is_highlighted ? "text-red-600 font-bold" : "hover:text-blue-600"}`}>{renderTitle(o.title)}</a></td>
                 <td className="border border-gray-200 px-1.5 py-[7px] text-right">{((o.total_amount||0) - (o.discount||0)).toLocaleString()}</td>
                 <td className="border border-gray-200 px-1.5 py-[7px] text-center">{o.product_type}</td>
+                <td className="border border-gray-200 px-1.5 py-[7px] text-center whitespace-nowrap text-xs">{o.tax_invoice}</td>
                 <td className="border border-gray-200 px-1.5 py-[7px] text-center">{o.payment}</td>
                 <td className="border border-gray-200 px-1.5 py-[7px] text-center">
                   <button onClick={()=>toggleStatus(o.id,o.status)} className={`text-xs font-semibold cursor-pointer ${o.status==="progress"?"text-blue-600":"text-red-600"}`}>{o.status==="progress"?"진행중":"완료"}</button>
