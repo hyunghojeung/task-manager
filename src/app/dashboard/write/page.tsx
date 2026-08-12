@@ -512,6 +512,7 @@ export default function WritePage() {
                 const today = new Date();
                 const dateStr = `${today.getMonth() + 1}/${today.getDate()}`;
                 const options = [
+                  { value: "", label: "없음" },
                   { value: `${dateStr} 거래명세서 발송완료`, label: "거래명세서 발송완료" },
                   { value: "세금계산서 작성요망", label: "세금계산서 작성요망" },
                   { value: `${dateStr} 세금계산서 발송완료`, label: "세금계산서 발송완료" },
@@ -522,7 +523,7 @@ export default function WritePage() {
                   <div className="flex flex-wrap gap-3 items-center">
                     {options.map(o => {
                       // 이미 저장된 값이 이 옵션 타입인지 확인 (날짜만 다를 수 있음)
-                      const checked = cur === o.value || (o.label === "거래명세서 발송완료" && cur.includes("거래명세서 발송완료")) || (o.label === "세금계산서 발송완료" && cur.includes("세금계산서 발송완료")) || (o.label === "세금계산서 작성요망" && cur === "세금계산서 작성요망");
+                      const checked = (o.label === "없음" && !cur) || cur === o.value || (o.label === "거래명세서 발송완료" && cur.includes("거래명세서 발송완료")) || (o.label === "세금계산서 발송완료" && cur.includes("세금계산서 발송완료")) || (o.label === "세금계산서 작성요망" && cur === "세금계산서 작성요망");
                       return (
                         <label key={o.label} className="inline-flex items-center gap-1 text-xs cursor-pointer">
                           <input type="radio" name="tax_invoice" checked={checked} onChange={() => handleChange("tax_invoice", o.value)} style={{width:"14px",height:"14px",accentColor:"#2563eb"}} />
@@ -530,7 +531,6 @@ export default function WritePage() {
                         </label>
                       );
                     })}
-                    {cur && <button type="button" onClick={() => handleChange("tax_invoice", "")} className="text-xs text-gray-400 hover:text-red-500 ml-auto">해제</button>}
                     {cur && !isMatched && <span className="text-xs text-gray-500 ml-2">({cur})</span>}
                   </div>
                 );
