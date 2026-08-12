@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback } from "react";
 
 interface OrderData {
   id: string; order_no: string; client_name: string; orderer: string; contact: string;
-  title: string; total_amount: number; discount: number; product_type: string; payment: string; status: string; is_highlighted?: boolean; author: string;
+  title: string; total_amount: number; discount: number; product_type: string; payment: string; status: string; tax_invoice?: string; is_highlighted?: boolean; author: string;
 }
 
 export default function EstimatesListPage() {
@@ -174,14 +174,15 @@ export default function EstimatesListPage() {
         <table className={`w-full border-collapse border border-gray-300 ${fontSize}`}>
           <thead><tr className="bg-[#3b4b5b] text-white">
             <th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap">순번</th><th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap">거래처</th><th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap">주문자</th><th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap">연락처</th><th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap">제목</th><th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap">금액</th><th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap">제품형태</th><th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap">MEMO</th>
+            <th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap">세금계산서</th>
             <th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap" style={{minWidth:"80px"}}>작업리스트 복귀</th>
             <th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap" style={{minWidth:"60px"}}>거래명세서</th><th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap" style={{minWidth:"60px"}}>견적서</th>
           </tr></thead>
           <tbody>
             {(() => {
               const filtered = statusFilter === "전체" ? orders : orders.filter(o => o.status === statusFilter);
-              if (loading) return <tr><td colSpan={11} className="text-center py-8 text-gray-300 text-sm">불러오는 중...</td></tr>;
-              if (filtered.length === 0) return <tr><td colSpan={11} className="text-center py-8 text-gray-400">견적서로 이동된 작업이 없습니다.</td></tr>;
+              if (loading) return <tr><td colSpan={12} className="text-center py-8 text-gray-300 text-sm">불러오는 중...</td></tr>;
+              if (filtered.length === 0) return <tr><td colSpan={12} className="text-center py-8 text-gray-400">견적서로 이동된 작업이 없습니다.</td></tr>;
               return filtered.map((o, i) => (
               <tr key={o.id} className={`${i % 2 === 1 ? "bg-gray-50" : ""} hover:bg-blue-50`} style={{animation: `fadeIn 0.3s ease ${i * 0.02}s both`}}>
                 <td className="border border-gray-200 px-1.5 py-[7px] text-center whitespace-nowrap">
@@ -195,6 +196,7 @@ export default function EstimatesListPage() {
                 <td className="border border-gray-200 px-1.5 py-[7px] text-right">{((o.total_amount||0) - (o.discount||0)).toLocaleString()}</td>
                 <td className="border border-gray-200 px-1.5 py-[7px] text-center">{o.product_type}</td>
                 <td className="border border-gray-200 px-1.5 py-[7px] text-center">{o.payment}</td>
+                <td className="border border-gray-200 px-1.5 py-[7px] text-center whitespace-nowrap text-xs">{o.tax_invoice}</td>
                 <td className="border border-gray-200 px-1.5 py-[7px] text-center">
                   <button onClick={() => moveToList(o.id)} className="px-2 py-0.5 border border-blue-500 text-blue-600 rounded text-xs hover:bg-blue-50">← 복귀</button>
                 </td>
