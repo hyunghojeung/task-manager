@@ -22,6 +22,27 @@ export interface Company {
   mail_email?: string
   mail_id?: string
   mail_password?: string
+  mail_service_2?: string
+  mail_email_2?: string
+  mail_id_2?: string
+  mail_password_2?: string
+  mail_service_3?: string
+  mail_email_3?: string
+  mail_id_3?: string
+  mail_password_3?: string
+  default_mail?: number
+  bankbook_url_1?: string
+  bankbook_url_2?: string
+  bankbook_url_3?: string
+  bankbook_label_1?: string
+  bankbook_label_2?: string
+  bankbook_label_3?: string
+  biz_reg_url_1?: string
+  biz_reg_url_2?: string
+  biz_reg_url_3?: string
+  biz_reg_label_1?: string
+  biz_reg_label_2?: string
+  biz_reg_label_3?: string
   stamp_image_url?: string
   logo_image_url?: string
   created_at: string

@@ -9,7 +9,7 @@ export async function POST(request: NextRequest) {
   const session = await getApiSession();
   if (!session) return unauthorized();
 
-  const { to, orderId, type, customSubject, customFrom, bankIdx } = await request.json();
+  const { to, orderId, type, customSubject, customFrom, bankIdx, mailIdx, bankbookIdx, bizRegIdx } = await request.json();
   if (!to || !orderId) {
     return NextResponse.json({ error: "수신 이메일과 주문 ID를 입력해주세요." }, { status: 400 });
   }
@@ -26,10 +26,10 @@ export async function POST(request: NextRequest) {
 
   if (!order) return NextResponse.json({ error: "주문을 찾을 수 없습니다." }, { status: 404 });
 
-  // 업체 정보 조회
+  // 업체 정보 조회 (모든 컬럼 필요 - 이메일 계정 3개 + 첨부 파일 3세트)
   const { data: company } = await supabase
     .from("companies")
-    .select("company_name, business_number, representative, address, business_type, business_category, phone, email, seal_image, bank_name, bank_account, bank_holder, bank_name_2, bank_account_2, bank_holder_2, bank_name_3, bank_account_3, bank_holder_3, default_bank, mail_service, mail_email, mail_id, mail_password")
+    .select("*")
     .eq("id", session.company.id)
     .single();
 
@@ -59,14 +59,16 @@ export async function POST(request: NextRequest) {
       <StatementPDF order={order} company={company} type={isEstimate ? "estimate" : "statement"} colOrder={colOrder} bankIdx={bankIdx || company.default_bank || 1} />
     );
 
-    // 이메일 설정
-    const mailId = company.mail_id || "blackcopy2";
-    const mailPassword = company.mail_password || process.env.NAVER_PASSWORD || "";
-    const mailEmail = company.mail_email || "blackcopy2@naver.com";
-    const mailService = company.mail_service || "naver";
+    // 이메일 계정 선택 (mailIdx 1/2/3, 없으면 default_mail, 없으면 1)
+    const chosenMail = parseInt(String(mailIdx || company.default_mail || 1));
+    const mailSuffix = chosenMail === 1 ? "" : `_${chosenMail}`;
+    const mailId = company[`mail_id${mailSuffix}`] || company.mail_id || "blackcopy2";
+    const mailPassword = company[`mail_password${mailSuffix}`] || company.mail_password || process.env.NAVER_PASSWORD || "";
+    const mailEmail = company[`mail_email${mailSuffix}`] || company.mail_email || "blackcopy2@naver.com";
+    const mailService = company[`mail_service${mailSuffix}`] || company.mail_service || "naver";
 
     if (!mailPassword) {
-      return NextResponse.json({ error: "이메일 발송 설정이 완료되지 않았습니다." }, { status: 400 });
+      return NextResponse.json({ error: "선택한 이메일 계정의 비밀번호가 설정되지 않았습니다." }, { status: 400 });
     }
 
     const smtpConfig: Record<string, { host: string; port: number; secure: boolean }> = {
@@ -89,19 +91,56 @@ export async function POST(request: NextRequest) {
     const fromName = customFrom || company.company_name;
     const emailSubject = customSubject || `[${company.company_name}] ${subject} - ${order.title || order.order_no}`;
 
+    // 첨부 파일 배열 구성
+    const attachments: Array<{filename: string; content: Buffer; contentType?: string}> = [{
+      filename: `${subject}_${order.order_no}.pdf`,
+      content: Buffer.from(pdfBuffer),
+      contentType: "application/pdf",
+    }];
+
+    // 통장사본 첨부
+    const bankbookSlot = parseInt(String(bankbookIdx || 0));
+    if (bankbookSlot >= 1 && bankbookSlot <= 3) {
+      const url = company[`bankbook_url_${bankbookSlot}`];
+      const label = company[`bankbook_label_${bankbookSlot}`] || "통장사본";
+      if (url) {
+        try {
+          const r = await fetch(url);
+          if (r.ok) {
+            const ext = url.split(".").pop()?.split("?")[0] || "pdf";
+            const ct = r.headers.get("content-type") || "application/octet-stream";
+            attachments.push({ filename: `${label}.${ext}`, content: Buffer.from(await r.arrayBuffer()), contentType: ct });
+          }
+        } catch { /* 첨부 실패는 무시 */ }
+      }
+    }
+
+    // 사업자등록증 첨부
+    const bizRegSlot = parseInt(String(bizRegIdx || 0));
+    if (bizRegSlot >= 1 && bizRegSlot <= 3) {
+      const url = company[`biz_reg_url_${bizRegSlot}`];
+      const label = company[`biz_reg_label_${bizRegSlot}`] || "사업자등록증";
+      if (url) {
+        try {
+          const r = await fetch(url);
+          if (r.ok) {
+            const ext = url.split(".").pop()?.split("?")[0] || "pdf";
+            const ct = r.headers.get("content-type") || "application/octet-stream";
+            attachments.push({ filename: `${label}.${ext}`, content: Buffer.from(await r.arrayBuffer()), contentType: ct });
+          }
+        } catch { /* 첨부 실패는 무시 */ }
+      }
+    }
+
     await transporter.sendMail({
       from: `"${fromName}" <${mailEmail}>`,
       to,
       subject: emailSubject,
-      html: `<p>${fromName}에서 보낸 ${subject}입니다.</p><p>첨부된 PDF 파일을 확인해주세요.</p>`,
-      attachments: [{
-        filename: `${subject}_${order.order_no}.pdf`,
-        content: Buffer.from(pdfBuffer),
-        contentType: "application/pdf",
-      }],
+      html: `<p>${fromName}에서 보낸 ${subject}입니다.</p><p>첨부된 파일을 확인해주세요.</p>`,
+      attachments,
     });
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, attached: attachments.length });
   } catch (err) {
     const message = err instanceof Error ? err.message : "PDF 생성 또는 이메일 발송 실패";
     return NextResponse.json({ error: message }, { status: 500 });
