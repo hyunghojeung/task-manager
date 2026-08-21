@@ -522,18 +522,18 @@ export default function WritePage() {
                 const cur = formData.tax_invoice || "";
                 const isMatched = options.some(o => cur === o.value) || cur.includes("거래명세서 발송완료") || cur.includes("세금계산서 발송완료") || cur === "세금계산서 작성요망" || cur.includes("나라빌청구요망") || cur.includes("나라빌청구완료");
                 return (
-                  <div className="flex flex-wrap gap-3 items-center">
+                  <div className="grid grid-cols-3 gap-x-2 gap-y-1 items-center" style={{maxWidth:"340px"}}>
                     {options.map(o => {
                       // 이미 저장된 값이 이 옵션 타입인지 확인 (날짜만 다를 수 있음)
                       const checked = (o.label === "없음" && !cur) || cur === o.value || (o.label === "거래명세서 발송완료" && cur.includes("거래명세서 발송완료")) || (o.label === "세금계산서 발송완료" && cur.includes("세금계산서 발송완료")) || (o.label === "세금계산서 작성요망" && cur === "세금계산서 작성요망") || (o.label === "나라빌청구요망" && cur.includes("나라빌청구요망")) || (o.label === "나라빌청구완료" && cur.includes("나라빌청구완료"));
                       return (
-                        <label key={o.label} className="inline-flex items-center gap-1 text-xs cursor-pointer">
+                        <label key={o.label} className="inline-flex items-center gap-1 text-xs cursor-pointer whitespace-nowrap">
                           <input type="radio" name="tax_invoice" checked={checked} onChange={() => handleChange("tax_invoice", o.value)} style={{width:"14px",height:"14px",accentColor:"#2563eb"}} />
                           <span>{o.label}</span>
                         </label>
                       );
                     })}
-                    {cur && !isMatched && <span className="text-xs text-gray-500 ml-2">({cur})</span>}
+                    {cur && !isMatched && <span className="text-xs text-gray-500 col-span-3">({cur})</span>}
                   </div>
                 );
               })()}
