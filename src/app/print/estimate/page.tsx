@@ -5,7 +5,20 @@ import { useSearchParams } from "next/navigation";
 
 interface OrderItemRow { sort_order: number; data: Record<string, string> }
 interface OrderData { id: string; order_no: string; client_name: string; title: string; total_amount: number; total_supply: number; total_vat: number; discount: number; template_name?: string; trade_type?: string; order_date: string; created_at: string; order_items?: OrderItemRow[] }
-interface CompanyData { company_name: string; business_number: string; representative: string; address: string; business_type: string; business_category: string; phone: string; email: string; seal_image?: string; bank_name?: string; bank_account?: string; bank_holder?: string; bank_name_2?: string; bank_account_2?: string; bank_holder_2?: string; bank_name_3?: string; bank_account_3?: string; bank_holder_3?: string; default_bank?: number }
+interface CompanyData {
+  company_name: string; business_number: string; representative: string; address: string; business_type: string; business_category: string; phone: string; email: string; seal_image?: string;
+  bank_name?: string; bank_account?: string; bank_holder?: string;
+  bank_name_2?: string; bank_account_2?: string; bank_holder_2?: string;
+  bank_name_3?: string; bank_account_3?: string; bank_holder_3?: string;
+  default_bank?: number;
+  mail_email?: string; mail_email_2?: string; mail_email_3?: string;
+  default_mail?: number;
+  bankbook_url_1?: string; bankbook_url_2?: string; bankbook_url_3?: string;
+  bankbook_label_1?: string; bankbook_label_2?: string; bankbook_label_3?: string;
+  biz_reg_url_1?: string; biz_reg_url_2?: string; biz_reg_url_3?: string;
+  biz_reg_label_1?: string; biz_reg_label_2?: string; biz_reg_label_3?: string;
+  [key: string]: unknown;
+}
 
 function fmt(n: number) { return (n || 0).toLocaleString(); }
 function numToKorean(n: number): string {
@@ -44,12 +57,21 @@ function EstimateContent() {
   const [emailSubject, setEmailSubject] = useState("");
   const [emailFrom, setEmailFrom] = useState("");
   const [bankIdx, setBankIdx] = useState<number>(1);
+  const [mailIdx, setMailIdx] = useState<number>(1);
+  const [attachBankbook, setAttachBankbook] = useState(false);
+  const [bankbookIdx, setBankbookIdx] = useState<number>(1);
+  const [attachBizReg, setAttachBizReg] = useState(false);
+  const [bizRegIdx, setBizRegIdx] = useState<number>(1);
   const [sending, setSending] = useState(false);
 
   useEffect(() => {
     if (!orderId) return;
     fetch(`/api/orders/${orderId}?_=${Date.now()}`).then(r => r.json()).then(d => setOrder(d));
-    fetch(`/api/company?_=${Date.now()}`).then(r => r.json()).then(d => { setCompany(d); if (d?.default_bank) setBankIdx(parseInt(d.default_bank) || 1); });
+    fetch(`/api/company?_=${Date.now()}`).then(r => r.json()).then(d => {
+      setCompany(d);
+      if (d?.default_bank) setBankIdx(parseInt(d.default_bank) || 1);
+      if (d?.default_mail) setMailIdx(parseInt(d.default_mail) || 1);
+    });
     fetch(`/api/templates?_=${Date.now()}`).then(r => r.json()).then(d => setTemplates(d || [])).catch(() => {});
   }, [orderId]);
 
@@ -75,7 +97,7 @@ function EstimateContent() {
     try {
       const res = await fetch("/api/email-pdf", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ to: emailTo, orderId, type: "estimate", customSubject: emailSubject || "", customFrom: emailFrom || "", bankIdx }),
+        body: JSON.stringify({ to: emailTo, orderId, type: "estimate", customSubject: emailSubject || "", customFrom: emailFrom || "", bankIdx, mailIdx, bankbookIdx: attachBankbook ? bankbookIdx : 0, bizRegIdx: attachBizReg ? bizRegIdx : 0 }),
       });
       if (res.ok) alert("이메일이 발송되었습니다. (PDF 첨부)");
       else { const d = await res.json().catch(() => ({})); alert("발송 실패: " + (d.error || res.status)); }
@@ -129,7 +151,7 @@ function EstimateContent() {
               <tr><th className="border border-gray-800 bg-gray-50 px-2 py-1 whitespace-nowrap">상호(법인명)</th><td className="border border-gray-800 px-2 py-1">{company.company_name}</td><th className="border border-gray-800 bg-gray-50 px-2 py-1 whitespace-nowrap">성명</th><td className="border border-gray-800 px-2 py-1 relative"><span className="relative inline-block">{company.representative || "[직인]"}{company.seal_image && <img src={company.seal_image} alt="도장" className="absolute left-full top-1/2 -translate-y-1/2 ml-2 w-16 h-16 object-contain pointer-events-none" style={{opacity:0.85}} />}</span></td></tr>
               <tr><th className="border border-gray-800 bg-gray-50 px-2 py-1 whitespace-nowrap">주소</th><td className="border border-gray-800 px-2 py-1" colSpan={3}>{company.address || "-"}</td></tr>
               <tr><th className="border border-gray-800 bg-gray-50 px-2 py-1 whitespace-nowrap">업태</th><td className="border border-gray-800 px-2 py-1">{company.business_type || "-"}</td><th className="border border-gray-800 bg-gray-50 px-2 py-1 whitespace-nowrap">종목</th><td className="border border-gray-800 px-2 py-1">{company.business_category || "-"}</td></tr>
-              <tr><th className="border border-gray-800 bg-gray-50 px-2 py-1 whitespace-nowrap">TEL / E-mail</th><td className="border border-gray-800 px-2 py-1" colSpan={3}>{company.phone || "-"} / {company.email || "-"}</td></tr>
+              <tr><th className="border border-gray-800 bg-gray-50 px-2 py-1 whitespace-nowrap">TEL / E-mail</th><td className="border border-gray-800 px-2 py-1" colSpan={3}>{company.phone || "-"} / {(() => { const suffix = mailIdx === 1 ? "" : `_${mailIdx}`; return (company[`mail_email${suffix}`] as string) || company.email || "-"; })()}</td></tr>
             </tbody>
           </table>
         </div>
@@ -221,6 +243,19 @@ function EstimateContent() {
       </div>
 
       <div className="max-w-[800px] mx-auto mt-3 flex flex-col gap-2 print:hidden">
+        <div className="flex flex-wrap gap-2 items-center bg-amber-50 border border-amber-200 rounded p-2">
+          <label className="text-sm shrink-0 font-semibold text-amber-900">발송 계정:</label>
+          <select value={mailIdx} onChange={e => setMailIdx(parseInt(e.target.value))} className="px-3 py-1.5 border border-amber-400 rounded text-sm min-w-[220px] font-semibold">
+            {[1, 2, 3].map(idx => {
+              const suffix = idx === 1 ? "" : `_${idx}`;
+              const email = company[`mail_email${suffix}`] as string;
+              const isDefault = (company.default_mail || 1) === idx;
+              if (!email) return <option key={idx} value={idx} disabled>계정{idx}: (미설정)</option>;
+              return <option key={idx} value={idx}>계정{idx}: {email}{isDefault ? " (기본)" : ""}</option>;
+            })}
+          </select>
+          <span className="text-xs text-amber-800">← 선택 시 상단 표의 E-mail이 갱신됩니다</span>
+        </div>
         <div className="flex flex-wrap gap-2 items-center">
           <label className="text-sm shrink-0">수신 이메일:</label>
           <input type="email" placeholder="이메일 주소를 입력하세요" value={emailTo} onChange={e => setEmailTo(e.target.value)} className="px-3 py-1.5 border border-gray-300 rounded text-sm w-64" />
@@ -242,6 +277,33 @@ function EstimateContent() {
               if (!name && !acc) return null;
               const isDefault = (company.default_bank || 1) === idx;
               return <option key={idx} value={idx}>계좌{idx}: {name} {acc}{isDefault ? " (기본)" : ""}</option>;
+            })}
+          </select>
+        </div>
+        <div className="flex flex-wrap gap-2 items-center bg-gray-50 border border-gray-200 rounded p-2">
+          <label className="text-sm shrink-0 font-semibold text-gray-700">추가 첨부:</label>
+          <label className="inline-flex items-center gap-1 text-sm cursor-pointer">
+            <input type="checkbox" checked={attachBankbook} onChange={e => setAttachBankbook(e.target.checked)} style={{width:"14px",height:"14px"}} />
+            <span>통장사본</span>
+          </label>
+          <select value={bankbookIdx} onChange={e => setBankbookIdx(parseInt(e.target.value))} disabled={!attachBankbook} className="px-2 py-1 border border-gray-300 rounded text-xs disabled:bg-gray-100 disabled:text-gray-400">
+            {[1, 2, 3].map(idx => {
+              const url = company[`bankbook_url_${idx}`] as string;
+              const label = company[`bankbook_label_${idx}`] as string;
+              if (!url) return <option key={idx} value={idx} disabled>{idx}. (미설정)</option>;
+              return <option key={idx} value={idx}>{idx}. {label || "통장사본"}</option>;
+            })}
+          </select>
+          <label className="inline-flex items-center gap-1 text-sm cursor-pointer ml-2">
+            <input type="checkbox" checked={attachBizReg} onChange={e => setAttachBizReg(e.target.checked)} style={{width:"14px",height:"14px"}} />
+            <span>사업자등록증</span>
+          </label>
+          <select value={bizRegIdx} onChange={e => setBizRegIdx(parseInt(e.target.value))} disabled={!attachBizReg} className="px-2 py-1 border border-gray-300 rounded text-xs disabled:bg-gray-100 disabled:text-gray-400">
+            {[1, 2, 3].map(idx => {
+              const url = company[`biz_reg_url_${idx}`] as string;
+              const label = company[`biz_reg_label_${idx}`] as string;
+              if (!url) return <option key={idx} value={idx} disabled>{idx}. (미설정)</option>;
+              return <option key={idx} value={idx}>{idx}. {label || "등록증"}</option>;
             })}
           </select>
         </div>

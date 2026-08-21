@@ -781,8 +781,50 @@ function CompanyTab() {
     ["phone","연락처"],["fax","팩스"],["email","이메일"],["business_type","업태"],
     ["address","주소"],["business_category","종목"],["company_id","업체 ID"],["password","비밀번호"],
   ];
-  const mailFields = [["mail_email","발신 이메일"],["mail_id","메일 아이디"],["mail_password","메일 비밀번호"]];
   const dropboxFields = [["dropbox_app_key","App Key"],["dropbox_app_secret","App Secret"],["dropbox_access_token","Access Token"],["dropbox_path","저장 경로"]];
+
+  async function uploadDoc(kind: "bankbook" | "biz_reg", slot: number, file: File) {
+    if (file.size > 20 * 1024 * 1024) { alert("파일은 20MB 이하만 가능합니다."); return; }
+    const fd = new FormData();
+    fd.append("file", file);
+    fd.append("kind", kind);
+    fd.append("slot", String(slot));
+    const res = await fetch("/api/company/upload-doc", { method: "POST", body: fd });
+    if (!res.ok) { const d = await res.json().catch(() => ({})); alert("업로드 실패: " + (d.error || res.status)); return; }
+    const d = await res.json();
+    set(`${kind}_url_${slot}`, d.url);
+  }
+
+  async function deleteDoc(kind: "bankbook" | "biz_reg", slot: number) {
+    if (!confirm("파일을 삭제하시겠습니까?")) return;
+    const res = await fetch(`/api/company/upload-doc?kind=${kind}&slot=${slot}`, { method: "DELETE" });
+    if (!res.ok) { const d = await res.json().catch(() => ({})); alert("삭제 실패: " + (d.error || res.status)); return; }
+    set(`${kind}_url_${slot}`, "");
+  }
+
+  function DocSlot({ kind, slot, title }: { kind: "bankbook" | "biz_reg"; slot: number; title: string }) {
+    const urlKey = `${kind}_url_${slot}`;
+    const labelKey = `${kind}_label_${slot}`;
+    const url = company[urlKey] || "";
+    return (
+      <div className="flex items-center gap-2 flex-wrap p-2 border border-gray-200 rounded">
+        <span className="text-xs font-semibold text-gray-600 shrink-0 w-16">{title}{slot}</span>
+        <input type="text" placeholder="라벨 (예: 일반과세, 신한은행)" value={company[labelKey]||""} onChange={e=>set(labelKey, e.target.value)} className="px-2 py-1.5 border border-gray-300 rounded text-sm w-48" />
+        {url ? (
+          <>
+            <a href={url} target="_blank" rel="noopener" className="px-2 py-1 text-xs text-green-700 bg-green-50 border border-green-500 rounded hover:bg-green-100">파일 보기 ✓</a>
+            <button type="button" onClick={() => deleteDoc(kind, slot)} className="px-2 py-1 text-xs text-red-500 border border-red-300 rounded hover:bg-red-50">삭제</button>
+          </>
+        ) : (
+          <label className="px-2 py-1 text-xs text-gray-600 bg-gray-50 border border-dashed border-gray-400 rounded cursor-pointer hover:bg-gray-100">
+            ＋ 파일 첨부
+            <input type="file" accept="image/png,image/jpeg,image/jpg,application/pdf" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) uploadDoc(kind, slot, f); }} />
+          </label>
+        )}
+        {!url && <span className="text-[10px] text-gray-400">PNG · JPG · PDF · 최대 20MB</span>}
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -838,10 +880,42 @@ function CompanyTab() {
         </div>
       </div>
       <div className="bg-white rounded-lg shadow p-6 mb-5">
-        <h3 className="text-base font-bold text-gray-800 mb-4 pb-2 border-b-2 border-gray-200">이메일 발송 설정</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm max-w-2xl">
-          <div className="flex items-center gap-2 md:col-span-2"><label className="w-24 text-xs font-semibold text-gray-600 shrink-0">메일 서비스</label><select value={company.mail_service||"naver"} onChange={e=>set("mail_service",e.target.value)} className="flex-1 px-2 py-1.5 border border-gray-300 rounded text-sm"><option value="naver">네이버</option><option value="daum">다음</option></select></div>
-          {mailFields.map(([k,l])=>(<div key={k} className="flex items-center gap-2"><label className="w-24 text-xs font-semibold text-gray-600 shrink-0">{l}</label><input type={k.includes("password")?"password":"text"} value={company[k]||""} onChange={e=>set(k,e.target.value)} className="flex-1 px-2 py-1.5 border border-gray-300 rounded text-sm" /></div>))}
+        <h3 className="text-base font-bold text-gray-800 mb-4 pb-2 border-b-2 border-gray-200">이메일 발송 설정 (최대 3개)</h3>
+        <p className="text-xs text-gray-400 mb-3">거래명세서/견적서 발송 시 이 목록에서 계정을 선택합니다. 라디오로 선택한 계정이 기본값입니다.</p>
+        <div className="space-y-3">
+          {[1, 2, 3].map(idx => {
+            const suffix = idx === 1 ? "" : `_${idx}`;
+            return (
+              <div key={idx} className="p-3 border border-gray-200 rounded space-y-2">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <label className="flex items-center gap-1 text-xs font-semibold text-gray-600 shrink-0 w-16">
+                    <input type="radio" name="default_mail" checked={String(company.default_mail || "1") === String(idx)} onChange={() => set("default_mail", String(idx))} style={{width:"14px",height:"14px"}} />
+                    계정{idx}
+                  </label>
+                  <select value={company[`mail_service${suffix}`]||"naver"} onChange={e=>set(`mail_service${suffix}`,e.target.value)} className="px-2 py-1.5 border border-gray-300 rounded text-xs w-24">
+                    <option value="naver">네이버</option><option value="daum">다음</option>
+                  </select>
+                  <input type="text" placeholder="발신 이메일" value={company[`mail_email${suffix}`]||""} onChange={e=>set(`mail_email${suffix}`, e.target.value)} className="flex-1 px-2 py-1.5 border border-gray-300 rounded text-sm min-w-[180px]" />
+                  <input type="text" placeholder="아이디" value={company[`mail_id${suffix}`]||""} onChange={e=>set(`mail_id${suffix}`, e.target.value)} className="px-2 py-1.5 border border-gray-300 rounded text-sm w-32" />
+                  <input type="password" placeholder="비밀번호" value={company[`mail_password${suffix}`]||""} onChange={e=>set(`mail_password${suffix}`, e.target.value)} className="px-2 py-1.5 border border-gray-300 rounded text-sm w-32" />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+      <div className="bg-white rounded-lg shadow p-6 mb-5">
+        <h3 className="text-base font-bold text-gray-800 mb-4 pb-2 border-b-2 border-gray-200">통장사본 (최대 3개)</h3>
+        <p className="text-xs text-gray-400 mb-3">이메일 발송 시 첨부할 통장사본. 라벨을 붙여 관리하며, 발송 화면에서 선택할 수 있습니다.</p>
+        <div className="space-y-2">
+          {[1, 2, 3].map(idx => <DocSlot key={idx} kind="bankbook" slot={idx} title="통장" />)}
+        </div>
+      </div>
+      <div className="bg-white rounded-lg shadow p-6 mb-5">
+        <h3 className="text-base font-bold text-gray-800 mb-4 pb-2 border-b-2 border-gray-200">사업자등록증 (최대 3개)</h3>
+        <p className="text-xs text-gray-400 mb-3">이메일 발송 시 첨부할 사업자등록증. 라벨(일반과세/간이과세/법인 등)로 구분합니다.</p>
+        <div className="space-y-2">
+          {[1, 2, 3].map(idx => <DocSlot key={idx} kind="biz_reg" slot={idx} title="등록증" />)}
         </div>
       </div>
       <div className="bg-white rounded-lg shadow p-6 mb-5">
