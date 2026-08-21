@@ -506,8 +506,12 @@ export default function WritePage() {
             <td className="py-1.5 px-2 border border-gray-200"><input type="text" placeholder="제품형태" value={formData.product_type} onChange={e => handleChange("product_type", e.target.value)} className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm" /></td>
           </tr>
           <tr>
+            <td className="text-[#3b4b5b] font-bold text-xs py-2 px-2 border border-gray-200">MEMO</td>
+            <td colSpan={3} className="py-1.5 px-2 border border-gray-200"><input type="text" placeholder="MEMO" value={formData.payment} onChange={e => handleChange("payment", e.target.value)} className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm" /></td>
+          </tr>
+          <tr>
             <td className="text-[#3b4b5b] font-bold text-xs py-2 px-2 border border-gray-200">세금계산서</td>
-            <td className="py-1.5 px-2 border border-gray-200">
+            <td colSpan={3} className="py-1.5 px-2 border border-gray-200">
               {(() => {
                 const today = new Date();
                 const dateStr = `${today.getMonth() + 1}/${today.getDate()}`;
@@ -522,7 +526,7 @@ export default function WritePage() {
                 const cur = formData.tax_invoice || "";
                 const isMatched = options.some(o => cur === o.value) || cur.includes("거래명세서 발송완료") || cur.includes("세금계산서 발송완료") || cur === "세금계산서 작성요망" || cur.includes("나라빌청구요망") || cur.includes("나라빌청구완료");
                 return (
-                  <div className="grid grid-cols-3 gap-x-2 gap-y-1 items-center" style={{maxWidth:"340px"}}>
+                  <div className="flex flex-wrap gap-x-4 gap-y-1 items-center">
                     {options.map(o => {
                       // 이미 저장된 값이 이 옵션 타입인지 확인 (날짜만 다를 수 있음)
                       const checked = (o.label === "없음" && !cur) || cur === o.value || (o.label === "거래명세서 발송완료" && cur.includes("거래명세서 발송완료")) || (o.label === "세금계산서 발송완료" && cur.includes("세금계산서 발송완료")) || (o.label === "세금계산서 작성요망" && cur === "세금계산서 작성요망") || (o.label === "나라빌청구요망" && cur.includes("나라빌청구요망")) || (o.label === "나라빌청구완료" && cur.includes("나라빌청구완료"));
@@ -533,13 +537,11 @@ export default function WritePage() {
                         </label>
                       );
                     })}
-                    {cur && !isMatched && <span className="text-xs text-gray-500 col-span-3">({cur})</span>}
+                    {cur && !isMatched && <span className="text-xs text-gray-500 ml-2">({cur})</span>}
                   </div>
                 );
               })()}
             </td>
-            <td className="text-[#3b4b5b] font-bold text-xs py-2 px-2 border border-gray-200 text-center">MEMO</td>
-            <td className="py-1.5 px-2 border border-gray-200"><input type="text" placeholder="MEMO" value={formData.payment} onChange={e => handleChange("payment", e.target.value)} className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm" /></td>
           </tr>
           <tr>
             <td className="text-[#3b4b5b] font-bold text-xs py-2 px-2 border border-gray-200">제목</td>
