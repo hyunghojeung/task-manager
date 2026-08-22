@@ -98,6 +98,21 @@ export async function POST(request: NextRequest) {
       contentType: "application/pdf",
     }];
 
+    // URL pathname과 content-type으로 확장자 안전하게 추출
+    const extFromUrl = (u: string): string => {
+      try {
+        const p = new URL(u).pathname;
+        const e = p.split(".").pop() || "";
+        return e && e.length <= 5 ? e.toLowerCase() : "";
+      } catch { return ""; }
+    };
+    const extFromContentType = (ct: string): string => {
+      if (ct.includes("pdf")) return "pdf";
+      if (ct.includes("png")) return "png";
+      if (ct.includes("jpeg") || ct.includes("jpg")) return "jpg";
+      return "bin";
+    };
+
     // 통장사본 첨부
     const bankbookSlot = parseInt(String(bankbookIdx || 0));
     if (bankbookSlot >= 1 && bankbookSlot <= 3) {
@@ -107,8 +122,8 @@ export async function POST(request: NextRequest) {
         try {
           const r = await fetch(url);
           if (r.ok) {
-            const ext = url.split(".").pop()?.split("?")[0] || "pdf";
             const ct = r.headers.get("content-type") || "application/octet-stream";
+            const ext = extFromUrl(url) || extFromContentType(ct);
             attachments.push({ filename: `${label}.${ext}`, content: Buffer.from(await r.arrayBuffer()), contentType: ct });
           }
         } catch { /* 첨부 실패는 무시 */ }
@@ -124,8 +139,8 @@ export async function POST(request: NextRequest) {
         try {
           const r = await fetch(url);
           if (r.ok) {
-            const ext = url.split(".").pop()?.split("?")[0] || "pdf";
             const ct = r.headers.get("content-type") || "application/octet-stream";
+            const ext = extFromUrl(url) || extFromContentType(ct);
             attachments.push({ filename: `${label}.${ext}`, content: Buffer.from(await r.arrayBuffer()), contentType: ct });
           }
         } catch { /* 첨부 실패는 무시 */ }
