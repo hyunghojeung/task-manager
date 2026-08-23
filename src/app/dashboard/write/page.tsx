@@ -506,8 +506,14 @@ export default function WritePage() {
             <td className="py-1.5 px-2 border border-gray-200"><input type="text" placeholder="제품형태" value={formData.product_type} onChange={e => handleChange("product_type", e.target.value)} className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm" /></td>
           </tr>
           <tr>
-            <td className="text-[#3b4b5b] font-bold text-xs py-2 px-2 border border-gray-200">MEMO</td>
-            <td colSpan={3} className="py-1.5 px-2 border border-gray-200"><input type="text" placeholder="MEMO" value={formData.payment} onChange={e => handleChange("payment", e.target.value)} className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm" /></td>
+            <td className="text-[#3b4b5b] font-bold text-xs py-2 px-2 border border-gray-200">제목</td>
+            <td className="py-1.5 px-2 border border-gray-200"><input type="text" placeholder="제목" value={formData.title} onChange={e => handleChange("title", e.target.value)} className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm" /></td>
+            <td className="text-[#3b4b5b] font-bold text-xs py-2 px-2 border border-gray-200 text-center">거래유형</td>
+            <td className="py-1.5 px-2 border border-gray-200">
+              <select value={formData.trade_type} onChange={e => handleChange("trade_type", e.target.value)} className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm">
+                <option value="vat">부가세율 적용</option><option value="novat">부가세율 미적용</option><option value="cash">현금가격 적용</option>
+              </select>
+            </td>
           </tr>
           <tr>
             <td className="text-[#3b4b5b] font-bold text-xs py-2 px-2 border border-gray-200">세금계산서</td>
@@ -544,14 +550,8 @@ export default function WritePage() {
             </td>
           </tr>
           <tr>
-            <td className="text-[#3b4b5b] font-bold text-xs py-2 px-2 border border-gray-200">제목</td>
-            <td className="py-1.5 px-2 border border-gray-200"><input type="text" placeholder="제목" value={formData.title} onChange={e => handleChange("title", e.target.value)} className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm" /></td>
-            <td className="text-[#3b4b5b] font-bold text-xs py-2 px-2 border border-gray-200 text-center">거래유형</td>
-            <td className="py-1.5 px-2 border border-gray-200">
-              <select value={formData.trade_type} onChange={e => handleChange("trade_type", e.target.value)} className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm">
-                <option value="vat">부가세율 적용</option><option value="novat">부가세율 미적용</option><option value="cash">현금가격 적용</option>
-              </select>
-            </td>
+            <td className="text-[#3b4b5b] font-bold text-xs py-2 px-2 border border-gray-200">MEMO</td>
+            <td colSpan={3} className="py-1.5 px-2 border border-gray-200"><input type="text" placeholder="MEMO" value={formData.payment} onChange={e => handleChange("payment", e.target.value)} className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm" /></td>
           </tr>
           <tr className="print:hidden">
             <td className="text-[#3b4b5b] font-bold text-xs py-2 px-2 border border-gray-200 align-top">첨부</td>
