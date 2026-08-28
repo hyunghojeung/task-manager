@@ -305,7 +305,9 @@ function UsersTab() {
     else { const d = await res.json().catch(() => ({})); alert(d.error || "수정 실패"); }
   }
   async function toggleRole(id:string, currentRole:string) {
-    const newRole = currentRole === "admin" ? "user" : "admin";
+    // 사용자 → 관리자 → 수퍼관리자 → 사용자 순환
+    const nextMap: Record<string,string> = { user: "admin", admin: "super_admin", super_admin: "user" };
+    const newRole = nextMap[currentRole] || "user";
     const res = await fetch(`/api/users/${id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ role: newRole }) });
     if (res.ok) load();
     else { const d = await res.json().catch(() => ({})); alert(d.error || "권한 변경 실패"); }
@@ -321,7 +323,7 @@ function UsersTab() {
             <td className="border border-gray-200 px-2 py-2 text-center">{i+1}</td>
             <td className="border border-gray-200 px-2 py-2 text-center font-bold">{u.user_id}</td>
             <td className="border border-gray-200 px-2 py-2 text-center">{u.name}</td>
-            <td className="border border-gray-200 px-2 py-2 text-center"><button onClick={() => toggleRole(u.id, u.role)} className={`px-2 py-0.5 rounded-full text-xs cursor-pointer hover:opacity-80 ${u.role==="admin"?"bg-amber-100 text-amber-800":"bg-blue-100 text-blue-800"}`}>{u.role==="admin"?"관리자":"사용자"}</button></td>
+            <td className="border border-gray-200 px-2 py-2 text-center"><button onClick={() => toggleRole(u.id, u.role)} className={`px-2 py-0.5 rounded-full text-xs cursor-pointer hover:opacity-80 ${u.role==="super_admin"?"bg-rose-100 text-rose-800":u.role==="admin"?"bg-amber-100 text-amber-800":"bg-blue-100 text-blue-800"}`}>{u.role==="super_admin"?"수퍼관리자":u.role==="admin"?"관리자":"사용자"}</button></td>
             <td className="border border-gray-200 px-2 py-2 text-center">{u.created_at?.slice(0,10)}</td>
             <td className="border border-gray-200 px-2 py-2 text-center"><button onClick={() => openEdit(u)} className="text-blue-600 border border-blue-600 px-2 py-0.5 rounded text-xs mr-1">수정</button><button onClick={()=>remove(u.id)} className="text-red-600 border border-red-600 px-2 py-0.5 rounded text-xs">삭제</button></td>
           </tr>
@@ -336,7 +338,7 @@ function UsersTab() {
               <div><label className="block text-xs font-semibold text-gray-600 mb-1">사용자 ID</label><input type="text" value={editUser.user_id} readOnly className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm bg-gray-100 text-gray-400" /></div>
               <div><label className="block text-xs font-semibold text-gray-600 mb-1">이름</label><input required type="text" value={editForm.name} onChange={e=>setEditForm(p=>({...p,name:e.target.value}))} className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm" /></div>
               <div><label className="block text-xs font-semibold text-gray-600 mb-1">비밀번호</label><input type="password" value={editForm.password} onChange={e=>setEditForm(p=>({...p,password:e.target.value}))} placeholder="변경 시에만 입력" className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm" /></div>
-              <div><label className="block text-xs font-semibold text-gray-600 mb-1">권한</label><select value={editForm.role} onChange={e=>setEditForm(p=>({...p,role:e.target.value}))} className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm"><option value="user">사용자</option><option value="admin">관리자</option></select></div>
+              <div><label className="block text-xs font-semibold text-gray-600 mb-1">권한</label><select value={editForm.role} onChange={e=>setEditForm(p=>({...p,role:e.target.value}))} className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm"><option value="user">사용자</option><option value="admin">관리자</option><option value="super_admin">수퍼관리자</option></select></div>
             </div>
             <div className="flex gap-2 justify-end mt-4"><button type="submit" className="px-5 py-2 bg-blue-600 text-white rounded text-sm">저장</button><button type="button" onClick={()=>setShowEditModal(false)} className="px-5 py-2 border border-gray-300 rounded text-sm">취소</button></div>
           </form>
@@ -350,7 +352,7 @@ function UsersTab() {
               <div><label className="block text-xs font-semibold text-gray-600 mb-1">이름</label><input required type="text" value={form.name} onChange={e=>setForm(p=>({...p,name:e.target.value}))} className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm" /></div>
               <div><label className="block text-xs font-semibold text-gray-600 mb-1">사용자 ID</label><input required type="text" value={form.user_id} onChange={e=>setForm(p=>({...p,user_id:e.target.value}))} className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm" /></div>
               <div><label className="block text-xs font-semibold text-gray-600 mb-1">비밀번호</label><input type="password" value={form.password} onChange={e=>setForm(p=>({...p,password:e.target.value}))} className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm" /></div>
-              <div><label className="block text-xs font-semibold text-gray-600 mb-1">권한</label><select value={form.role} onChange={e=>setForm(p=>({...p,role:e.target.value}))} className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm"><option value="user">사용자</option><option value="admin">관리자</option></select></div>
+              <div><label className="block text-xs font-semibold text-gray-600 mb-1">권한</label><select value={form.role} onChange={e=>setForm(p=>({...p,role:e.target.value}))} className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm"><option value="user">사용자</option><option value="admin">관리자</option><option value="super_admin">수퍼관리자</option></select></div>
             </div>
             <div className="flex gap-2 justify-end mt-4"><button type="submit" className="px-5 py-2 bg-blue-600 text-white rounded text-sm">등록</button><button type="button" onClick={()=>setShowModal(false)} className="px-5 py-2 border border-gray-300 rounded text-sm">취소</button></div>
           </form>

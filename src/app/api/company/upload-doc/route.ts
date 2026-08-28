@@ -11,7 +11,7 @@ const BUCKET = "company-docs";
 export async function POST(request: NextRequest) {
   const session = await getApiSession();
   if (!session) return unauthorized();
-  if (session.user.role !== "admin") return NextResponse.json({ error: "관리자만 업로드할 수 있습니다." }, { status: 403 });
+  if (session.user.role !== "admin" && session.user.role !== "super_admin") return NextResponse.json({ error: "관리자만 업로드할 수 있습니다." }, { status: 403 });
 
   const formData = await request.formData();
   const file = formData.get("file") as File | null;
@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   const session = await getApiSession();
   if (!session) return unauthorized();
-  if (session.user.role !== "admin") return NextResponse.json({ error: "관리자만 삭제할 수 있습니다." }, { status: 403 });
+  if (session.user.role !== "admin" && session.user.role !== "super_admin") return NextResponse.json({ error: "관리자만 삭제할 수 있습니다." }, { status: 403 });
 
   const { searchParams } = new URL(request.url);
   const kind = searchParams.get("kind") || "";
