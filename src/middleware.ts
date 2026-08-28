@@ -27,7 +27,7 @@ export function middleware(request: NextRequest) {
   if (pathname.startsWith("/admin")) {
     try {
       const sessionData = JSON.parse(session.value);
-      if (sessionData.user.role !== "admin") {
+      if (sessionData.user.role !== "admin" && sessionData.user.role !== "super_admin") {
         return NextResponse.redirect(new URL("/dashboard", request.url));
       }
     } catch {

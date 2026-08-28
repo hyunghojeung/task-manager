@@ -58,7 +58,7 @@ export default async function DashboardLayout({
         impersonated={session.impersonated}
       />
       <NoticeBar notices={notices || []} />
-      <NavBar />
+      <NavBar role={session.user.role} />
       <main className="p-4 md:p-6">{children}</main>
     </div>
   );
