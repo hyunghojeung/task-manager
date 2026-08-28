@@ -48,6 +48,8 @@ export interface Company {
   created_at: string
 }
 
+export type UserRole = 'admin' | 'user' | 'super_admin'
+
 export interface User {
   id: string
   company_id: string
@@ -55,8 +57,15 @@ export interface User {
   name: string
   email?: string
   phone?: string
-  role: 'admin' | 'user'
+  role: UserRole
   created_at: string
+}
+
+export function isAdminRole(role?: string): boolean {
+  return role === 'admin' || role === 'super_admin'
+}
+export function isSuperAdmin(role?: string): boolean {
+  return role === 'super_admin'
 }
 
 export interface Category {

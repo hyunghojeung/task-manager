@@ -2,7 +2,7 @@
 
 import { usePathname } from "next/navigation";
 
-export default function NavBar() {
+export default function NavBar({ role }: { role?: string }) {
   const pathname = usePathname();
 
   const links = [
@@ -11,6 +11,9 @@ export default function NavBar() {
     { href: "/dashboard/estimates", label: "견적서", color: "bg-purple-600 hover:bg-purple-700" },
     { href: "/dashboard/orders", label: "발주서", color: "bg-gray-700 hover:bg-gray-800" },
     { href: "/dashboard/memo", label: "업무용메모", color: "bg-emerald-600 hover:bg-emerald-700" },
+    ...(role === "super_admin"
+      ? [{ href: "/dashboard/sales", label: "매출리스트", color: "bg-rose-600 hover:bg-rose-700" }]
+      : []),
   ];
 
   return (
