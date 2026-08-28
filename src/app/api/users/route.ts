@@ -15,7 +15,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   const session = await getApiSession();
   if (!session) return unauthorized();
-  if (session.user.role !== "admin") return NextResponse.json({ error: "관리자만 사용자를 등록할 수 있습니다." }, { status: 403 });
+  if (session.user.role !== "admin" && session.user.role !== "super_admin") return NextResponse.json({ error: "관리자만 사용자를 등록할 수 있습니다." }, { status: 403 });
   const body = await request.json();
   const supabase = getSupabase();
   const { data, error } = await supabase.from("users").insert({ ...body, company_id: session.company.id }).select().single();
