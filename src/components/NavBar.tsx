@@ -5,7 +5,8 @@ import { usePathname } from "next/navigation";
 export default function NavBar({ role }: { role?: string }) {
   const pathname = usePathname();
 
-  const links = [
+  const links: Array<{ href: string; label: string; color: string; external?: boolean }> = [
+    { href: "https://claude.ai/code/artifact/0bd57f9a-ce54-4799-ab89-ba7a766df40a", label: "송장변환", color: "bg-amber-500 hover:bg-amber-600", external: true },
     { href: "/dashboard", label: "작업리스트", color: "bg-blue-600 hover:bg-blue-700" },
     { href: "/dashboard/write", label: "작업등록", color: "bg-blue-600 hover:bg-blue-700" },
     { href: "/dashboard/estimates", label: "견적서", color: "bg-purple-600 hover:bg-purple-700" },
@@ -22,6 +23,8 @@ export default function NavBar({ role }: { role?: string }) {
         <a
           key={link.href}
           href={link.href}
+          target={link.external ? "_blank" : undefined}
+          rel={link.external ? "noopener noreferrer" : undefined}
           className={`px-4 py-2 rounded text-white text-xs md:text-sm font-medium whitespace-nowrap transition ${
             pathname === link.href ? link.color + " ring-2 ring-offset-1 ring-blue-300" : link.color
           }`}
