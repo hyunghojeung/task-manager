@@ -6,7 +6,7 @@ export default function NavBar({ role }: { role?: string }) {
   const pathname = usePathname();
 
   const links: Array<{ href: string; label: string; color: string; external?: boolean }> = [
-    { href: "https://claude.ai/code/artifact/0bd57f9a-ce54-4799-ab89-ba7a766df40a", label: "송장변환", color: "bg-amber-500 hover:bg-amber-600", external: true },
+    { href: "/tools/taekbae.html", label: "송장변환", color: "bg-amber-500 hover:bg-amber-600", external: true },
     { href: "/dashboard", label: "작업리스트", color: "bg-blue-600 hover:bg-blue-700" },
     { href: "/dashboard/write", label: "작업등록", color: "bg-blue-600 hover:bg-blue-700" },
     { href: "/dashboard/estimates", label: "견적서", color: "bg-purple-600 hover:bg-purple-700" },
