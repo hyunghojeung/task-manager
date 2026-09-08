@@ -10,6 +10,11 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
+  // 공개 업무도구 (public/tools) — 로그인 없이 사용
+  if (pathname.startsWith("/tools/")) {
+    return NextResponse.next();
+  }
+
   // 최고관리자 페이지 & API는 별도 처리
   if (pathname.startsWith("/super-admin/") || pathname.startsWith("/api/admin/")) {
     return NextResponse.next();
