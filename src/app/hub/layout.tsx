@@ -1,3 +1,4 @@
+import type { Metadata, Viewport } from "next";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
 import { getSupabase } from "@/lib/supabase-admin";
@@ -7,6 +8,22 @@ import HubTabs from "./HubTabs";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
+
+// 폰 홈 화면에 "업무관리"로 따로 설치할 수 있게 한다.
+// 아이콘을 누르면 주소창 없이 /hub 로 바로 열린다.
+export const metadata: Metadata = {
+  title: "업무관리",
+  manifest: "/hub.webmanifest",
+  appleWebApp: { capable: true, title: "업무관리", statusBarStyle: "default" },
+  icons: { apple: "/hub-apple-touch-icon.png" },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#FEE500",
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+};
 
 export default async function HubLayout({
   children,

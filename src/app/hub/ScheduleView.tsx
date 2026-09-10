@@ -349,7 +349,8 @@ export default function ScheduleView() {
       <button
         onClick={() => setForm({ title: "", content: "", color: "yellow" })}
         aria-label="일정 추가"
-        className="md:hidden fixed right-5 bottom-6 w-14 h-14 rounded-full bg-[#FEE500] text-[#191919] text-3xl font-bold shadow-lg grid place-items-center leading-none"
+        style={{ bottom: "calc(1.5rem + env(safe-area-inset-bottom))" }}
+        className="md:hidden fixed right-5 w-14 h-14 rounded-full bg-[#FEE500] text-[#191919] text-3xl font-bold shadow-lg grid place-items-center leading-none"
       >
         +
       </button>
