@@ -387,7 +387,7 @@ export default function ScheduleView() {
       {/* 상세 */}
       {detail && (
         <Modal onClose={() => setDetail(null)}>
-          <div className="flex items-center gap-2 text-sm text-gray-500 font-medium">
+          <div className="flex items-center gap-2 text-sm text-gray-500 font-medium pr-10">
             <i className={`w-3.5 h-3.5 rounded ${bar(detail.color)}`} />
             <span>
               {labelOf(detail.on_date.slice(0, 10))}
@@ -514,13 +514,35 @@ function Modal({
   title?: string;
   sub?: string;
 }) {
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") onClose();
+    }
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
   return (
     <div className="fixed inset-0 z-[60] flex items-end md:items-center justify-center">
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
       <div className="relative w-full md:max-w-md bg-white rounded-t-2xl md:rounded-xl p-5 flex flex-col gap-3.5 max-h-[88vh] overflow-y-auto">
-        <div className="md:hidden w-9 h-1 rounded-full bg-gray-300 mx-auto -mt-1 mb-1" />
+        {/* 폰: 손잡이를 눌러도 닫힌다 */}
+        <button
+          onClick={onClose}
+          aria-label="닫기"
+          className="md:hidden w-16 h-5 -mt-2 mb-0 mx-auto grid place-items-center"
+        >
+          <span className="block w-9 h-1 rounded-full bg-gray-300" />
+        </button>
+        <button
+          onClick={onClose}
+          aria-label="닫기"
+          className="absolute right-3 top-3 md:top-4 w-9 h-9 grid place-items-center rounded-full text-gray-400 hover:text-gray-900 hover:bg-gray-100 text-lg leading-none"
+        >
+          ✕
+        </button>
         {title && (
-          <h3 className="text-lg font-bold text-gray-900">
+          <h3 className="text-lg font-bold text-gray-900 pr-10">
             {title}
             {sub && <span className="text-sm font-medium text-[#D93A33] ml-2">{sub}</span>}
           </h3>
