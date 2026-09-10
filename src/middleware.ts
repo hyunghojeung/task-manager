@@ -15,6 +15,11 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
+  // 공유 링크로 받은 메모 — 로그인 없이 열람만 가능
+  if (pathname.startsWith("/s/")) {
+    return NextResponse.next();
+  }
+
   // 최고관리자 페이지 & API는 별도 처리
   if (pathname.startsWith("/super-admin/") || pathname.startsWith("/api/admin/")) {
     return NextResponse.next();

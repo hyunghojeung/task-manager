@@ -27,6 +27,30 @@ interface Photo {
  */
 const SHOW_ALBUMS = false;
 
+async function copyText(text: string) {
+  try {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+  } catch {
+    /* 아래 방법으로 다시 시도 */
+  }
+  try {
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    ta.style.position = "fixed";
+    ta.style.opacity = "0";
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand("copy");
+    document.body.removeChild(ta);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export default function GalleryView() {
   const [albums, setAlbums] = useState<Album[]>([]);
   const [photos, setPhotos] = useState<Photo[]>([]);
@@ -367,12 +391,26 @@ export default function GalleryView() {
                 ))}
               </span>
             )}
-            <button
-              onClick={() => removePhoto(photos[viewer])}
-              className="self-start mt-1 border border-red-400/50 text-red-300 rounded px-3 py-1.5"
-            >
-              사진 삭제
-            </button>
+            <div className="flex flex-wrap gap-2 mt-1">
+              <button
+                onClick={async () => {
+                  const ok = await copyText(photos[viewer].url);
+                  alert(ok ? "사진 링크를 복사했습니다" : photos[viewer].url);
+                }}
+                className="border border-[#FEE500]/60 text-[#FEE500] rounded px-3 py-1.5"
+              >
+                🔗 사진 링크 복사
+              </button>
+              <button
+                onClick={() => removePhoto(photos[viewer])}
+                className="border border-red-400/50 text-red-300 rounded px-3 py-1.5"
+              >
+                사진 삭제
+              </button>
+            </div>
+            <p className="text-[11px] text-gray-500 leading-relaxed">
+              복사한 링크는 로그인 없이 이 사진만 열립니다. 한 번 만들어진 주소는 사진을 지워야 막힙니다.
+            </p>
           </div>
         </div>
       )}

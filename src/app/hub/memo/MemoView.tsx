@@ -14,6 +14,7 @@ interface Memo {
   content: string;
   tags: string[];
   pinned: boolean;
+  share_token?: string | null;
   updated_at: string;
   photos: Photo[];
 }
@@ -23,7 +24,32 @@ interface Draft {
   title: string;
   content: string;
   pinned: boolean;
+  share_token: string | null;
   photos: Photo[];
+}
+
+async function copyText(text: string) {
+  try {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+  } catch {
+    /* 아래 방법으로 다시 시도 */
+  }
+  try {
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    ta.style.position = "fixed";
+    ta.style.opacity = "0";
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand("copy");
+    document.body.removeChild(ta);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 function tagsOf(text: string) {
@@ -137,12 +163,51 @@ export default function MemoView() {
   }
 
   function openMemo(m: Memo) {
-    setDraft({ id: m.id, title: m.title, content: m.content, pinned: m.pinned, photos: m.photos });
+    setDraft({
+      id: m.id,
+      title: m.title,
+      content: m.content,
+      pinned: m.pinned,
+      share_token: m.share_token ?? null,
+      photos: m.photos,
+    });
     setDirty(false);
   }
   function newMemo() {
-    setDraft({ id: null, title: "", content: "", pinned: false, photos: [] });
+    setDraft({ id: null, title: "", content: "", pinned: false, share_token: null, photos: [] });
     setDirty(false);
+  }
+
+  /** 링크 공유 켜기 — 없으면 만들고, 있으면 그대로 쓴다 */
+  async function startShare() {
+    if (!draft) return;
+    const id = draft.id || (await ensureSaved());
+    if (!id) return;
+    const r = await fetch(`/api/hub/memos/${id}/share`, { method: "POST" });
+    if (!r.ok) {
+      alert((await r.json().catch(() => ({}))).error || "공유 링크를 만들지 못했습니다");
+      return;
+    }
+    const { share_token } = await r.json();
+    setDraft((d) => (d ? { ...d, id, share_token } : d));
+    setMemos((prev) => prev.map((p) => (p.id === id ? { ...p, share_token } : p)));
+  }
+
+  async function stopShare() {
+    if (!draft?.id) return;
+    if (!confirm("공유를 중지할까요? 이미 보낸 링크가 더 이상 열리지 않습니다.")) return;
+    const r = await fetch(`/api/hub/memos/${draft.id}/share`, { method: "DELETE" });
+    if (r.ok) {
+      setDraft((d) => (d ? { ...d, share_token: null } : d));
+      setMemos((prev) => prev.map((p) => (p.id === draft.id ? { ...p, share_token: null } : p)));
+    }
+  }
+
+  async function copyShareLink() {
+    if (!draft?.share_token) return;
+    const url = `${window.location.origin}/s/${draft.share_token}`;
+    const ok = await copyText(url);
+    alert(ok ? "링크를 복사했습니다" : url);
   }
 
   /** 지금 보고 있는 화면의 고정 아이콘을 먼저 바꾸고, 뒤이어 서버에 반영한다 */
@@ -283,6 +348,7 @@ export default function MemoView() {
               <span className="flex gap-2.5 text-[11px] text-gray-400">
                 <span>{when(m.updated_at)}</span>
                 {m.photos.length > 0 && <span>🖼 {m.photos.length}</span>}
+                {m.share_token && <span className="text-[#8a6d00] font-bold">🔗 공유 중</span>}
               </span>
             </button>
           ))}
@@ -385,6 +451,31 @@ export default function MemoView() {
                   </div>
                 ))}
               </div>
+            )}
+
+            {/* 링크 공유 */}
+            {draft.share_token ? (
+              <div className="flex flex-col gap-2 bg-gray-50 border border-gray-200 rounded-lg px-3 py-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold text-gray-900 shrink-0">🔗 공유 중</span>
+                  <span className="text-[11px] text-gray-500 font-mono truncate">/s/{draft.share_token}</span>
+                </div>
+                <p className="text-[11.5px] text-gray-500 leading-relaxed">
+                  이 링크를 가진 사람은 <b className="text-gray-800">로그인 없이</b> 제목·내용·첨부 사진을 볼 수 있습니다. 고치거나 지울 수는 없습니다.
+                </p>
+                <div className="flex gap-2">
+                  <button onClick={copyShareLink} className="flex-1 py-2 rounded bg-[#FEE500] text-[#191919] text-xs font-bold">
+                    링크 복사
+                  </button>
+                  <button onClick={stopShare} className="px-3 py-2 rounded border border-gray-300 text-xs text-gray-600">
+                    공유 중지
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button onClick={startShare} className="self-start text-xs text-gray-600 border border-gray-300 rounded px-3 py-2">
+                🔗 링크로 공유
+              </button>
             )}
 
             <div className="grid grid-cols-3 gap-2">

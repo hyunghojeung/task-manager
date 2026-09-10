@@ -24,7 +24,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     .update(patch)
     .eq("id", id)
     .eq("user_id", auth.session.user.id)
-    .select("id, title, content, tags, pinned, updated_at")
+    .select("id, title, content, tags, pinned, share_token, updated_at")
     .maybeSingle();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
