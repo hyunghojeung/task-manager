@@ -34,9 +34,13 @@ export function HubMobileHeader() {
   // 서버와 화면이 어긋나지 않게 브라우저에서만 채운다
   const [now, setNow] = useState<{ clock: string; date: string } | null>(null);
   useEffect(() => {
-    setNow(nowStrings());
-    const t = setInterval(() => setNow(nowStrings()), 10000);
-    return () => clearInterval(t);
+    const tick = () => setNow(nowStrings());
+    const first = setTimeout(tick, 0);
+    const timer = setInterval(tick, 10000);
+    return () => {
+      clearTimeout(first);
+      clearInterval(timer);
+    };
   }, []);
 
   return (

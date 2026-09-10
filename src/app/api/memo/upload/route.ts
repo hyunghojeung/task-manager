@@ -17,12 +17,21 @@ async function getDropboxAccessToken(refreshToken: string, appKey: string, appSe
 export async function POST(request: NextRequest) {
   const session = await getApiSession();
   if (!session) return unauthorized();
-  // pwindow 업체만 허용
-  if (session.company.company_id !== "pwindow") {
-    return NextResponse.json({ error: "첨부파일 기능과 게시판 본문의 이미지 복사붙혀넣기 기능은 현재 준비중입니다" }, { status: 403 });
-  }
 
   const supabase = getSupabase();
+
+  // pwindow 업체이거나, 업무관리 권한을 받은 사용자만 허용
+  if (session.company.company_id !== "pwindow") {
+    const { data: hubUser } = await supabase
+      .from("users")
+      .select("hub_enabled")
+      .eq("id", session.user.id)
+      .maybeSingle();
+    if (!hubUser?.hub_enabled) {
+      return NextResponse.json({ error: "첨부파일 기능과 게시판 본문의 이미지 복사붙혀넣기 기능은 현재 준비중입니다" }, { status: 403 });
+    }
+  }
+
   const { data: company } = await supabase
     .from("companies")
     .select("dropbox_app_key, dropbox_app_secret, dropbox_access_token")
@@ -37,7 +46,13 @@ export async function POST(request: NextRequest) {
     const formData = await request.formData();
     const file = formData.get("file") as File;
     if (!file) return NextResponse.json({ error: "파일이 없습니다." }, { status: 400 });
-    const folder = formData.get("folder") as string || "file";
+    // 폴더 이름에 경로 이동 문자가 섞이지 않게 걸러낸다
+    const folder = ((formData.get("folder") as string) || "file")
+      .split("/")
+      .map((s) => s.replace(/[^A-Za-z0-9_-]/g, ""))
+      .filter(Boolean)
+      .slice(0, 3)
+      .join("/") || "file";
 
     const accessToken = await getDropboxAccessToken(company.dropbox_access_token, company.dropbox_app_key, company.dropbox_app_secret);
 
