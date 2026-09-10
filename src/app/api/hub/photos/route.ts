@@ -4,15 +4,17 @@ import { getSupabase } from "@/lib/supabase-admin";
 import { requireHub, extractTags } from "@/lib/hub";
 
 // 사진 목록
-//   /api/hub/photos            전체 (앨범 + 메모 첨부)
-//   /api/hub/photos?album=ID   그 앨범만
-//   /api/hub/photos?q=태그     태그로 검색
+//   /api/hub/photos              전체 (갤러리 + 메모 첨부)
+//   /api/hub/photos?album=ID     그 앨범만
+//   /api/hub/photos?q=태그       태그로 검색
+//   /api/hub/photos?source=gallery  갤러리에 올린 것만 (메모 첨부 제외)
 export async function GET(request: NextRequest) {
   const auth = await requireHub();
   if (!auth.ok) return auth.res;
 
   const { searchParams } = new URL(request.url);
   const album = searchParams.get("album");
+  const source = searchParams.get("source");
   const q = (searchParams.get("q") || "").replace(/^#/, "").trim();
 
   const supabase = getSupabase();
@@ -24,6 +26,8 @@ export async function GET(request: NextRequest) {
     .limit(500);
 
   if (album) query = query.eq("album_id", album);
+  // 갤러리 검색은 갤러리에 올린 사진만 본다. 메모에 붙인 사진은 개인메모에서 찾는다.
+  if (source === "gallery") query = query.is("memo_id", null);
   if (q) query = query.contains("tags", [q]);
 
   const { data, error } = await query;

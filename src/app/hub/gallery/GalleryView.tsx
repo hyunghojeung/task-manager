@@ -49,7 +49,11 @@ export default function GalleryView() {
     try {
       const p = new URLSearchParams();
       if (albumId) p.set("album", albumId);
-      if (keyword) p.set("q", keyword);
+      if (keyword) {
+        p.set("q", keyword);
+        // 갤러리 검색은 갤러리에 올린 사진만 — 메모 첨부 사진은 개인메모에서 찾는다
+        p.set("source", "gallery");
+      }
       const r = await fetch(`/api/hub/photos?${p.toString()}&_=${Date.now()}`);
       if (r.ok) setPhotos((await r.json()).photos || []);
     } finally {
@@ -148,7 +152,7 @@ export default function GalleryView() {
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="태그로 검색 — 메모에 붙인 사진도 함께"
+            placeholder="태그로 검색 — 갤러리에 올린 사진"
             className="flex-1 min-w-0 outline-none text-base bg-transparent"
           />
           {q && (
@@ -198,9 +202,7 @@ export default function GalleryView() {
 
       {searching && (
         <p className="text-xs text-gray-500">
-          <b className="text-gray-900">#{q.replace(/^#/, "")}</b> — 사진 {photos.length}장
-          {photos.filter((p) => p.source === "memo").length > 0 &&
-            ` (메모 첨부 ${photos.filter((p) => p.source === "memo").length}장 포함)`}
+          <b className="text-gray-900">#{q.replace(/^#/, "")}</b> — 갤러리 사진 {photos.length}장
         </p>
       )}
 
