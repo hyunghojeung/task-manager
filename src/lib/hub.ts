@@ -38,6 +38,35 @@ export function normalizeColor(v: unknown): HubColor {
   return HUB_COLORS.includes(v as HubColor) ? (v as HubColor) : "yellow";
 }
 
+/** 본문에서 #태그를 뽑아낸다. 중복은 제거하고 순서는 유지한다. */
+export function extractTags(text: string): string[] {
+  const out: string[] = [];
+  const re = /#([^\s#]{1,30})/g;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(text || "")) !== null) {
+    const t = m[1].trim();
+    if (t && !out.includes(t)) out.push(t);
+  }
+  return out.slice(0, 20);
+}
+
+export interface HubMemo {
+  id: string;
+  title: string;
+  content: string;
+  tags: string[];
+  pinned: boolean;
+  updated_at: string;
+  photos?: HubPhoto[];
+}
+
+export interface HubPhoto {
+  id: string;
+  url: string;
+  file_name: string | null;
+  memo_id: string | null;
+}
+
 export interface HubSchedule {
   id: string;
   on_date: string;
