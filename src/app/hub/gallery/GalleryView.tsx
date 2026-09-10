@@ -27,6 +27,24 @@ interface Photo {
  */
 const SHOW_ALBUMS = false;
 
+/**
+ * 창이 열려 있는 동안 폰의 뒤로가기 버튼이 페이지를 떠나지 않고
+ * 그 창만 닫도록 한다.
+ */
+function useBackToClose(open: boolean, close: () => void) {
+  useEffect(() => {
+    if (!open) return;
+    const onPop = () => close();
+    window.history.pushState({ hubOverlay: true }, "");
+    window.addEventListener("popstate", onPop);
+    return () => {
+      window.removeEventListener("popstate", onPop);
+      // 버튼으로 닫은 경우에는 우리가 넣어 둔 기록을 되돌려 놓는다
+      if (window.history.state?.hubOverlay) window.history.back();
+    };
+  }, [open, close]);
+}
+
 async function copyText(text: string) {
   try {
     if (navigator.clipboard?.writeText) {
@@ -102,6 +120,11 @@ export default function GalleryView() {
 
   const searching = q.replace(/^#/, "").trim().length > 0;
   const showGrid = searching || mode === "all" || !!openAlbum;
+
+  const closeViewer = useCallback(() => setViewer(null), []);
+  const closeUpload = useCallback(() => setUpload(null), []);
+  useBackToClose(viewer !== null, closeViewer);
+  useBackToClose(upload !== null && busy === 0, closeUpload);
 
   async function doUpload(files: FileList | null) {
     if (!files || !upload) return;
@@ -377,11 +400,13 @@ export default function GalleryView() {
           </div>
           <div className="px-5 py-4 text-gray-300 text-xs flex flex-col gap-2" style={{ paddingBottom: "calc(1rem + env(safe-area-inset-bottom))" }}>
             <span className="text-gray-100 text-sm">{photos[viewer].file_name || "사진"}</span>
-            <span>
-              {photos[viewer].source === "memo"
-                ? `메모 「${photos[viewer].source_name}」의 첨부 사진`
-                : `앨범 「${photos[viewer].source_name}」`}
-            </span>
+            {(photos[viewer].source === "memo" || SHOW_ALBUMS) && (
+              <span>
+                {photos[viewer].source === "memo"
+                  ? `메모 「${photos[viewer].source_name}」의 첨부 사진`
+                  : `앨범 「${photos[viewer].source_name}」`}
+              </span>
+            )}
             {photos[viewer].tags.length > 0 && (
               <span className="flex flex-wrap gap-1.5">
                 {photos[viewer].tags.map((t) => (
