@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
   const supabase = getSupabase();
   let query = supabase
     .from("hub_memos")
-    .select("id, title, content, tags, pinned, updated_at")
+    .select("id, title, content, tags, pinned, share_token, updated_at")
     .eq("user_id", auth.session.user.id)
     .order("pinned", { ascending: false })
     .order("updated_at", { ascending: false })
@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
       content,
       tags: extractTags(content),
     })
-    .select("id, title, content, tags, pinned, updated_at")
+    .select("id, title, content, tags, pinned, share_token, updated_at")
     .single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
