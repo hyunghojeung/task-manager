@@ -389,15 +389,6 @@ export default function MemoView() {
                 >
                   {draft.pinned ? "📌" : "📍"}
                 </button>
-                {draft.id && (
-                  <button
-                    onClick={() => removeMemo(draft.id!)}
-                    aria-label="삭제"
-                    className="ml-2 w-9 h-9 grid place-items-center rounded-full hover:bg-red-50 text-red-500 text-sm"
-                  >
-                    🗑
-                  </button>
-                )}
                 <button
                   onClick={close}
                   aria-label="닫기"
@@ -502,6 +493,14 @@ export default function MemoView() {
             <div className="flex items-center justify-between gap-2 pt-1 border-t border-gray-100 mt-1">
               <span className="text-[11.5px] text-gray-400">{dirty ? "저장하지 않은 변경이 있습니다" : ""}</span>
               <div className="flex gap-2">
+                {draft.id && (
+                  <button
+                    onClick={() => removeMemo(draft.id!)}
+                    className="px-4 py-2.5 rounded border border-red-300 text-red-600 text-sm hover:bg-red-50"
+                  >
+                    삭제
+                  </button>
+                )}
                 <button onClick={close} className="px-4 py-2.5 rounded border border-gray-300 text-sm">
                   취소
                 </button>
