@@ -21,12 +21,18 @@ interface Photo {
   source_name: string;
 }
 
+/**
+ * 앨범 기능 감추기.
+ * 지우지 않고 꺼 둔 것이라 true 로 바꾸면 앨범 목록·앨범 지정 업로드가 다시 나온다.
+ */
+const SHOW_ALBUMS = false;
+
 export default function GalleryView() {
   const [albums, setAlbums] = useState<Album[]>([]);
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [openAlbum, setOpenAlbum] = useState<Album | null>(null);
   const [q, setQ] = useState("");
-  const [mode, setMode] = useState<"album" | "all">("album");
+  const [mode, setMode] = useState<"album" | "all">(SHOW_ALBUMS ? "album" : "all");
   const [loading, setLoading] = useState(true);
   const [viewer, setViewer] = useState<number | null>(null);
   const [upload, setUpload] = useState<{ album: string; tags: string } | null>(null);
@@ -52,7 +58,7 @@ export default function GalleryView() {
   }, []);
 
   useEffect(() => {
-    loadAlbums();
+    if (SHOW_ALBUMS) loadAlbums();
   }, [loadAlbums]);
 
   useEffect(() => {
@@ -108,7 +114,7 @@ export default function GalleryView() {
       setBusy(0);
       setUpload(null);
       if (fileRef.current) fileRef.current.value = "";
-      await loadAlbums();
+      if (SHOW_ALBUMS) await loadAlbums();
       if (openAlbum) loadPhotos(openAlbum.id);
       else if (mode === "all") loadPhotos();
     }
@@ -120,7 +126,7 @@ export default function GalleryView() {
     if (r.ok) {
       setPhotos((prev) => prev.filter((x) => x.id !== p.id));
       setViewer(null);
-      loadAlbums();
+      if (SHOW_ALBUMS) loadAlbums();
     }
   }
 
@@ -159,8 +165,8 @@ export default function GalleryView() {
         </button>
       </div>
 
-      {/* 머리말 */}
-      {!searching && (
+      {/* 머리말 — 앨범을 감춘 동안에는 보여줄 것이 없다 */}
+      {SHOW_ALBUMS && !searching && (
         <div className="flex items-center justify-between gap-2">
           {openAlbum ? (
             <button onClick={() => setOpenAlbum(null)} className="text-sm font-bold text-gray-900">
@@ -199,7 +205,7 @@ export default function GalleryView() {
       )}
 
       {/* 앨범 목록 */}
-      {!showGrid && (
+      {SHOW_ALBUMS && !showGrid && (
         albums.length === 0 ? (
           <div className="text-center text-xs text-gray-400 py-12 border border-dashed border-gray-300 rounded-lg whitespace-pre-line">
             {"앨범이 없습니다\n+ 를 눌러 사진을 올려보세요"}
@@ -274,22 +280,24 @@ export default function GalleryView() {
             >
               ✕
             </button>
-            <label className="flex flex-col gap-1.5">
-              <span className="text-xs font-semibold text-gray-600">앨범</span>
-              <input
-                value={upload.album}
-                onChange={(e) => setUpload({ ...upload, album: e.target.value })}
-                list="hub-albums"
-                placeholder="예: 제주 여행"
-                className="border border-gray-300 rounded px-3 py-2.5 text-base outline-none focus:border-gray-900"
-              />
-              <datalist id="hub-albums">
-                {albums.map((a) => (
-                  <option key={a.id} value={a.name} />
-                ))}
-              </datalist>
-              <span className="text-[11px] text-gray-400">없는 이름을 적으면 새 앨범이 만들어집니다. 비워두면 앨범 없이 올라갑니다.</span>
-            </label>
+            {SHOW_ALBUMS && (
+              <label className="flex flex-col gap-1.5">
+                <span className="text-xs font-semibold text-gray-600">앨범</span>
+                <input
+                  value={upload.album}
+                  onChange={(e) => setUpload({ ...upload, album: e.target.value })}
+                  list="hub-albums"
+                  placeholder="예: 제주 여행"
+                  className="border border-gray-300 rounded px-3 py-2.5 text-base outline-none focus:border-gray-900"
+                />
+                <datalist id="hub-albums">
+                  {albums.map((a) => (
+                    <option key={a.id} value={a.name} />
+                  ))}
+                </datalist>
+                <span className="text-[11px] text-gray-400">없는 이름을 적으면 새 앨범이 만들어집니다. 비워두면 앨범 없이 올라갑니다.</span>
+              </label>
+            )}
             <label className="flex flex-col gap-1.5">
               <span className="text-xs font-semibold text-gray-600">태그</span>
               <input
