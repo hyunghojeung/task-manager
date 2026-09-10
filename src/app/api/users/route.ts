@@ -7,7 +7,7 @@ export async function GET() {
   const session = await getApiSession();
   if (!session) return unauthorized();
   const supabase = getSupabase();
-  const { data, error } = await supabase.from("users").select("id, user_id, name, email, phone, role, created_at").eq("company_id", session.company.id).order("created_at");
+  const { data, error } = await supabase.from("users").select("id, user_id, name, email, phone, role, hub_enabled, created_at").eq("company_id", session.company.id).order("created_at");
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json(data);
 }

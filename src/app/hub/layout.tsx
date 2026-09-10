@@ -4,7 +4,10 @@ import { getSupabase } from "@/lib/supabase-admin";
 import Header from "@/components/Header";
 import NavBar from "@/components/NavBar";
 
-export default async function AdminLayout({
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
+export default async function HubLayout({
   children,
 }: {
   children: React.ReactNode;
@@ -15,22 +18,23 @@ export default async function AdminLayout({
     redirect("/");
   }
 
-  if (session.user.role !== "admin" && session.user.role !== "super_admin") {
-    redirect("/dashboard");
-  }
-
   const supabase = getSupabase();
-  const { data: settingsData } = await supabase
-    .from("system_settings")
-    .select("system_name")
-    .eq("id", 1)
-    .maybeSingle();
 
-  // 업무관리 사용 권한 — 네비바 버튼 표시용
+  // 업무관리 권한 확인 — 화면에서 버튼을 숨기는 것과 별개로 여기서 실제로 막는다
   const { data: hubUser } = await supabase
     .from("users")
     .select("hub_enabled")
     .eq("id", session.user.id)
+    .maybeSingle();
+
+  if (!hubUser?.hub_enabled) {
+    redirect("/dashboard");
+  }
+
+  const { data: settingsData } = await supabase
+    .from("system_settings")
+    .select("system_name")
+    .eq("id", 1)
     .maybeSingle();
 
   return (
@@ -43,7 +47,7 @@ export default async function AdminLayout({
         systemName={settingsData?.system_name}
         impersonated={session.impersonated}
       />
-      <NavBar role={session.user.role} hubEnabled={hubUser?.hub_enabled ?? false} />
+      <NavBar role={session.user.role} hubEnabled />
       <main className="p-4 md:p-6">{children}</main>
     </div>
   );

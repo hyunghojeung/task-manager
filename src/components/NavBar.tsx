@@ -2,10 +2,14 @@
 
 import { usePathname } from "next/navigation";
 
-export default function NavBar({ role }: { role?: string }) {
+export default function NavBar({ role, hubEnabled }: { role?: string; hubEnabled?: boolean }) {
   const pathname = usePathname();
 
-  const links: Array<{ href: string; label: string; color: string; external?: boolean }> = [
+  const links: Array<{ href: string; label: string; color: string; text?: string; external?: boolean }> = [
+    // 업무관리: 관리자가 사용자별로 켜 준 사람에게만 보인다
+    ...(hubEnabled
+      ? [{ href: "/hub", label: "업무관리", color: "bg-[#FEE500] hover:bg-[#f2da00]", text: "text-[#191919] font-bold" }]
+      : []),
     { href: "/tools/taekbae.html", label: "송장변환", color: "bg-amber-500 hover:bg-amber-600", external: true },
     { href: "/dashboard", label: "작업리스트", color: "bg-blue-600 hover:bg-blue-700" },
     { href: "/dashboard/write", label: "작업등록", color: "bg-blue-600 hover:bg-blue-700" },
@@ -25,8 +29,10 @@ export default function NavBar({ role }: { role?: string }) {
           href={link.href}
           target={link.external ? "_blank" : undefined}
           rel={link.external ? "noopener noreferrer" : undefined}
-          className={`px-4 py-2 rounded text-white text-xs md:text-sm font-medium whitespace-nowrap transition ${
-            pathname === link.href ? link.color + " ring-2 ring-offset-1 ring-blue-300" : link.color
+          className={`px-4 py-2 rounded text-xs md:text-sm font-medium whitespace-nowrap transition ${link.text || "text-white"} ${
+            pathname === link.href || (link.href === "/hub" && pathname.startsWith("/hub/"))
+              ? link.color + " ring-2 ring-offset-1 ring-blue-300"
+              : link.color
           }`}
         >
           {link.label}
