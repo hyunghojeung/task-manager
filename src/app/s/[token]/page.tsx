@@ -43,7 +43,7 @@ export default async function SharedMemoPage({ params }: { params: Promise<{ tok
     <div className="min-h-screen bg-gray-50 py-8 px-4">
       <article className="max-w-2xl mx-auto bg-white border border-gray-200 rounded-xl p-6 md:p-8 flex flex-col gap-4">
         <h1 className="text-2xl md:text-3xl font-bold text-gray-900">{memo.title || "제목 없음"}</h1>
-        <p className="text-xs text-gray-400">
+        <p className="text-xs text-gray-400 md:border-b md:border-gray-200 md:pb-4 md:-mt-1">
           {d.getFullYear()}년 {d.getMonth() + 1}월 {d.getDate()}일 작성
           {(photos || []).length > 0 && ` · 사진 ${(photos || []).length}장`}
         </p>

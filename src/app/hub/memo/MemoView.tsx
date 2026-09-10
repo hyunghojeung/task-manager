@@ -403,7 +403,7 @@ export default function MemoView() {
               value={draft.title}
               onChange={(e) => edit({ title: e.target.value })}
               placeholder="제목"
-              className="text-xl font-bold outline-none w-full placeholder:text-gray-300"
+              className="text-xl font-bold outline-none w-full placeholder:text-gray-300 md:border-b md:border-gray-200 md:pb-2.5"
             />
             <textarea
               value={draft.content}
