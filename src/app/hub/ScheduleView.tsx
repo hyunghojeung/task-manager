@@ -199,7 +199,7 @@ export default function ScheduleView() {
   const isOff = (key: string, dow: number) => dow === 0 || !!holidays[key];
 
   return (
-    <div className="w-full flex flex-col gap-4 pb-24 md:pb-6">
+    <div className="w-full flex flex-col gap-4 pb-28 md:pb-6">
       {/* 머리말 */}
       <div className="flex items-center justify-between gap-3">
         <p className="text-xs text-gray-500">나만 보는 개인 일정입니다</p>
@@ -349,7 +349,7 @@ export default function ScheduleView() {
       <button
         onClick={() => setForm({ title: "", content: "", color: "yellow" })}
         aria-label="일정 추가"
-        style={{ bottom: "calc(1.5rem + env(safe-area-inset-bottom))" }}
+        style={{ bottom: "calc(5.25rem + env(safe-area-inset-bottom))" }}
         className="md:hidden fixed right-5 w-14 h-14 rounded-full bg-[#FEE500] text-[#191919] text-3xl font-bold shadow-lg grid place-items-center leading-none"
       >
         +
