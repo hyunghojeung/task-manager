@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useBackToClose } from "../useBackToClose";
 
 interface Album {
   id: string;
@@ -26,24 +27,6 @@ interface Photo {
  * 지우지 않고 꺼 둔 것이라 true 로 바꾸면 앨범 목록·앨범 지정 업로드가 다시 나온다.
  */
 const SHOW_ALBUMS = false;
-
-/**
- * 창이 열려 있는 동안 폰의 뒤로가기 버튼이 페이지를 떠나지 않고
- * 그 창만 닫도록 한다.
- */
-function useBackToClose(open: boolean, close: () => void) {
-  useEffect(() => {
-    if (!open) return;
-    const onPop = () => close();
-    window.history.pushState({ hubOverlay: true }, "");
-    window.addEventListener("popstate", onPop);
-    return () => {
-      window.removeEventListener("popstate", onPop);
-      // 버튼으로 닫은 경우에는 우리가 넣어 둔 기록을 되돌려 놓는다
-      if (window.history.state?.hubOverlay) window.history.back();
-    };
-  }, [open, close]);
-}
 
 async function copyText(text: string) {
   try {
@@ -80,6 +63,7 @@ export default function GalleryView() {
   const [upload, setUpload] = useState<{ album: string; tags: string } | null>(null);
   const [busy, setBusy] = useState(0);
   const fileRef = useRef<HTMLInputElement>(null);
+  const cameraRef = useRef<HTMLInputElement>(null);
 
   const loadAlbums = useCallback(async () => {
     const r = await fetch(`/api/hub/albums?_=${Date.now()}`);
@@ -165,6 +149,7 @@ export default function GalleryView() {
       setBusy(0);
       setUpload(null);
       if (fileRef.current) fileRef.current.value = "";
+      if (cameraRef.current) cameraRef.current.value = "";
       if (SHOW_ALBUMS) await loadAlbums();
       if (openAlbum) loadPhotos(openAlbum.id);
       else if (mode === "all") loadPhotos();
@@ -360,13 +345,22 @@ export default function GalleryView() {
             {busy > 0 ? (
               <p className="text-sm text-gray-600 text-center py-2">올리는 중… {busy}장 남음</p>
             ) : (
-              <button
-                onClick={() => fileRef.current?.click()}
-                className="w-full py-3 rounded bg-[#FEE500] text-[#191919] text-sm font-bold"
-              >
-                사진 고르기
-              </button>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={() => cameraRef.current?.click()}
+                  className="py-3 rounded border border-gray-300 text-sm font-medium"
+                >
+                  📷 사진 찍기
+                </button>
+                <button
+                  onClick={() => fileRef.current?.click()}
+                  className="py-3 rounded bg-[#FEE500] text-[#191919] text-sm font-bold"
+                >
+                  🖼 사진 고르기
+                </button>
+              </div>
             )}
+            <input ref={cameraRef} type="file" accept="image/*" capture="environment" hidden onChange={(e) => doUpload(e.target.files)} />
             <input ref={fileRef} type="file" accept="image/*" multiple hidden onChange={(e) => doUpload(e.target.files)} />
           </div>
         </div>
