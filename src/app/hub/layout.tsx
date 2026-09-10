@@ -3,6 +3,7 @@ import { getSession } from "@/lib/session";
 import { getSupabase } from "@/lib/supabase-admin";
 import Header from "@/components/Header";
 import NavBar from "@/components/NavBar";
+import HubTabs from "./HubTabs";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -48,7 +49,10 @@ export default async function HubLayout({
         impersonated={session.impersonated}
       />
       <NavBar role={session.user.role} hubEnabled />
-      <main className="p-4 md:p-6">{children}</main>
+      <main className="p-4 md:p-6">
+        <HubTabs />
+        {children}
+      </main>
     </div>
   );
 }

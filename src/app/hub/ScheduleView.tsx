@@ -199,13 +199,10 @@ export default function ScheduleView() {
   const isOff = (key: string, dow: number) => dow === 0 || !!holidays[key];
 
   return (
-    <div className="max-w-6xl mx-auto flex flex-col gap-4 pb-24 md:pb-6">
+    <div className="w-full flex flex-col gap-4 pb-24 md:pb-6">
       {/* 머리말 */}
       <div className="flex items-center justify-between gap-3">
-        <div>
-          <h2 className="text-lg md:text-xl font-bold text-gray-900">일정</h2>
-          <p className="text-xs text-gray-500 mt-0.5">나만 보는 개인 일정입니다</p>
-        </div>
+        <p className="text-xs text-gray-500">나만 보는 개인 일정입니다</p>
         <div className="flex items-center gap-2">
           <button onClick={goToday} className="px-3 py-1.5 border border-gray-300 rounded text-xs bg-white hover:bg-gray-50">
             오늘
@@ -219,7 +216,7 @@ export default function ScheduleView() {
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_320px] items-start">
+      <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_320px] xl:grid-cols-[minmax(0,1fr)_360px] items-start">
         {/* ===== 달력 ===== */}
         <div>
           <div className="flex items-center justify-between px-1 pb-2">
@@ -292,7 +289,7 @@ export default function ScheduleView() {
                 <button
                   key={c.key}
                   onClick={() => setSel(c.key)}
-                  className={`border-r border-b border-gray-200/70 min-h-[112px] p-2 flex flex-col gap-1 text-left overflow-hidden ${
+                  className={`border-r border-b border-gray-200/70 min-h-[112px] xl:min-h-[132px] p-2 flex flex-col gap-1 text-left overflow-hidden ${
                     selected ? "bg-[#FEE500]/25 ring-1 ring-inset ring-[#FEE500]" : c.other ? "bg-gray-50/60 hover:bg-gray-100" : "hover:bg-gray-50"
                   }`}
                 >
