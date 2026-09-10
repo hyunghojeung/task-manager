@@ -202,8 +202,7 @@ export default function ScheduleView() {
     <div className="w-full flex flex-col gap-4 pb-28 md:pb-6">
       {/* 머리말 */}
       <div className="flex items-center justify-between gap-3">
-        <p className="text-xs text-gray-500">나만 보는 개인 일정입니다</p>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 ml-auto">
           <button onClick={goToday} className="px-3 py-1.5 border border-gray-300 rounded text-xs bg-white hover:bg-gray-50">
             오늘
           </button>
