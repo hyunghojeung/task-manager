@@ -335,7 +335,7 @@ export default function MemoView() {
               className="text-left border border-gray-200 bg-white rounded-lg p-3.5 flex flex-col gap-1.5 hover:border-gray-400"
             >
               <span className="text-[15px] font-bold text-gray-900 flex items-center gap-1.5">
-                {m.pinned && <span className="text-[#E5B800]">★</span>}
+                {m.pinned && <span className="text-xs">📌</span>}
                 {m.title || "제목 없음"}
               </span>
               {stripTags(m.content) && (
@@ -381,11 +381,13 @@ export default function MemoView() {
                 <button
                   onClick={togglePin}
                   aria-pressed={draft.pinned}
-                  className={`h-8 px-2.5 rounded-full text-xs flex items-center gap-1 ${
-                    draft.pinned ? "text-[#8a6d00] bg-[#FEE500]/40 font-bold" : "text-gray-500 hover:bg-gray-100"
+                  aria-label={draft.pinned ? "고정 해제" : "고정"}
+                  title={draft.pinned ? "고정 해제" : "고정"}
+                  className={`w-9 h-9 grid place-items-center rounded-full text-base ${
+                    draft.pinned ? "bg-[#FEE500]/40" : "hover:bg-gray-100"
                   }`}
                 >
-                  {draft.pinned ? "★ 고정됨" : "☆ 고정"}
+                  {draft.pinned ? "📌" : "📍"}
                 </button>
                 {draft.id && (
                   <button
