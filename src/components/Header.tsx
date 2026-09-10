@@ -40,7 +40,7 @@ export default function Header({ companyName, userName, userId, userRole, banner
         </h1>
         <div className="flex items-center gap-2 md:gap-3 text-xs md:text-sm">
           {userName && <span>{userName}님 ({userId})</span>}
-          {userRole === "admin" && (
+          {(userRole === "admin" || userRole === "super_admin") && (
             <a href="/admin" className="text-slate-400 hover:text-white transition">관리자</a>
           )}
           <button onClick={handleLogout} className="text-slate-400 hover:text-white transition">
