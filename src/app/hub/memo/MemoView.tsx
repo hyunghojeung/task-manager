@@ -17,6 +17,14 @@ interface Memo {
   updated_at: string;
   photos: Photo[];
 }
+/** 편집 중인 내용. id 가 없으면 아직 등록 전이다. */
+interface Draft {
+  id: string | null;
+  title: string;
+  content: string;
+  pinned: boolean;
+  photos: Photo[];
+}
 
 function tagsOf(text: string) {
   const out: string[] = [];
@@ -33,9 +41,8 @@ function stripTags(text: string) {
 }
 function when(iso: string) {
   const d = new Date(iso);
-  const now = new Date();
-  const sameDay = d.toDateString() === now.toDateString();
-  if (sameDay) return `오늘 ${d.getHours()}:${String(d.getMinutes()).padStart(2, "0")}`;
+  if (d.toDateString() === new Date().toDateString())
+    return `오늘 ${d.getHours()}:${String(d.getMinutes()).padStart(2, "0")}`;
   return `${d.getMonth() + 1}월 ${d.getDate()}일`;
 }
 
@@ -43,13 +50,12 @@ export default function MemoView() {
   const [memos, setMemos] = useState<Memo[]>([]);
   const [q, setQ] = useState("");
   const [loading, setLoading] = useState(true);
-  const [open, setOpen] = useState<Memo | null>(null);
-  const [saved, setSaved] = useState(false);
+  const [draft, setDraft] = useState<Draft | null>(null);
+  const [dirty, setDirty] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(0);
   const fileRef = useRef<HTMLInputElement>(null);
   const cameraRef = useRef<HTMLInputElement>(null);
-  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const savedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const load = useCallback(async (keyword: string) => {
     setLoading(true);
@@ -66,66 +72,119 @@ export default function MemoView() {
     return () => clearTimeout(t);
   }, [q, load]);
 
-  function flashSaved() {
-    setSaved(true);
-    if (savedTimer.current) clearTimeout(savedTimer.current);
-    savedTimer.current = setTimeout(() => setSaved(false), 1800);
+  function edit(patch: Partial<Draft>) {
+    if (!draft) return;
+    setDraft({ ...draft, ...patch });
+    setDirty(true);
   }
 
-  // 편집 중 자동 저장 (입력이 멎고 0.7초 뒤)
-  function edit(patch: Partial<Memo>) {
-    if (!open) return;
-    const next = { ...open, ...patch };
-    if (patch.content !== undefined) next.tags = tagsOf(patch.content);
-    setOpen(next);
-    setMemos((prev) => prev.map((m) => (m.id === next.id ? next : m)));
-
-    if (saveTimer.current) clearTimeout(saveTimer.current);
-    saveTimer.current = setTimeout(async () => {
-      const r = await fetch(`/api/hub/memos/${next.id}`, {
+  /** 사진을 붙이려면 메모가 먼저 있어야 해서, 없으면 조용히 만들어 둔다 */
+  async function ensureSaved(): Promise<string | null> {
+    if (!draft) return null;
+    if (draft.id) {
+      await fetch(`/api/hub/memos/${draft.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title: next.title, content: next.content }),
+        body: JSON.stringify({ title: draft.title, content: draft.content }),
       });
-      if (r.ok) flashSaved();
-    }, 700);
-  }
-
-  async function createMemo() {
+      return draft.id;
+    }
     const r = await fetch("/api/hub/memos", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title: "", content: "" }),
+      body: JSON.stringify({ title: draft.title, content: draft.content }),
     });
     if (!r.ok) {
-      alert((await r.json().catch(() => ({}))).error || "메모를 만들지 못했습니다");
+      alert((await r.json().catch(() => ({}))).error || "메모를 저장하지 못했습니다");
+      return null;
+    }
+    const created: Memo = await r.json();
+    setDraft((d) => (d ? { ...d, id: created.id } : d));
+    return created.id;
+  }
+
+  async function save() {
+    if (!draft || saving) return;
+    if (!draft.title.trim() && !draft.content.trim() && draft.photos.length === 0) {
+      alert("내용을 입력하세요");
       return;
     }
-    const m: Memo = await r.json();
-    setMemos((prev) => [m, ...prev]);
-    setOpen(m);
+    setSaving(true);
+    try {
+      const id = await ensureSaved();
+      if (!id) return;
+      // 등록 전에 켜 둔 고정을 여기서 반영한다
+      if (draft.pinned) {
+        await fetch(`/api/hub/memos/${id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ pinned: true }),
+        });
+      }
+      setDirty(false);
+      setDraft(null);
+      await load(q);
+    } finally {
+      setSaving(false);
+    }
   }
 
-  async function togglePin(m: Memo) {
-    const r = await fetch(`/api/hub/memos/${m.id}`, {
+  function close() {
+    if (dirty && !confirm("저장하지 않고 닫을까요? 적은 내용이 사라집니다.")) return;
+    setDraft(null);
+    setDirty(false);
+    load(q);
+  }
+
+  function openMemo(m: Memo) {
+    setDraft({ id: m.id, title: m.title, content: m.content, pinned: m.pinned, photos: m.photos });
+    setDirty(false);
+  }
+  function newMemo() {
+    setDraft({ id: null, title: "", content: "", pinned: false, photos: [] });
+    setDirty(false);
+  }
+
+  /** 지금 보고 있는 화면의 고정 아이콘을 먼저 바꾸고, 뒤이어 서버에 반영한다 */
+  async function togglePin() {
+    if (!draft) return;
+    const next = !draft.pinned;
+    setDraft({ ...draft, pinned: next });
+
+    // 아직 등록 전이면 저장할 때 함께 반영한다
+    if (!draft.id) {
+      setDirty(true);
+      return;
+    }
+
+    const r = await fetch(`/api/hub/memos/${draft.id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ pinned: !m.pinned }),
+      body: JSON.stringify({ pinned: next }),
     });
-    if (r.ok) load(q);
+    if (r.ok) {
+      setMemos((prev) => prev.map((p) => (p.id === draft.id ? { ...p, pinned: next } : p)));
+    } else {
+      setDraft((d) => (d ? { ...d, pinned: !next } : d)); // 실패하면 되돌린다
+      alert("고정 상태를 바꾸지 못했습니다");
+    }
   }
 
-  async function removeMemo(m: Memo) {
+  async function removeMemo(id: string) {
     if (!confirm("이 메모를 삭제할까요? 첨부한 사진도 함께 지워집니다.")) return;
-    const r = await fetch(`/api/hub/memos/${m.id}`, { method: "DELETE" });
+    const r = await fetch(`/api/hub/memos/${id}`, { method: "DELETE" });
     if (r.ok) {
-      setMemos((prev) => prev.filter((p) => p.id !== m.id));
-      setOpen(null);
+      setMemos((prev) => prev.filter((p) => p.id !== id));
+      setDraft(null);
+      setDirty(false);
     }
   }
 
   async function attach(files: FileList | null) {
-    if (!files || !open) return;
+    if (!files || !draft) return;
+    const memoId = await ensureSaved();
+    if (!memoId) return;
+
     const list = Array.from(files).slice(0, 10);
     setUploading(list.length);
     try {
@@ -142,12 +201,11 @@ export default function MemoView() {
         const r = await fetch("/api/hub/photos", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ url: upData.url, memo_id: open.id, file_name: file.name, file_size: file.size }),
+          body: JSON.stringify({ url: upData.url, memo_id: memoId, file_name: file.name, file_size: file.size }),
         });
         if (r.ok) {
           const photo: Photo = await r.json();
-          setOpen((prev) => (prev ? { ...prev, photos: [...prev.photos, photo] } : prev));
-          setMemos((prev) => prev.map((m) => (m.id === open.id ? { ...m, photos: [...m.photos, photo] } : m)));
+          setDraft((d) => (d ? { ...d, photos: [...d.photos, photo] } : d));
         }
         setUploading((n) => n - 1);
       }
@@ -159,13 +217,11 @@ export default function MemoView() {
   }
 
   async function removePhoto(p: Photo) {
-    if (!open) return;
     const r = await fetch(`/api/hub/photos/${p.id}`, { method: "DELETE" });
-    if (r.ok) {
-      setOpen((prev) => (prev ? { ...prev, photos: prev.photos.filter((x) => x.id !== p.id) } : prev));
-      setMemos((prev) => prev.map((m) => (m.id === open.id ? { ...m, photos: m.photos.filter((x) => x.id !== p.id) } : m)));
-    }
+    if (r.ok) setDraft((d) => (d ? { ...d, photos: d.photos.filter((x) => x.id !== p.id) } : d));
   }
+
+  const draftTags = draft ? tagsOf(draft.content) : [];
 
   return (
     <div className="w-full flex flex-col gap-3 pb-28 md:pb-6">
@@ -186,7 +242,7 @@ export default function MemoView() {
           )}
         </div>
         <button
-          onClick={createMemo}
+          onClick={newMemo}
           className="hidden md:inline-flex px-3.5 py-2.5 rounded text-xs font-bold bg-[#FEE500] text-[#191919] hover:bg-[#f2da00] whitespace-nowrap"
         >
           + 새 메모
@@ -205,11 +261,11 @@ export default function MemoView() {
           {memos.map((m) => (
             <button
               key={m.id}
-              onClick={() => setOpen(m)}
+              onClick={() => openMemo(m)}
               className="text-left border border-gray-200 bg-white rounded-lg p-3.5 flex flex-col gap-1.5 hover:border-gray-400"
             >
               <span className="text-[15px] font-bold text-gray-900 flex items-center gap-1.5">
-                {m.pinned && <span className="text-xs">📌</span>}
+                {m.pinned && <span className="text-[#E5B800]">★</span>}
                 {m.title || "제목 없음"}
               </span>
               {stripTags(m.content) && (
@@ -235,7 +291,7 @@ export default function MemoView() {
 
       {/* 새 메모 (폰) */}
       <button
-        onClick={createMemo}
+        onClick={newMemo}
         aria-label="새 메모"
         style={{ bottom: "calc(5.25rem + env(safe-area-inset-bottom))" }}
         className="md:hidden fixed right-5 w-14 h-14 rounded-full bg-[#FEE500] text-[#191919] text-3xl font-bold shadow-lg grid place-items-center leading-none"
@@ -244,34 +300,33 @@ export default function MemoView() {
       </button>
 
       {/* 편집 */}
-      {open && (
+      {draft && (
         <div className="fixed inset-0 z-[60] flex items-end md:items-center justify-center">
-          <div
-            className="absolute inset-0 bg-black/40"
-            onClick={() => {
-              setOpen(null);
-              load(q);
-            }}
-          />
+          <div className="absolute inset-0 bg-black/40" onClick={close} />
           <div className="relative w-full md:max-w-lg bg-white rounded-t-2xl md:rounded-xl p-5 flex flex-col gap-3 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between gap-2">
-              <span className={`text-xs transition-opacity ${saved ? "opacity-100 text-gray-500" : "opacity-0"}`}>✓ 저장됨</span>
+              <span className="text-sm font-bold text-gray-900">{draft.id ? "메모 수정" : "새 메모"}</span>
               <div className="flex items-center gap-1">
-                <button onClick={() => togglePin(open)} aria-label="고정" className="w-9 h-9 grid place-items-center rounded-full hover:bg-gray-100 text-base">
-                  {open.pinned ? "📌" : "📍"}
-                </button>
                 <button
-                  onClick={() => removeMemo(open)}
-                  aria-label="삭제"
-                  className="w-9 h-9 grid place-items-center rounded-full hover:bg-red-50 text-red-500 text-sm"
+                  onClick={togglePin}
+                  aria-pressed={draft.pinned}
+                  className={`h-8 px-2.5 rounded-full text-xs flex items-center gap-1 ${
+                    draft.pinned ? "text-[#8a6d00] bg-[#FEE500]/40 font-bold" : "text-gray-500 hover:bg-gray-100"
+                  }`}
                 >
-                  🗑
+                  {draft.pinned ? "★ 고정됨" : "☆ 고정"}
                 </button>
+                {draft.id && (
+                  <button
+                    onClick={() => removeMemo(draft.id!)}
+                    aria-label="삭제"
+                    className="ml-2 w-9 h-9 grid place-items-center rounded-full hover:bg-red-50 text-red-500 text-sm"
+                  >
+                    🗑
+                  </button>
+                )}
                 <button
-                  onClick={() => {
-                    setOpen(null);
-                    load(q);
-                  }}
+                  onClick={close}
                   aria-label="닫기"
                   className="w-9 h-9 grid place-items-center rounded-full hover:bg-gray-100 text-gray-400 text-lg leading-none"
                 >
@@ -281,13 +336,13 @@ export default function MemoView() {
             </div>
 
             <input
-              value={open.title}
+              value={draft.title}
               onChange={(e) => edit({ title: e.target.value })}
               placeholder="제목"
               className="text-xl font-bold outline-none w-full placeholder:text-gray-300"
             />
             <textarea
-              value={open.content}
+              value={draft.content}
               onChange={(e) => edit({ content: e.target.value })}
               placeholder="내용을 입력하세요. #여행 처럼 적으면 태그가 됩니다."
               rows={7}
@@ -296,17 +351,17 @@ export default function MemoView() {
 
             <div className="flex flex-wrap items-center gap-1.5 bg-[#FEE500]/25 rounded-lg px-3 py-2.5">
               <span className="text-[11px] font-bold text-gray-900">태그</span>
-              {open.tags.length === 0 ? (
+              {draftTags.length === 0 ? (
                 <span className="text-[11.5px] text-gray-500">본문에 #태그 를 적으면 여기에 모입니다</span>
               ) : (
                 <>
-                  {open.tags.map((t) => (
+                  {draftTags.map((t) => (
                     <em key={t} className="not-italic text-[11.5px] font-bold bg-white rounded-full px-2 py-0.5">
                       #{t}
                     </em>
                   ))}
-                  {open.photos.length > 0 && (
-                    <span className="text-[11.5px] text-gray-600">첨부 {open.photos.length}장에도 적용됨</span>
+                  {draft.photos.length > 0 && (
+                    <span className="text-[11.5px] text-gray-600">첨부 {draft.photos.length}장에도 적용됨</span>
                   )}
                 </>
               )}
@@ -314,9 +369,9 @@ export default function MemoView() {
 
             {uploading > 0 && <div className="text-xs text-gray-500">사진 올리는 중… {uploading}장 남음</div>}
 
-            {open.photos.length > 0 && (
+            {draft.photos.length > 0 && (
               <div className="grid grid-cols-3 gap-1.5">
-                {open.photos.map((p) => (
+                {draft.photos.map((p) => (
                   <div key={p.id} className="relative aspect-square rounded overflow-hidden bg-gray-100">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={p.url} alt={p.file_name || "첨부 사진"} className="w-full h-full object-cover" />
@@ -345,6 +400,22 @@ export default function MemoView() {
             </div>
             <input ref={cameraRef} type="file" accept="image/*" capture="environment" hidden onChange={(e) => attach(e.target.files)} />
             <input ref={fileRef} type="file" accept="image/*" multiple hidden onChange={(e) => attach(e.target.files)} />
+
+            <div className="flex items-center justify-between gap-2 pt-1 border-t border-gray-100 mt-1">
+              <span className="text-[11.5px] text-gray-400">{dirty ? "저장하지 않은 변경이 있습니다" : ""}</span>
+              <div className="flex gap-2">
+                <button onClick={close} className="px-4 py-2.5 rounded border border-gray-300 text-sm">
+                  취소
+                </button>
+                <button
+                  onClick={save}
+                  disabled={saving}
+                  className="px-6 py-2.5 rounded bg-[#FEE500] text-[#191919] text-sm font-bold disabled:opacity-50"
+                >
+                  {saving ? "저장 중…" : draft.id ? "저장" : "등록"}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
