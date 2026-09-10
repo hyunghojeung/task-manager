@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useBackToClose } from "../useBackToClose";
 
 interface Photo {
   id: string;
@@ -155,12 +156,16 @@ export default function MemoView() {
     }
   }
 
-  function close() {
-    if (dirty && !confirm("저장하지 않고 닫을까요? 적은 내용이 사라집니다.")) return;
+  const close = useCallback(() => {
+    if (dirty && !confirm("저장하지 않고 닫을까요? 적은 내용이 사라집니다.")) return false;
     setDraft(null);
     setDirty(false);
     load(q);
-  }
+    return true;
+  }, [dirty, load, q]);
+
+  // 폰 뒤로가기로 편집 창만 닫고 메모 목록에 남는다
+  useBackToClose(draft !== null, close);
 
   function openMemo(m: Memo) {
     setDraft({

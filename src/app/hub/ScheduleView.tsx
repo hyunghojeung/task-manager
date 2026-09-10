@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useBackToClose } from "./useBackToClose";
 
 interface Item {
   id: string;
@@ -197,6 +198,14 @@ export default function ScheduleView() {
   }, [view.y, view.m]);
 
   const isOff = (key: string, dow: number) => dow === 0 || !!holidays[key];
+
+  // 폰 뒤로가기로 창만 닫고 일정 화면에 남는다
+  const closeDay = useCallback(() => setDayOpen(false), []);
+  const closeDetail = useCallback(() => setDetail(null), []);
+  const closeForm = useCallback(() => setForm(null), []);
+  useBackToClose(dayOpen, closeDay);
+  useBackToClose(detail !== null, closeDetail);
+  useBackToClose(form !== null, closeForm);
 
   return (
     <div className="w-full flex flex-col gap-4 pb-28 md:pb-6">
