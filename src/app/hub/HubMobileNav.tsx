@@ -1,6 +1,20 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
+
+const DOW = ["일", "월", "화", "수", "목", "금", "토"];
+
+function nowStrings() {
+  const d = new Date();
+  const h = d.getHours();
+  const ap = h < 12 ? "오전" : "오후";
+  const h12 = h % 12 === 0 ? 12 : h % 12;
+  return {
+    clock: `${ap} ${h12}:${String(d.getMinutes()).padStart(2, "0")}`,
+    date: `${d.getFullYear()}년 ${d.getMonth() + 1}월 ${d.getDate()}일 ${DOW[d.getDay()]}요일`,
+  };
+}
 
 const TABS = [
   { href: "/hub", label: "일정", path: "M4 5.5h16v15H4zM4 10h16M8.5 3v4M15.5 3v4" },
@@ -17,18 +31,31 @@ export function HubMobileHeader() {
   const pathname = usePathname();
   const cur = activeOf(pathname);
 
+  // 서버와 화면이 어긋나지 않게 브라우저에서만 채운다
+  const [now, setNow] = useState<{ clock: string; date: string } | null>(null);
+  useEffect(() => {
+    setNow(nowStrings());
+    const t = setInterval(() => setNow(nowStrings()), 10000);
+    return () => clearInterval(t);
+  }, []);
+
   return (
-    <div className="md:hidden sticky top-0 z-40 bg-white border-b border-gray-200 px-4 pt-3 pb-2.5 flex items-center justify-between gap-3">
-      <div className="flex items-baseline gap-2">
-        <span className="text-xl font-bold text-gray-900">{cur?.label || "업무관리"}</span>
-        <span className="text-xs text-gray-400">업무관리</span>
+    <div className="md:hidden sticky top-0 z-40 bg-white border-b border-gray-200 px-4 pt-2.5 pb-2.5">
+      <div className="flex items-center justify-between gap-3">
+        <span className="text-[19px] font-bold text-gray-900 tabular-nums tracking-tight">
+          {now?.clock ?? " "}
+        </span>
+        <a
+          href="/dashboard"
+          className="text-xs text-gray-500 border border-gray-300 rounded px-2.5 py-1 whitespace-nowrap"
+        >
+          B카운트 ›
+        </a>
       </div>
-      <a
-        href="/dashboard"
-        className="text-xs text-gray-500 border border-gray-300 rounded px-2.5 py-1 whitespace-nowrap"
-      >
-        B카운트 ›
-      </a>
+      <div className="mt-0.5">
+        <div className="text-xl font-bold text-gray-900 leading-tight">{cur?.label || "업무관리"}</div>
+        <div className="text-[13.5px] font-medium text-gray-900">{now?.date ?? " "}</div>
+      </div>
     </div>
   );
 }
