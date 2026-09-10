@@ -5,6 +5,7 @@ import { getSupabase } from "@/lib/supabase-admin";
 import Header from "@/components/Header";
 import NavBar from "@/components/NavBar";
 import HubTabs from "./HubTabs";
+import { HubMobileHeader, HubMobileTabs } from "./HubMobileNav";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -57,19 +58,30 @@ export default async function HubLayout({
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header
-        companyName={session.company.company_name}
-        userName={session.user.name}
-        userId={session.user.user_id}
-        userRole={session.user.role}
-        systemName={settingsData?.system_name}
-        impersonated={session.impersonated}
-      />
-      <NavBar role={session.user.role} hubEnabled />
-      <main className="p-4 md:p-6">
-        <HubTabs />
+      {/* PC: B카운트 헤더와 네비바를 그대로 쓴다 */}
+      <div className="hidden md:block">
+        <Header
+          companyName={session.company.company_name}
+          userName={session.user.name}
+          userId={session.user.user_id}
+          userRole={session.user.role}
+          systemName={settingsData?.system_name}
+          impersonated={session.impersonated}
+        />
+        <NavBar role={session.user.role} hubEnabled />
+      </div>
+
+      {/* 폰: 독립된 앱처럼 보이게 한다 */}
+      <HubMobileHeader />
+
+      <main className="px-4 py-4 md:p-6">
+        <div className="hidden md:block">
+          <HubTabs />
+        </div>
         {children}
       </main>
+
+      <HubMobileTabs />
     </div>
   );
 }
