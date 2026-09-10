@@ -280,7 +280,7 @@ function NoticeTab() {
 
 // ===== 사용자관리 =====
 function UsersTab() {
-  const [users, setUsers] = useState<Array<{id:string;user_id:string;name:string;role:string;created_at:string}>>([]);
+  const [users, setUsers] = useState<Array<{id:string;user_id:string;name:string;role:string;hub_enabled?:boolean;created_at:string}>>([]);
   const [form, setForm] = useState({name:"",user_id:"",password:"",role:"user"});
   const [showModal, setShowModal] = useState(false);
   const [editUser, setEditUser] = useState<{id:string;user_id:string;name:string;role:string}|null>(null);
@@ -312,18 +312,24 @@ function UsersTab() {
     if (res.ok) load();
     else { const d = await res.json().catch(() => ({})); alert(d.error || "권한 변경 실패"); }
   }
+  async function toggleHub(id:string, current:boolean) {
+    const res = await fetch(`/api/users/${id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ hub_enabled: !current }) });
+    if (res.ok) load();
+    else { const d = await res.json().catch(() => ({})); alert(d.error || "업무관리 권한 변경 실패"); }
+  }
 
   return (
     <div className="bg-white rounded-lg shadow p-6">
       <h3 className="text-base font-bold text-gray-800 mb-4 pb-2 border-b-2 border-gray-200">사용자 관리</h3>
       <table className="w-full border-collapse text-xs border border-gray-300">
-        <thead><tr className="bg-[#3b4b5b] text-white"><th className="border border-[#2d3a47] px-2 py-2.5 w-12">순번</th><th className="border border-[#2d3a47] px-2 py-2.5 w-32">사용자ID</th><th className="border border-[#2d3a47] px-2 py-2.5 w-28">이름</th><th className="border border-[#2d3a47] px-2 py-2.5 w-20">권한</th><th className="border border-[#2d3a47] px-2 py-2.5 w-28">등록일</th><th className="border border-[#2d3a47] px-2 py-2.5 w-20">관리</th></tr></thead>
+        <thead><tr className="bg-[#3b4b5b] text-white"><th className="border border-[#2d3a47] px-2 py-2.5 w-12">순번</th><th className="border border-[#2d3a47] px-2 py-2.5 w-32">사용자ID</th><th className="border border-[#2d3a47] px-2 py-2.5 w-28">이름</th><th className="border border-[#2d3a47] px-2 py-2.5 w-20">권한</th><th className="border border-[#2d3a47] px-2 py-2.5 w-24">업무관리</th><th className="border border-[#2d3a47] px-2 py-2.5 w-28">등록일</th><th className="border border-[#2d3a47] px-2 py-2.5 w-20">관리</th></tr></thead>
         <tbody>{users.map((u,i) => (
           <tr key={u.id} className={i%2===1?"bg-gray-50":""}>
             <td className="border border-gray-200 px-2 py-2 text-center">{i+1}</td>
             <td className="border border-gray-200 px-2 py-2 text-center font-bold">{u.user_id}</td>
             <td className="border border-gray-200 px-2 py-2 text-center">{u.name}</td>
             <td className="border border-gray-200 px-2 py-2 text-center"><button onClick={() => toggleRole(u.id, u.role)} className={`px-2 py-0.5 rounded-full text-xs cursor-pointer hover:opacity-80 ${u.role==="super_admin"?"bg-rose-100 text-rose-800":u.role==="admin"?"bg-amber-100 text-amber-800":"bg-blue-100 text-blue-800"}`}>{u.role==="super_admin"?"수퍼관리자":u.role==="admin"?"관리자":"사용자"}</button></td>
+            <td className="border border-gray-200 px-2 py-2 text-center"><button onClick={() => toggleHub(u.id, !!u.hub_enabled)} title="개인 일정·갤러리·개인메모 사용 권한" className={`px-2 py-0.5 rounded-full text-xs cursor-pointer hover:opacity-80 border ${u.hub_enabled?"bg-[#FEE500] text-[#191919] border-[#FEE500] font-bold":"bg-gray-100 text-gray-500 border-gray-300"}`}>{u.hub_enabled?"사용":"미사용"}</button></td>
             <td className="border border-gray-200 px-2 py-2 text-center">{u.created_at?.slice(0,10)}</td>
             <td className="border border-gray-200 px-2 py-2 text-center"><button onClick={() => openEdit(u)} className="text-blue-600 border border-blue-600 px-2 py-0.5 rounded text-xs mr-1">수정</button><button onClick={()=>remove(u.id)} className="text-red-600 border border-red-600 px-2 py-0.5 rounded text-xs">삭제</button></td>
           </tr>

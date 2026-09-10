@@ -44,6 +44,14 @@ export default async function DashboardLayout({
     .eq("id", 1)
     .maybeSingle();
 
+  // 업무관리 사용 권한 (관리자가 사용자별로 지정) — 세션이 아니라 매번 조회해서
+  // 관리자가 켜면 재로그인 없이 새로고침만으로 반영되게 한다
+  const { data: hubUser } = await supabase
+    .from("users")
+    .select("hub_enabled")
+    .eq("id", session.user.id)
+    .maybeSingle();
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Header
@@ -58,7 +66,7 @@ export default async function DashboardLayout({
         impersonated={session.impersonated}
       />
       <NoticeBar notices={notices || []} />
-      <NavBar role={session.user.role} />
+      <NavBar role={session.user.role} hubEnabled={hubUser?.hub_enabled ?? false} />
       <main className="p-4 md:p-6">{children}</main>
     </div>
   );
