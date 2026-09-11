@@ -20,15 +20,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
   if (Array.isArray(body.tags)) patch.tags = normalizeTags(body.tags);
   if (typeof body.pinned === "boolean") patch.pinned = body.pinned;
 
-  if ("link_previews" in body) {
-    // 본문에 실제로 적힌 주소의 미리보기만 받는다
-    let content = typeof body.content === "string" ? body.content : null;
-    if (content === null) {
-      const { data: cur } = await supabase.from("hub_memos").select("content").eq("id", id).eq("user_id", auth.session.user.id).maybeSingle();
-      content = cur?.content || "";
-    }
-    patch.link_previews = sanitizePreviews(body.link_previews, content);
-  }
+  if ("link_previews" in body) patch.link_previews = sanitizePreviews(body.link_previews);
 
   const { data, error } = await supabase
     .from("hub_memos")
