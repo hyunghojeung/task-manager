@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useBackToClose } from "../useBackToClose";
 import LinkCard, { type LinkPreview } from "./LinkCard";
+import BlockEditor from "./BlockEditor";
+import { extractUrls, textOnly } from "@/lib/memo-text";
 
 interface Photo {
   id: string;
@@ -40,17 +42,6 @@ function parseTags(text: string) {
     const t = r.replace(/^#+/, "").trim();
     if (t && !out.includes(t)) out.push(t);
   });
-  return out;
-}
-function extractUrls(text: string) {
-  const out: string[] = [];
-  const re = /https?:\/\/[^\s<>"'`]+/gi;
-  let m: RegExpExecArray | null;
-  while ((m = re.exec(text || "")) !== null) {
-    const u = m[0].replace(/[.,;:!?)\]}>]+$/, "");
-    if (!out.includes(u)) out.push(u);
-    if (out.length >= 5) break;
-  }
   return out;
 }
 function when(iso: string) {
@@ -111,8 +102,8 @@ export default function MemoView() {
     return () => clearTimeout(t);
   }, [q, load]);
 
-  // ----- 본문에 적은 주소를 카드로 바꾼다 -----
-  // 주소 글자는 본문에서 빼고, 그 자리를 대신하는 카드를 아래에 둔다.
+  // ----- 본문에 적은 주소의 미리보기를 읽어온다 -----
+  // 주소는 본문 속 제자리에 그대로 두고, 편집기가 그 자리를 카드로 보여준다.
   const draftContent = draft?.content ?? "";
   const draftOpen = draft !== null;
   useEffect(() => {
@@ -121,24 +112,17 @@ export default function MemoView() {
     if (urls.length === 0) return;
 
     const t = setTimeout(async () => {
-      // 1) 본문에서 주소를 떼어내고, 우선 빈 카드를 붙인다
+      // 이미 읽어 둔 것은 바로 채운다
       setDraft((d) => {
         if (!d) return d;
-        let content = d.content;
-        const previews = [...d.previews];
-        urls.forEach((u) => {
-          content = content.replace(u, "");
-          if (!previews.some((p) => p.url === u)) {
-            previews.push({ url: u, title: "", description: "", image: "", site: "" });
-          }
-        });
-        content = content.replace(/[ \t]+\n/g, "\n").replace(/\n{3,}/g, "\n\n").replace(/^\s+/, "");
-        return { ...d, content, previews: previews.slice(0, 5) };
+        const add = urls
+          .map((u) => previewCache.current.get(u))
+          .filter((p): p is LinkPreview => !!p && !d.previews.some((x) => x.url === p.url));
+        return add.length ? { ...d, previews: [...d.previews, ...add] } : d;
       });
-      setDirty(true);
 
-      // 2) 미리보기를 읽어와 카드를 채운다
       const missing = urls.filter((u) => !previewCache.current.has(u));
+      if (missing.length === 0) return;
       setFetchingUrls(missing);
       await Promise.all(
         missing.map(async (u) => {
@@ -147,26 +131,21 @@ export default function MemoView() {
             const data = r.ok ? (await r.json()).preview : null;
             previewCache.current.set(u, data);
             if (data) {
-              setDraft((d) => (d ? { ...d, previews: d.previews.map((p) => (p.url === u ? data : p)) } : d));
+              setDraft((d) => (d && !d.previews.some((p) => p.url === u) ? { ...d, previews: [...d.previews, data] } : d));
             }
           } catch {
             previewCache.current.set(u, null);
           }
         }),
       );
-      // 캐시에 있던 것은 바로 채운다
-      urls.forEach((u) => {
-        const cached = previewCache.current.get(u);
-        if (cached) setDraft((d) => (d ? { ...d, previews: d.previews.map((p) => (p.url === u && !p.title ? cached : p)) } : d));
-      });
       setFetchingUrls([]);
-    }, 500);
+    }, 700);
     return () => clearTimeout(t);
   }, [draftContent, draftOpen]);
 
   function edit(patch: Partial<Draft>) {
-    if (!draft) return;
-    setDraft({ ...draft, ...patch });
+    // 같은 순간에 두 번 불려도 서로 덮어쓰지 않게 최신 상태 기준으로 합친다
+    setDraft((d) => (d ? { ...d, ...patch } : d));
     setDirty(true);
   }
 
@@ -403,8 +382,8 @@ export default function MemoView() {
                 {m.pinned && <span className="text-xs">📌</span>}
                 {m.title || "제목 없음"}
               </span>
-              {m.content.trim() && (
-                <span className="text-[13px] text-gray-500 line-clamp-2 whitespace-pre-line">{m.content.trim()}</span>
+              {textOnly(m.content) && (
+                <span className="text-[13px] text-gray-500 line-clamp-2 whitespace-pre-line">{textOnly(m.content)}</span>
               )}
               {(m.link_previews || []).length > 0 && <LinkCard preview={m.link_previews![0]} compact />}
               {m.tags.length > 0 && (
@@ -467,29 +446,22 @@ export default function MemoView() {
               value={draft.title}
               onChange={(e) => edit({ title: e.target.value })}
               placeholder="제목"
-              className="text-xl font-bold outline-none w-full placeholder:text-gray-300 md:border-b md:border-gray-200 md:pb-2.5"
-            />
-            <textarea
-              value={draft.content}
-              onChange={(e) => edit({ content: e.target.value })}
-              placeholder="내용을 입력하세요. 주소를 적으면 미리보기가 붙습니다."
-              rows={6}
-              className="text-base leading-relaxed outline-none w-full resize-y placeholder:text-gray-300"
+              className="text-xl font-bold outline-none w-full placeholder:text-gray-300 border-b border-gray-200 pb-2.5"
             />
 
-            {/* 주소 카드 — 본문에서 빠져나온 링크가 여기 놓인다 */}
-            {draft.previews.length > 0 && (
-              <div className="flex flex-col gap-2">
-                {draft.previews.map((p) => (
-                  <LinkCard
-                    key={p.url}
-                    preview={p}
-                    loading={fetchingUrls.includes(p.url)}
-                    onRemove={() => edit({ previews: draft.previews.filter((x) => x.url !== p.url) })}
-                  />
-                ))}
-              </div>
-            )}
+            {/* 본문 — 주소를 적으면 그 자리가 카드로 바뀌고, 아래에 글을 계속 쓸 수 있다 */}
+            <BlockEditor
+              key={draft.id ?? "new"}
+              content={draft.content}
+              previews={draft.previews}
+              loadingUrls={fetchingUrls}
+              onChange={(c) => edit({ content: c })}
+              onRemoveLink={(u) => {
+                setDraft((d) => (d ? { ...d, previews: d.previews.filter((x) => x.url !== u) } : d));
+                setDirty(true);
+              }}
+              placeholder="내용을 입력하세요. 주소를 적으면 그 자리에 미리보기 카드가 붙습니다."
+            />
 
             {/* 태그 입력 */}
             <div className="flex flex-col gap-1.5 bg-[#FEE500]/25 rounded-lg px-3 py-2.5">
