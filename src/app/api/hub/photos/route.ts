@@ -1,7 +1,7 @@
 export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabase } from "@/lib/supabase-admin";
-import { requireHub, extractTags } from "@/lib/hub";
+import { requireHub, normalizeTags } from "@/lib/hub";
 
 // 사진 목록
 //   /api/hub/photos              전체 (갤러리 + 메모 첨부)
@@ -79,17 +79,15 @@ export async function POST(request: NextRequest) {
     // 메모 첨부: 본인 메모인지 확인하고 그 메모의 태그를 물려준다
     const { data: memo } = await supabase
       .from("hub_memos")
-      .select("id, content")
+      .select("id, tags")
       .eq("id", memoId)
       .eq("user_id", auth.session.user.id)
       .maybeSingle();
     if (!memo) return NextResponse.json({ error: "메모를 찾을 수 없습니다." }, { status: 404 });
-    tags = extractTags(memo.content || "");
+    tags = Array.isArray(memo.tags) ? memo.tags : [];
   } else {
     // 갤러리 업로드: 올릴 때 입력한 태그를 쓴다
-    tags = Array.isArray(body.tags)
-      ? body.tags.map((t: unknown) => String(t).replace(/^#/, "").trim()).filter(Boolean).slice(0, 20)
-      : extractTags(String(body.tags || ""));
+    tags = normalizeTags(body.tags);
     if (albumId) {
       const { data: album } = await supabase
         .from("hub_albums")

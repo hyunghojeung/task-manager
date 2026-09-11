@@ -1,7 +1,10 @@
 export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabase } from "@/lib/supabase-admin";
-import { requireHub, extractTags } from "@/lib/hub";
+import { requireHub, normalizeTags } from "@/lib/hub";
+import { sanitizePreviews } from "@/lib/link-preview";
+
+const FIELDS = "id, title, content, tags, pinned, share_token, link_previews, updated_at";
 
 // 목록: /api/hub/memos?q=검색어
 export async function GET(request: NextRequest) {
@@ -14,7 +17,7 @@ export async function GET(request: NextRequest) {
   const supabase = getSupabase();
   let query = supabase
     .from("hub_memos")
-    .select("id, title, content, tags, pinned, share_token, updated_at")
+    .select(FIELDS)
     .eq("user_id", auth.session.user.id)
     .order("pinned", { ascending: false })
     .order("updated_at", { ascending: false })
@@ -67,9 +70,10 @@ export async function POST(request: NextRequest) {
       user_id: auth.session.user.id,
       title: String(body.title || "").slice(0, 255),
       content,
-      tags: extractTags(content),
+      tags: normalizeTags(body.tags),
+      link_previews: sanitizePreviews(body.link_previews, content),
     })
-    .select("id, title, content, tags, pinned, share_token, updated_at")
+    .select(FIELDS)
     .single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
