@@ -18,13 +18,18 @@ function hostOf(url: string) {
 export default function LinkCard({
   preview,
   compact = false,
+  loading = false,
   onRemove,
 }: {
   preview: LinkPreview;
   compact?: boolean;
+  loading?: boolean;
   onRemove?: () => void;
 }) {
   const host = preview.site || hostOf(preview.url);
+  // 아직 읽어오는 중이거나, 사이트가 정보를 주지 않은 경우
+  const bare = !preview.title && !preview.description && !preview.image;
+  const titleText = preview.title || (loading ? "미리보기 불러오는 중…" : preview.url);
 
   if (compact) {
     return (
@@ -33,7 +38,7 @@ export default function LinkCard({
           // eslint-disable-next-line @next/next/no-img-element
           <img src={preview.image} alt="" className="w-11 h-11 object-cover shrink-0 bg-gray-200" loading="lazy" />
         )}
-        <span className="min-w-0 flex flex-col py-1 pr-2">
+        <span className="min-w-0 flex flex-col py-1 px-2">
           <span className="text-[12px] font-semibold text-gray-800 truncate">{preview.title || preview.url}</span>
           <span className="text-[10.5px] text-gray-400 truncate">{host}</span>
         </span>
@@ -55,7 +60,9 @@ export default function LinkCard({
         )}
         <span className="min-w-0 flex-1 flex flex-col gap-0.5 px-3 py-2.5">
           <span className="text-[10.5px] text-gray-400 truncate">{host}</span>
-          <span className="text-[13.5px] font-bold text-gray-900 line-clamp-2 leading-snug">{preview.title || preview.url}</span>
+          <span className={`text-[13.5px] leading-snug ${bare ? "text-gray-500 break-all line-clamp-2" : "font-bold text-gray-900 line-clamp-2"}`}>
+            {titleText}
+          </span>
           {preview.description && <span className="text-[12px] text-gray-500 line-clamp-2 leading-snug">{preview.description}</span>}
         </span>
       </a>

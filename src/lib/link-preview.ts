@@ -170,16 +170,18 @@ export async function fetchLinkPreview(raw: string): Promise<LinkPreview | null>
   return data;
 }
 
-/** 저장 요청으로 들어온 미리보기 목록을 검증한다 — 본문에 있는 주소만, 최대 5개 */
-export function sanitizePreviews(input: unknown, content: string): LinkPreview[] {
+/**
+ * 저장 요청으로 들어온 링크 카드 목록을 검증한다 — 최대 5개.
+ * 주소는 본문에서 빠져나와 카드로만 남으므로 본문과 대조하지 않는다.
+ */
+export function sanitizePreviews(input: unknown): LinkPreview[] {
   if (!Array.isArray(input)) return [];
-  const allowed = new Set(extractUrls(content));
   const out: LinkPreview[] = [];
   for (const p of input) {
     if (!p || typeof p !== "object") continue;
     const o = p as Record<string, unknown>;
-    const url = String(o.url || "");
-    if (!allowed.has(url) || out.some((x) => x.url === url)) continue;
+    const url = String(o.url || "").slice(0, 2000);
+    if (!/^https?:\/\//i.test(url) || out.some((x) => x.url === url)) continue;
     out.push({
       url,
       title: String(o.title || "").slice(0, 200),

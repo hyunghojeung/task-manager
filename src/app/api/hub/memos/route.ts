@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
       title: String(body.title || "").slice(0, 255),
       content,
       tags: normalizeTags(body.tags),
-      link_previews: sanitizePreviews(body.link_previews, content),
+      link_previews: sanitizePreviews(body.link_previews),
     })
     .select(FIELDS)
     .single();
