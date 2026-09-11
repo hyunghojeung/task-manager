@@ -463,54 +463,6 @@ export default function MemoView() {
               placeholder="내용을 입력하세요. 주소를 적으면 그 자리에 미리보기 카드가 붙습니다."
             />
 
-            {/* 태그 입력 */}
-            <div className="flex flex-col gap-1.5 bg-[#FEE500]/25 rounded-lg px-3 py-2.5">
-              <div className="flex items-center gap-2">
-                <span className="text-[11px] font-bold text-gray-900 shrink-0">태그</span>
-                <input
-                  value={draft.tagText}
-                  onChange={(e) => edit({ tagText: e.target.value })}
-                  placeholder="띄어쓰기로 구분 — 예: 여행 바다"
-                  className="flex-1 min-w-0 bg-white/70 rounded px-2.5 py-1.5 text-sm outline-none focus:bg-white placeholder:text-gray-400"
-                />
-              </div>
-              {draftTags.length > 0 && (
-                <div className="flex flex-wrap items-center gap-1.5">
-                  {draftTags.map((t) => (
-                    <em key={t} className="not-italic text-[11.5px] font-bold bg-white rounded-full px-2 py-0.5">
-                      #{t}
-                    </em>
-                  ))}
-                  {draft.photos.length > 0 && <span className="text-[11.5px] text-gray-600">첨부 {draft.photos.length}장에도 적용됨</span>}
-                </div>
-              )}
-            </div>
-
-            {/* 링크 공유 */}
-            {draft.share_token ? (
-              <div className="flex flex-col gap-2 bg-gray-50 border border-gray-200 rounded-lg px-3 py-3">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-bold text-gray-900 shrink-0">🔗 공유 중</span>
-                  <span className="text-[11px] text-gray-500 font-mono truncate">/s/{draft.share_token}</span>
-                </div>
-                <p className="text-[11.5px] text-gray-500 leading-relaxed">
-                  이 링크를 가진 사람은 <b className="text-gray-800">로그인 없이</b> 제목·내용·첨부 사진을 볼 수 있습니다. 고치거나 지울 수는 없습니다.
-                </p>
-                <div className="flex gap-2">
-                  <button onClick={copyShareLink} className="flex-1 py-2 rounded bg-[#FEE500] text-[#191919] text-xs font-bold">
-                    링크 복사
-                  </button>
-                  <button onClick={stopShare} className="px-3 py-2 rounded border border-gray-300 text-xs text-gray-600">
-                    공유 중지
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <button onClick={startShare} className="self-start text-xs text-gray-600 border border-gray-300 rounded px-3 py-2">
-                🔗 링크로 공유
-              </button>
-            )}
-
             {uploading > 0 && <div className="text-xs text-gray-500">사진 올리는 중… {uploading}장 남음</div>}
 
             {draft.photos.length > 0 && (
@@ -545,8 +497,53 @@ export default function MemoView() {
             <input ref={cameraRef} type="file" accept="image/*" capture="environment" hidden onChange={(e) => attach(e.target.files)} />
             <input ref={fileRef} type="file" accept="image/*" multiple hidden onChange={(e) => attach(e.target.files)} />
 
-            <div className="flex items-center justify-between gap-2 pt-1 border-t border-gray-100 mt-1">
-              <span className="text-[11.5px] text-gray-400">{dirty ? "저장하지 않은 변경이 있습니다" : ""}</span>
+            {/* 태그 입력 */}
+            <div className="flex flex-col gap-1.5 bg-[#FEE500]/25 rounded-lg px-3 py-2.5">
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] font-bold text-gray-900 shrink-0">태그</span>
+                <input
+                  value={draft.tagText}
+                  onChange={(e) => edit({ tagText: e.target.value })}
+                  placeholder="띄어쓰기로 구분 — 예: 여행 바다"
+                  className="flex-1 min-w-0 bg-white/70 rounded px-2.5 py-1.5 text-sm outline-none focus:bg-white placeholder:text-gray-400"
+                />
+              </div>
+              {draftTags.length > 0 && (
+                <div className="flex flex-wrap items-center gap-1.5">
+                  {draftTags.map((t) => (
+                    <em key={t} className="not-italic text-[11.5px] font-bold bg-white rounded-full px-2 py-0.5">
+                      #{t}
+                    </em>
+                  ))}
+                  {draft.photos.length > 0 && <span className="text-[11.5px] text-gray-600">첨부 {draft.photos.length}장에도 적용됨</span>}
+                </div>
+              )}
+            </div>
+
+            {dirty && <span className="text-[11.5px] text-gray-400">저장하지 않은 변경이 있습니다</span>}
+            {draft.share_token && (
+              <span className="text-[11.5px] text-gray-500">
+                🔗 <b className="text-gray-800">공유 중</b> — 링크를 가진 사람은 로그인 없이 볼 수 있습니다
+              </span>
+            )}
+
+            <div className="flex items-center justify-between gap-2 pt-2 border-t border-gray-100">
+              <div className="flex items-center gap-1.5">
+                {draft.share_token ? (
+                  <>
+                    <button onClick={copyShareLink} className="px-3 py-2.5 rounded bg-[#FEE500] text-[#191919] text-xs font-bold">
+                      🔗 링크 복사
+                    </button>
+                    <button onClick={stopShare} className="px-2 py-2.5 text-xs text-gray-500 underline underline-offset-2">
+                      공유 중지
+                    </button>
+                  </>
+                ) : (
+                  <button onClick={startShare} className="px-3 py-2.5 rounded border border-gray-300 text-xs text-gray-600">
+                    🔗 링크로 공유
+                  </button>
+                )}
+              </div>
               <div className="flex gap-2">
                 {draft.id && (
                   <button
