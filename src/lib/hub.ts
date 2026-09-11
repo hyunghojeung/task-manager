@@ -38,6 +38,23 @@ export function normalizeColor(v: unknown): HubColor {
   return HUB_COLORS.includes(v as HubColor) ? (v as HubColor) : "yellow";
 }
 
+/**
+ * 태그 입력값을 정리한다. 배열이든 "여행 바다" 같은 문자열이든 받는다.
+ * 띄어쓰기로 나누고, 앞의 # 은 떼고, 중복은 제거한다.
+ */
+export function normalizeTags(input: unknown): string[] {
+  const raw: string[] = Array.isArray(input)
+    ? input.map((t) => String(t))
+    : String(input || "").split(/[\s,]+/);
+  const out: string[] = [];
+  for (const r of raw) {
+    const t = r.replace(/^#+/, "").trim().slice(0, 30);
+    if (t && !out.includes(t)) out.push(t);
+    if (out.length >= 20) break;
+  }
+  return out;
+}
+
 /** 본문에서 #태그를 뽑아낸다. 중복은 제거하고 순서는 유지한다. */
 export function extractTags(text: string): string[] {
   const out: string[] = [];

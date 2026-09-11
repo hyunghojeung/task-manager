@@ -1,7 +1,10 @@
 export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabase } from "@/lib/supabase-admin";
-import { requireHub, extractTags } from "@/lib/hub";
+import { requireHub, normalizeTags } from "@/lib/hub";
+import { sanitizePreviews } from "@/lib/link-preview";
+
+const FIELDS = "id, title, content, tags, pinned, share_token, link_previews, updated_at";
 
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireHub();
@@ -13,24 +16,32 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 
   const patch: Record<string, unknown> = { updated_at: new Date().toISOString() };
   if (typeof body.title === "string") patch.title = body.title.slice(0, 255);
-  if (typeof body.content === "string") {
-    patch.content = body.content;
-    patch.tags = extractTags(body.content);
-  }
+  if (typeof body.content === "string") patch.content = body.content;
+  if (Array.isArray(body.tags)) patch.tags = normalizeTags(body.tags);
   if (typeof body.pinned === "boolean") patch.pinned = body.pinned;
+
+  if ("link_previews" in body) {
+    // 본문에 실제로 적힌 주소의 미리보기만 받는다
+    let content = typeof body.content === "string" ? body.content : null;
+    if (content === null) {
+      const { data: cur } = await supabase.from("hub_memos").select("content").eq("id", id).eq("user_id", auth.session.user.id).maybeSingle();
+      content = cur?.content || "";
+    }
+    patch.link_previews = sanitizePreviews(body.link_previews, content);
+  }
 
   const { data, error } = await supabase
     .from("hub_memos")
     .update(patch)
     .eq("id", id)
     .eq("user_id", auth.session.user.id)
-    .select("id, title, content, tags, pinned, share_token, updated_at")
+    .select(FIELDS)
     .maybeSingle();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   if (!data) return NextResponse.json({ error: "메모를 찾을 수 없습니다." }, { status: 404 });
 
-  // 본문 태그가 바뀌면 첨부 사진의 태그도 함께 맞춘다
+  // 태그가 바뀌면 첨부 사진의 태그도 함께 맞춘다
   if (patch.tags) {
     await supabase
       .from("hub_photos")

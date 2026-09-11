@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getSupabase } from "@/lib/supabase-admin";
+import LinkCard, { type LinkPreview } from "@/app/hub/memo/LinkCard";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -16,6 +17,24 @@ interface Photo {
   file_name: string | null;
 }
 
+/** 본문 속 주소를 눌러서 열 수 있게 만든다 */
+function Linkify({ text }: { text: string }) {
+  const parts = text.split(/(https?:\/\/[^\s<>"'`]+)/gi);
+  return (
+    <>
+      {parts.map((p, i) =>
+        /^https?:\/\//i.test(p) ? (
+          <a key={i} href={p} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline break-all">
+            {p}
+          </a>
+        ) : (
+          <span key={i}>{p}</span>
+        ),
+      )}
+    </>
+  );
+}
+
 export default async function SharedMemoPage({ params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;
   if (!/^[a-z0-9]{8,32}$/.test(token)) notFound();
@@ -23,7 +42,7 @@ export default async function SharedMemoPage({ params }: { params: Promise<{ tok
   const supabase = getSupabase();
   const { data: memo } = await supabase
     .from("hub_memos")
-    .select("id, title, content, tags, updated_at")
+    .select("id, title, content, tags, link_previews, updated_at")
     .eq("share_token", token)
     .maybeSingle();
 
@@ -36,7 +55,8 @@ export default async function SharedMemoPage({ params }: { params: Promise<{ tok
     .order("sort_order")
     .order("created_at");
 
-  const body = (memo.content || "").replace(/#[^\s#]+/g, "").trim();
+  const body = (memo.content || "").trim();
+  const previews = (Array.isArray(memo.link_previews) ? memo.link_previews : []) as LinkPreview[];
   const d = new Date(memo.updated_at);
 
   return (
@@ -48,7 +68,19 @@ export default async function SharedMemoPage({ params }: { params: Promise<{ tok
           {(photos || []).length > 0 && ` · 사진 ${(photos || []).length}장`}
         </p>
 
-        {body && <p className="text-base leading-relaxed whitespace-pre-line text-gray-800">{body}</p>}
+        {body && (
+          <p className="text-base leading-relaxed whitespace-pre-line text-gray-800">
+            <Linkify text={body} />
+          </p>
+        )}
+
+        {previews.length > 0 && (
+          <div className="flex flex-col gap-2">
+            {previews.map((p) => (
+              <LinkCard key={p.url} preview={p} />
+            ))}
+          </div>
+        )}
 
         {(memo.tags || []).length > 0 && (
           <p className="flex flex-wrap gap-2">

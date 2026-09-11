@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useBackToClose } from "../useBackToClose";
+import LinkCard, { type LinkPreview } from "./LinkCard";
 
 interface Photo {
   id: string;
@@ -16,6 +17,7 @@ interface Memo {
   tags: string[];
   pinned: boolean;
   share_token?: string | null;
+  link_previews?: LinkPreview[];
   updated_at: string;
   photos: Photo[];
 }
@@ -24,11 +26,39 @@ interface Draft {
   id: string | null;
   title: string;
   content: string;
+  tagText: string;
   pinned: boolean;
   share_token: string | null;
+  previews: LinkPreview[];
   photos: Photo[];
 }
 
+/** "여행 바다" → ["여행","바다"]. 앞의 # 은 떼고 중복은 없앤다 */
+function parseTags(text: string) {
+  const out: string[] = [];
+  text.split(/[\s,]+/).forEach((r) => {
+    const t = r.replace(/^#+/, "").trim();
+    if (t && !out.includes(t)) out.push(t);
+  });
+  return out;
+}
+function extractUrls(text: string) {
+  const out: string[] = [];
+  const re = /https?:\/\/[^\s<>"'`]+/gi;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(text || "")) !== null) {
+    const u = m[0].replace(/[.,;:!?)\]}>]+$/, "");
+    if (!out.includes(u)) out.push(u);
+    if (out.length >= 5) break;
+  }
+  return out;
+}
+function when(iso: string) {
+  const d = new Date(iso);
+  if (d.toDateString() === new Date().toDateString())
+    return `오늘 ${d.getHours()}:${String(d.getMinutes()).padStart(2, "0")}`;
+  return `${d.getMonth() + 1}월 ${d.getDate()}일`;
+}
 async function copyText(text: string) {
   try {
     if (navigator.clipboard?.writeText) {
@@ -53,26 +83,6 @@ async function copyText(text: string) {
   }
 }
 
-function tagsOf(text: string) {
-  const out: string[] = [];
-  const re = /#([^\s#]{1,30})/g;
-  let m: RegExpExecArray | null;
-  while ((m = re.exec(text || "")) !== null) {
-    const t = m[1].trim();
-    if (t && !out.includes(t)) out.push(t);
-  }
-  return out;
-}
-function stripTags(text: string) {
-  return (text || "").replace(/#[^\s#]+/g, "").trim();
-}
-function when(iso: string) {
-  const d = new Date(iso);
-  if (d.toDateString() === new Date().toDateString())
-    return `오늘 ${d.getHours()}:${String(d.getMinutes()).padStart(2, "0")}`;
-  return `${d.getMonth() + 1}월 ${d.getDate()}일`;
-}
-
 export default function MemoView() {
   const [memos, setMemos] = useState<Memo[]>([]);
   const [q, setQ] = useState("");
@@ -81,8 +91,10 @@ export default function MemoView() {
   const [dirty, setDirty] = useState(false);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(0);
+  const [fetchingUrls, setFetchingUrls] = useState<string[]>([]);
   const fileRef = useRef<HTMLInputElement>(null);
   const cameraRef = useRef<HTMLInputElement>(null);
+  const previewCache = useRef<Map<string, LinkPreview | null>>(new Map());
 
   const load = useCallback(async (keyword: string) => {
     setLoading(true);
@@ -99,27 +111,72 @@ export default function MemoView() {
     return () => clearTimeout(t);
   }, [q, load]);
 
+  // ----- 본문의 URL 미리보기 -----
+  const draftContent = draft?.content ?? "";
+  const draftOpen = draft !== null;
+  useEffect(() => {
+    if (!draftOpen) return;
+    const urls = extractUrls(draftContent);
+    // 본문에서 사라진 주소의 카드는 뺀다
+    setDraft((d) => (d ? { ...d, previews: d.previews.filter((p) => urls.includes(p.url)) } : d));
+
+    const missing = urls.filter((u) => !previewCache.current.has(u));
+    if (missing.length === 0) return;
+
+    const t = setTimeout(async () => {
+      setFetchingUrls(missing);
+      await Promise.all(
+        missing.map(async (u) => {
+          try {
+            const r = await fetch(`/api/hub/link-preview?url=${encodeURIComponent(u)}`);
+            const data = r.ok ? (await r.json()).preview : null;
+            previewCache.current.set(u, data);
+            if (data) {
+              setDraft((d) => {
+                if (!d || d.previews.some((p) => p.url === u) || !extractUrls(d.content).includes(u)) return d;
+                return { ...d, previews: [...d.previews, data] };
+              });
+            }
+          } catch {
+            previewCache.current.set(u, null);
+          }
+        }),
+      );
+      setFetchingUrls([]);
+    }, 600);
+    return () => clearTimeout(t);
+  }, [draftContent, draftOpen]);
+
   function edit(patch: Partial<Draft>) {
     if (!draft) return;
     setDraft({ ...draft, ...patch });
     setDirty(true);
   }
 
-  /** 사진을 붙이려면 메모가 먼저 있어야 해서, 없으면 조용히 만들어 둔다 */
+  function payload(d: Draft) {
+    return {
+      title: d.title,
+      content: d.content,
+      tags: parseTags(d.tagText),
+      link_previews: d.previews,
+    };
+  }
+
+  /** 사진을 붙이거나 공유하려면 메모가 먼저 있어야 해서, 없으면 조용히 만들어 둔다 */
   async function ensureSaved(): Promise<string | null> {
     if (!draft) return null;
     if (draft.id) {
       await fetch(`/api/hub/memos/${draft.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title: draft.title, content: draft.content }),
+        body: JSON.stringify(payload(draft)),
       });
       return draft.id;
     }
     const r = await fetch("/api/hub/memos", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title: draft.title, content: draft.content }),
+      body: JSON.stringify(payload(draft)),
     });
     if (!r.ok) {
       alert((await r.json().catch(() => ({}))).error || "메모를 저장하지 못했습니다");
@@ -140,7 +197,6 @@ export default function MemoView() {
     try {
       const id = await ensureSaved();
       if (!id) return;
-      // 등록 전에 켜 둔 고정을 여기서 반영한다
       if (draft.pinned) {
         await fetch(`/api/hub/memos/${id}`, {
           method: "PUT",
@@ -164,78 +220,43 @@ export default function MemoView() {
     return true;
   }, [dirty, load, q]);
 
-  // 폰 뒤로가기로 편집 창만 닫고 메모 목록에 남는다
   useBackToClose(draft !== null, close);
 
   function openMemo(m: Memo) {
+    (m.link_previews || []).forEach((p) => previewCache.current.set(p.url, p));
     setDraft({
       id: m.id,
       title: m.title,
       content: m.content,
+      tagText: (m.tags || []).join(" "),
       pinned: m.pinned,
       share_token: m.share_token ?? null,
+      previews: m.link_previews || [],
       photos: m.photos,
     });
     setDirty(false);
   }
   function newMemo() {
-    setDraft({ id: null, title: "", content: "", pinned: false, share_token: null, photos: [] });
+    setDraft({ id: null, title: "", content: "", tagText: "", pinned: false, share_token: null, previews: [], photos: [] });
     setDirty(false);
   }
 
-  /** 링크 공유 켜기 — 없으면 만들고, 있으면 그대로 쓴다 */
-  async function startShare() {
-    if (!draft) return;
-    const id = draft.id || (await ensureSaved());
-    if (!id) return;
-    const r = await fetch(`/api/hub/memos/${id}/share`, { method: "POST" });
-    if (!r.ok) {
-      alert((await r.json().catch(() => ({}))).error || "공유 링크를 만들지 못했습니다");
-      return;
-    }
-    const { share_token } = await r.json();
-    setDraft((d) => (d ? { ...d, id, share_token } : d));
-    setMemos((prev) => prev.map((p) => (p.id === id ? { ...p, share_token } : p)));
-  }
-
-  async function stopShare() {
-    if (!draft?.id) return;
-    if (!confirm("공유를 중지할까요? 이미 보낸 링크가 더 이상 열리지 않습니다.")) return;
-    const r = await fetch(`/api/hub/memos/${draft.id}/share`, { method: "DELETE" });
-    if (r.ok) {
-      setDraft((d) => (d ? { ...d, share_token: null } : d));
-      setMemos((prev) => prev.map((p) => (p.id === draft.id ? { ...p, share_token: null } : p)));
-    }
-  }
-
-  async function copyShareLink() {
-    if (!draft?.share_token) return;
-    const url = `${window.location.origin}/s/${draft.share_token}`;
-    const ok = await copyText(url);
-    alert(ok ? "링크를 복사했습니다" : url);
-  }
-
-  /** 지금 보고 있는 화면의 고정 아이콘을 먼저 바꾸고, 뒤이어 서버에 반영한다 */
   async function togglePin() {
     if (!draft) return;
     const next = !draft.pinned;
     setDraft({ ...draft, pinned: next });
-
-    // 아직 등록 전이면 저장할 때 함께 반영한다
     if (!draft.id) {
       setDirty(true);
       return;
     }
-
     const r = await fetch(`/api/hub/memos/${draft.id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ pinned: next }),
     });
-    if (r.ok) {
-      setMemos((prev) => prev.map((p) => (p.id === draft.id ? { ...p, pinned: next } : p)));
-    } else {
-      setDraft((d) => (d ? { ...d, pinned: !next } : d)); // 실패하면 되돌린다
+    if (r.ok) setMemos((prev) => prev.map((p) => (p.id === draft.id ? { ...p, pinned: next } : p)));
+    else {
+      setDraft((d) => (d ? { ...d, pinned: !next } : d));
       alert("고정 상태를 바꾸지 못했습니다");
     }
   }
@@ -250,11 +271,39 @@ export default function MemoView() {
     }
   }
 
+  async function startShare() {
+    if (!draft) return;
+    const id = draft.id || (await ensureSaved());
+    if (!id) return;
+    const r = await fetch(`/api/hub/memos/${id}/share`, { method: "POST" });
+    if (!r.ok) {
+      alert((await r.json().catch(() => ({}))).error || "공유 링크를 만들지 못했습니다");
+      return;
+    }
+    const { share_token } = await r.json();
+    setDraft((d) => (d ? { ...d, id, share_token } : d));
+    setMemos((prev) => prev.map((p) => (p.id === id ? { ...p, share_token } : p)));
+  }
+  async function stopShare() {
+    if (!draft?.id) return;
+    if (!confirm("공유를 중지할까요? 이미 보낸 링크가 더 이상 열리지 않습니다.")) return;
+    const r = await fetch(`/api/hub/memos/${draft.id}/share`, { method: "DELETE" });
+    if (r.ok) {
+      setDraft((d) => (d ? { ...d, share_token: null } : d));
+      setMemos((prev) => prev.map((p) => (p.id === draft.id ? { ...p, share_token: null } : p)));
+    }
+  }
+  async function copyShareLink() {
+    if (!draft?.share_token) return;
+    const url = `${window.location.origin}/s/${draft.share_token}`;
+    const ok = await copyText(url);
+    alert(ok ? "링크를 복사했습니다" : url);
+  }
+
   async function attach(files: FileList | null) {
     if (!files || !draft) return;
     const memoId = await ensureSaved();
     if (!memoId) return;
-
     const list = Array.from(files).slice(0, 10);
     setUploading(list.length);
     try {
@@ -285,13 +334,12 @@ export default function MemoView() {
       if (cameraRef.current) cameraRef.current.value = "";
     }
   }
-
   async function removePhoto(p: Photo) {
     const r = await fetch(`/api/hub/photos/${p.id}`, { method: "DELETE" });
     if (r.ok) setDraft((d) => (d ? { ...d, photos: d.photos.filter((x) => x.id !== p.id) } : d));
   }
 
-  const draftTags = draft ? tagsOf(draft.content) : [];
+  const draftTags = draft ? parseTags(draft.tagText) : [];
 
   return (
     <div className="w-full flex flex-col gap-3 pb-28 md:pb-6">
@@ -338,9 +386,10 @@ export default function MemoView() {
                 {m.pinned && <span className="text-xs">📌</span>}
                 {m.title || "제목 없음"}
               </span>
-              {stripTags(m.content) && (
-                <span className="text-[13px] text-gray-500 line-clamp-2 whitespace-pre-line">{stripTags(m.content)}</span>
+              {m.content.trim() && (
+                <span className="text-[13px] text-gray-500 line-clamp-2 whitespace-pre-line">{m.content.trim()}</span>
               )}
+              {(m.link_previews || []).length > 0 && <LinkCard preview={m.link_previews![0]} compact />}
               {m.tags.length > 0 && (
                 <span className="flex flex-wrap gap-1.5">
                   {m.tags.map((t) => (
@@ -383,9 +432,7 @@ export default function MemoView() {
                   aria-pressed={draft.pinned}
                   aria-label={draft.pinned ? "고정 해제" : "고정"}
                   title={draft.pinned ? "고정 해제" : "고정"}
-                  className={`w-9 h-9 grid place-items-center rounded-full text-base ${
-                    draft.pinned ? "bg-[#FEE500]/40" : "hover:bg-gray-100"
-                  }`}
+                  className={`w-9 h-9 grid place-items-center rounded-full text-base ${draft.pinned ? "bg-[#FEE500]/40" : "hover:bg-gray-100"}`}
                 >
                   {draft.pinned ? "📌" : "📍"}
                 </button>
@@ -408,48 +455,47 @@ export default function MemoView() {
             <textarea
               value={draft.content}
               onChange={(e) => edit({ content: e.target.value })}
-              placeholder="내용을 입력하세요. #여행 처럼 적으면 태그가 됩니다."
-              rows={7}
+              placeholder="내용을 입력하세요. 주소를 적으면 미리보기가 붙습니다."
+              rows={6}
               className="text-base leading-relaxed outline-none w-full resize-y placeholder:text-gray-300"
             />
 
-            <div className="flex flex-wrap items-center gap-1.5 bg-[#FEE500]/25 rounded-lg px-3 py-2.5">
-              <span className="text-[11px] font-bold text-gray-900">태그</span>
-              {draftTags.length === 0 ? (
-                <span className="text-[11.5px] text-gray-500">본문에 #태그 를 적으면 여기에 모입니다</span>
-              ) : (
-                <>
+            {/* 주소 미리보기 */}
+            {(draft.previews.length > 0 || fetchingUrls.length > 0) && (
+              <div className="flex flex-col gap-2">
+                {draft.previews.map((p) => (
+                  <LinkCard key={p.url} preview={p} onRemove={() => edit({ previews: draft.previews.filter((x) => x.url !== p.url) })} />
+                ))}
+                {fetchingUrls.map((u) => (
+                  <div key={u} className="text-[11.5px] text-gray-400 border border-dashed border-gray-200 rounded-lg px-3 py-2 truncate">
+                    미리보기 불러오는 중… {u}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* 태그 입력 */}
+            <div className="flex flex-col gap-1.5 bg-[#FEE500]/25 rounded-lg px-3 py-2.5">
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] font-bold text-gray-900 shrink-0">태그</span>
+                <input
+                  value={draft.tagText}
+                  onChange={(e) => edit({ tagText: e.target.value })}
+                  placeholder="띄어쓰기로 구분 — 예: 여행 바다"
+                  className="flex-1 min-w-0 bg-white/70 rounded px-2.5 py-1.5 text-sm outline-none focus:bg-white placeholder:text-gray-400"
+                />
+              </div>
+              {draftTags.length > 0 && (
+                <div className="flex flex-wrap items-center gap-1.5">
                   {draftTags.map((t) => (
                     <em key={t} className="not-italic text-[11.5px] font-bold bg-white rounded-full px-2 py-0.5">
                       #{t}
                     </em>
                   ))}
-                  {draft.photos.length > 0 && (
-                    <span className="text-[11.5px] text-gray-600">첨부 {draft.photos.length}장에도 적용됨</span>
-                  )}
-                </>
+                  {draft.photos.length > 0 && <span className="text-[11.5px] text-gray-600">첨부 {draft.photos.length}장에도 적용됨</span>}
+                </div>
               )}
             </div>
-
-            {uploading > 0 && <div className="text-xs text-gray-500">사진 올리는 중… {uploading}장 남음</div>}
-
-            {draft.photos.length > 0 && (
-              <div className="grid grid-cols-3 gap-1.5">
-                {draft.photos.map((p) => (
-                  <div key={p.id} className="relative aspect-square rounded overflow-hidden bg-gray-100">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={p.url} alt={p.file_name || "첨부 사진"} className="w-full h-full object-cover" />
-                    <button
-                      onClick={() => removePhoto(p)}
-                      aria-label="사진 삭제"
-                      className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/55 text-white text-[10px] grid place-items-center"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
 
             {/* 링크 공유 */}
             {draft.share_token ? (
@@ -474,6 +520,26 @@ export default function MemoView() {
               <button onClick={startShare} className="self-start text-xs text-gray-600 border border-gray-300 rounded px-3 py-2">
                 🔗 링크로 공유
               </button>
+            )}
+
+            {uploading > 0 && <div className="text-xs text-gray-500">사진 올리는 중… {uploading}장 남음</div>}
+
+            {draft.photos.length > 0 && (
+              <div className="grid grid-cols-3 gap-1.5">
+                {draft.photos.map((p) => (
+                  <div key={p.id} className="relative aspect-square rounded overflow-hidden bg-gray-100">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={p.url} alt={p.file_name || "첨부 사진"} className="w-full h-full object-cover" />
+                    <button
+                      onClick={() => removePhoto(p)}
+                      aria-label="사진 삭제"
+                      className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/55 text-white text-[10px] grid place-items-center"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ))}
+              </div>
             )}
 
             <div className="grid grid-cols-3 gap-2">
