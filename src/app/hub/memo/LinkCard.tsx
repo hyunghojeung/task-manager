@@ -1,3 +1,7 @@
+"use client";
+
+import { useState } from "react";
+
 /** 메모에 적은 주소의 미리보기 카드 — 카톡 링크 카드와 같은 모양 */
 export interface LinkPreview {
   url: string;
@@ -26,6 +30,10 @@ export default function LinkCard({
   loading?: boolean;
   onRemove?: () => void;
 }) {
+  // 이미지를 못 불러오면(다른 사이트 접근을 막는 경우) 이미지 칸을 숨긴다
+  const [imgBroken, setImgBroken] = useState(false);
+  const image = preview.image && !imgBroken ? preview.image : "";
+
   const host = hostOf(preview.url);
   // 아직 읽어오는 중이거나, 사이트가 정보를 주지 않은 경우
   const bare = !preview.title && !preview.description && !preview.image;
@@ -34,12 +42,19 @@ export default function LinkCard({
   // 목록용 — 작은 가로형
   if (compact) {
     return (
-      <span className="flex items-center gap-2 border border-gray-200 rounded-md overflow-hidden bg-gray-50">
-        {preview.image && (
+      <span className="flex items-center gap-2 w-full min-w-0 border border-gray-200 rounded-lg overflow-hidden bg-gray-50">
+        {image && (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={preview.image} alt="" className="w-11 h-11 object-cover shrink-0 bg-gray-200" loading="lazy" />
+          <img
+            src={image}
+            alt=""
+            referrerPolicy="no-referrer"
+            onError={() => setImgBroken(true)}
+            className="w-11 h-11 object-cover shrink-0 bg-gray-200"
+            loading="lazy"
+          />
         )}
-        <span className="min-w-0 flex flex-col py-1 px-2">
+        <span className="min-w-0 flex-1 flex flex-col py-1 px-2">
           <span className="text-[12px] font-semibold text-gray-800 truncate">{preview.title || preview.url}</span>
           <span className="text-[10.5px] text-gray-400 truncate">{host}</span>
         </span>
@@ -47,29 +62,31 @@ export default function LinkCard({
     );
   }
 
-  // 카톡식 — 큰 이미지 위, 제목 두 줄, 주소 한 줄
+  // 카톡식 — 큰 이미지 위, 제목 두 줄, 설명, 파란 주소
   return (
-    <div className="relative max-w-sm border border-gray-200 rounded-2xl overflow-hidden bg-white shadow-sm">
+    <div className="relative w-full max-w-sm border border-gray-200 rounded-2xl overflow-hidden bg-white shadow-sm">
       <a href={preview.url} target="_blank" rel="noopener noreferrer" className="block no-underline text-inherit hover:bg-gray-50">
-        {preview.image && (
+        {image && (
           // eslint-disable-next-line @next/next/no-img-element
           <img
-            src={preview.image}
+            src={image}
             alt=""
+            referrerPolicy="no-referrer"
+            onError={() => setImgBroken(true)}
             className="w-full aspect-[1.91/1] object-cover bg-gray-100 border-b border-gray-100"
             loading="lazy"
           />
         )}
-        <span className="block px-3.5 pt-3 pb-3">
+        <span className="block px-3.5 pt-3 pb-3 min-w-0">
           <span
-            className={`block text-[15px] leading-snug ${
+            className={`block text-[15px] leading-snug break-words ${
               bare ? "text-gray-500 break-all line-clamp-2" : "font-bold text-gray-900 line-clamp-2"
             }`}
           >
             {titleText}
           </span>
           {preview.description && preview.title && (
-            <span className="block text-[13px] text-gray-500 leading-snug line-clamp-3 mt-1.5">{preview.description}</span>
+            <span className="block text-[13px] text-gray-500 leading-snug line-clamp-3 mt-1.5 break-words">{preview.description}</span>
           )}
           <span className="block text-[12.5px] text-blue-600 underline underline-offset-2 truncate mt-2">{host}</span>
         </span>
