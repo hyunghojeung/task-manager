@@ -43,7 +43,7 @@ function isPrivateIp(ip: string) {
   );
 }
 
-async function isSafeUrl(raw: string): Promise<URL | null> {
+export async function isSafeUrl(raw: string): Promise<URL | null> {
   let u: URL;
   try {
     u = new URL(raw);

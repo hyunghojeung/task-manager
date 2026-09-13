@@ -23,16 +23,23 @@ export default function LinkCard({
   preview,
   compact = false,
   loading = false,
+  shareToken,
   onRemove,
 }: {
   preview: LinkPreview;
   compact?: boolean;
   loading?: boolean;
+  /** 공유받은 화면에서 이미지를 받아올 때 쓰는 메모 공유 토큰 */
+  shareToken?: string;
   onRemove?: () => void;
 }) {
-  // 이미지를 못 불러오면(다른 사이트 접근을 막는 경우) 이미지 칸을 숨긴다
+  // 이미지는 우리 서버가 대신 받아 준다 (다른 사이트 접근을 막는 곳도 보이게)
+  // 그래도 못 불러오면 이미지 칸을 숨긴다
   const [imgBroken, setImgBroken] = useState(false);
-  const image = preview.image && !imgBroken ? preview.image : "";
+  const image =
+    preview.image && !imgBroken
+      ? `/api/hub/link-image?u=${encodeURIComponent(preview.image)}${shareToken ? `&t=${encodeURIComponent(shareToken)}` : ""}`
+      : "";
 
   const host = hostOf(preview.url);
   // 아직 읽어오는 중이거나, 사이트가 정보를 주지 않은 경우
@@ -48,7 +55,6 @@ export default function LinkCard({
           <img
             src={image}
             alt=""
-            referrerPolicy="no-referrer"
             onError={() => setImgBroken(true)}
             className="w-11 h-11 object-cover shrink-0 bg-gray-200"
             loading="lazy"
@@ -71,7 +77,6 @@ export default function LinkCard({
           <img
             src={image}
             alt=""
-            referrerPolicy="no-referrer"
             onError={() => setImgBroken(true)}
             className="w-full aspect-[1.91/1] object-cover bg-gray-100 border-b border-gray-100"
             loading="lazy"
