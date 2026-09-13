@@ -39,7 +39,21 @@ export default function LoginPage() {
 
       localStorage.setItem("login_companyId", companyId);
       localStorage.setItem("login_userId", userId);
-      router.push("/dashboard");
+
+      // 어디로 보낼지:
+      //  1) 로그인 전에 가려던 페이지(next)가 있으면 그리로
+      //  2) 폰이고 업무관리 권한이 있으면 업무관리로
+      //  3) 아니면 작업리스트로
+      const hub = !!data.hub_enabled;
+      const next = new URLSearchParams(window.location.search).get("next") || "";
+      const isMobile = window.matchMedia("(max-width: 767px)").matches;
+      let dest = "/dashboard";
+      if (next.startsWith("/") && !next.startsWith("//")) {
+        dest = next.startsWith("/hub") && !hub ? "/dashboard" : next;
+      } else if (isMobile && hub) {
+        dest = "/hub";
+      }
+      router.push(dest);
     } catch {
       setError("서버에 연결할 수 없습니다.");
     } finally {
