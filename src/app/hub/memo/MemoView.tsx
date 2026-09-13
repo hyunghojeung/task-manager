@@ -376,14 +376,14 @@ export default function MemoView() {
             <button
               key={m.id}
               onClick={() => openMemo(m)}
-              className="text-left border border-gray-200 bg-white rounded-lg p-3.5 flex flex-col gap-1.5 hover:border-gray-400"
+              className="text-left w-full min-w-0 overflow-hidden border border-gray-200 bg-white rounded-lg p-3.5 flex flex-col gap-1.5 hover:border-gray-400"
             >
-              <span className="text-[15px] font-bold text-gray-900 flex items-center gap-1.5">
+              <span className="text-[15px] font-bold text-gray-900 flex items-center gap-1.5 break-words">
                 {m.pinned && <span className="text-xs">📌</span>}
                 {m.title || "제목 없음"}
               </span>
               {textOnly(m.content) && (
-                <span className="text-[13px] text-gray-500 line-clamp-2 whitespace-pre-line">{textOnly(m.content)}</span>
+                <span className="text-[13px] text-gray-500 line-clamp-2 whitespace-pre-line break-words">{textOnly(m.content)}</span>
               )}
               {(m.link_previews || []).length > 0 && <LinkCard preview={m.link_previews![0]} compact />}
               {m.tags.length > 0 && (
