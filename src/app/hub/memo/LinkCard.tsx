@@ -49,7 +49,7 @@ export default function LinkCard({
 
   // 카톡식 — 큰 이미지 위, 제목 두 줄, 주소 한 줄
   return (
-    <div className="relative max-w-sm border border-gray-200 rounded-xl overflow-hidden bg-white shadow-sm">
+    <div className="relative max-w-sm border border-gray-200 rounded-2xl overflow-hidden bg-white shadow-sm">
       <a href={preview.url} target="_blank" rel="noopener noreferrer" className="block no-underline text-inherit hover:bg-gray-50">
         {preview.image && (
           // eslint-disable-next-line @next/next/no-img-element
