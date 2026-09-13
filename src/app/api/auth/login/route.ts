@@ -2,8 +2,18 @@ import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { getSupabase } from "@/lib/supabase-admin";
 
+/** LIKE 패턴 문자를 글자 그대로 찾게 한다 */
+function escapeLike(s: string) {
+  return s.replace(/[\\%_]/g, (c) => "\\" + c);
+}
+
 export async function POST(request: NextRequest) {
-  const { companyId, userId, password } = await request.json();
+  const body = await request.json();
+  // 폰 키보드가 첫 글자를 대문자로 바꾸거나 뒤에 공백을 붙이는 일이 잦다.
+  // 아이디는 대소문자·앞뒤 공백을 가리지 않고 찾는다 (비밀번호는 그대로).
+  const companyId = String(body.companyId || "").trim();
+  const userId = String(body.userId || "").trim();
+  const password = body.password;
 
   if (!companyId || !userId || !password) {
     return NextResponse.json(
@@ -13,14 +23,16 @@ export async function POST(request: NextRequest) {
   }
 
   // 1. 업체 조회
-  const { data: company, error: companyError } = await getSupabase()
+  const { data: companies, error: companyError } = await getSupabase()
     .from("companies")
     .select("*")
-    .eq("company_id", companyId)
-    .eq("status", "active")
-    .single();
+    .ilike("company_id", escapeLike(companyId))
+    .eq("status", "active");
+  const company = (companies || []).find((c) => c.company_id.toLowerCase() === companyId.toLowerCase());
 
   if (companyError || !company) {
+    // 원인 추적용 — 무엇이 들어왔는지 (비밀번호는 남기지 않는다)
+    console.warn(`[login] 업체 없음: "${companyId}" (길이 ${companyId.length}) / 사용자 "${userId}"`);
     return NextResponse.json(
       { error: "존재하지 않는 업체이거나 비활성 상태입니다." },
       { status: 401 }

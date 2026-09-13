@@ -27,7 +27,7 @@ export default function LoginPage() {
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ companyId, userId, password }),
+        body: JSON.stringify({ companyId: companyId.trim(), userId: userId.trim(), password }),
       });
 
       const data = await res.json();
@@ -85,6 +85,10 @@ export default function LoginPage() {
             placeholder="업체 ID를 입력하세요"
             value={companyId}
             onChange={(e) => setCompanyId(e.target.value)}
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
+            autoComplete="organization"
             className="w-full px-3 py-2.5 border border-gray-300 rounded text-sm mb-3 focus:outline-none focus:border-blue-500"
             required
           />
@@ -97,6 +101,10 @@ export default function LoginPage() {
             placeholder="사용자 ID를 입력하세요"
             value={userId}
             onChange={(e) => setUserId(e.target.value)}
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
+            autoComplete="username"
             className="w-full px-3 py-2.5 border border-gray-300 rounded text-sm mb-3 focus:outline-none focus:border-blue-500"
             required
           />
@@ -109,6 +117,7 @@ export default function LoginPage() {
             placeholder="비밀번호를 입력하세요"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            autoComplete="current-password"
             className="w-full px-3 py-2.5 border border-gray-300 rounded text-sm mb-4 focus:outline-none focus:border-blue-500"
             required
           />
