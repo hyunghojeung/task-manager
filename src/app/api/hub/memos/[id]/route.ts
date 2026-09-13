@@ -4,7 +4,14 @@ import { getSupabase } from "@/lib/supabase-admin";
 import { requireHub, normalizeTags } from "@/lib/hub";
 import { sanitizePreviews } from "@/lib/link-preview";
 
-const FIELDS = "id, title, content, tags, pinned, share_token, link_previews, updated_at";
+/** 본인 카테고리만 붙일 수 있게 확인한다. 아니면 미분류로 둔다 */
+async function ownCategory(supabase: ReturnType<typeof getSupabase>, userId: string, v: unknown): Promise<string | null> {
+  if (typeof v !== "string" || !v) return null;
+  const { data } = await supabase.from("hub_memo_categories").select("id").eq("id", v).eq("user_id", userId).maybeSingle();
+  return data ? data.id : null;
+}
+
+const FIELDS = "id, title, content, tags, pinned, share_token, link_previews, category_id, updated_at";
 
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireHub();
@@ -19,6 +26,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
   if (typeof body.content === "string") patch.content = body.content;
   if (Array.isArray(body.tags)) patch.tags = normalizeTags(body.tags);
   if (typeof body.pinned === "boolean") patch.pinned = body.pinned;
+  if ("category_id" in body) patch.category_id = await ownCategory(supabase, auth.session.user.id, body.category_id);
 
   if ("link_previews" in body) patch.link_previews = sanitizePreviews(body.link_previews);
 
