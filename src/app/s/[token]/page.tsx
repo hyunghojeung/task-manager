@@ -61,7 +61,7 @@ export async function generateMetadata({ params }: { params: Promise<{ token: st
 }
 
 /** 본문을 글과 링크 카드가 섞인 순서 그대로 보여준다 */
-function Body({ content, previews }: { content: string; previews: LinkPreview[] }) {
+function Body({ content, previews, token }: { content: string; previews: LinkPreview[]; token: string }) {
   const segs = splitContent(content);
   const inContent = new Set(segs.filter((_, i) => i % 2 === 1));
   const orphan = previews.filter((p) => !inContent.has(p.url));
@@ -69,7 +69,11 @@ function Body({ content, previews }: { content: string; previews: LinkPreview[] 
     <div className="flex flex-col gap-2">
       {segs.map((s, i) =>
         i % 2 === 1 ? (
-          <LinkCard key={`u${i}`} preview={previews.find((p) => p.url === s) || { url: s, title: "", description: "", image: "", site: "" }} />
+          <LinkCard
+            key={`u${i}`}
+            shareToken={token}
+            preview={previews.find((p) => p.url === s) || { url: s, title: "", description: "", image: "", site: "" }}
+          />
         ) : s.trim() ? (
           <p key={`t${i}`} className="text-base leading-relaxed whitespace-pre-line text-gray-800">
             {s.replace(/^\n+|\n+$/g, "")}
@@ -77,7 +81,7 @@ function Body({ content, previews }: { content: string; previews: LinkPreview[] 
         ) : null,
       )}
       {orphan.map((p) => (
-        <LinkCard key={`o-${p.url}`} preview={p} />
+        <LinkCard key={`o-${p.url}`} shareToken={token} preview={p} />
       ))}
     </div>
   );
@@ -102,7 +106,7 @@ export default async function SharedMemoPage({ params }: { params: Promise<{ tok
           {(photos || []).length > 0 && ` · 사진 ${(photos || []).length}장`}
         </p>
 
-        {(body || previews.length > 0) && <Body content={body} previews={previews} />}
+        {(body || previews.length > 0) && <Body content={body} previews={previews} token={token} />}
 
         {(memo.tags || []).length > 0 && (
           <p className="flex flex-wrap gap-2">
