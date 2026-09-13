@@ -30,7 +30,12 @@ export function middleware(request: NextRequest) {
     if (pathname.startsWith("/api/")) {
       return NextResponse.json({ error: "인증이 필요합니다." }, { status: 401 });
     }
-    return NextResponse.redirect(new URL("/", request.url));
+    // 로그인한 뒤 원래 가려던 곳으로 돌려보내기 위해 주소를 기억해 둔다
+    const login = new URL("/", request.url);
+    if (pathname !== "/" && pathname !== "/dashboard") {
+      login.searchParams.set("next", pathname + request.nextUrl.search);
+    }
+    return NextResponse.redirect(login);
   }
 
   // 관리자 페이지 권한 체크

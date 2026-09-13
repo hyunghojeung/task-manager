@@ -75,5 +75,6 @@ export async function POST(request: NextRequest) {
     path: "/",
   });
 
-  return NextResponse.json({ success: true });
+  // 업무관리 권한 여부 — 로그인 후 어디로 보낼지 화면에서 정한다
+  return NextResponse.json({ success: true, hub_enabled: !!user.hub_enabled });
 }
