@@ -95,6 +95,56 @@ function parseMeta(html: string) {
   return meta;
 }
 
+const BROWSER_UA =
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
+
+/** 유튜브 영상 ID — youtu.be/ID, youtube.com/watch?v=ID, /shorts/ID, /live/ID, /embed/ID */
+function youtubeId(u: URL): string | null {
+  const host = u.hostname.replace(/^(www|m)\./, "");
+  if (host === "youtu.be") return u.pathname.slice(1).split("/")[0] || null;
+  if (host === "youtube.com" || host === "youtube-nocookie.com") {
+    if (u.pathname === "/watch") return u.searchParams.get("v");
+    const m = u.pathname.match(/^\/(shorts|live|embed|v)\/([^/?]+)/);
+    if (m) return m[2];
+  }
+  return null;
+}
+
+/**
+ * 유튜브는 일반 요청을 봇으로 보고 거절하므로 공식 미리보기 API(oEmbed)로 읽는다.
+ * 제목·채널명·썸네일을 확실하게 준다.
+ */
+async function fetchYoutube(raw: string, id: string, signal: AbortSignal): Promise<LinkPreview | null> {
+  const res = await fetch(`https://www.youtube.com/oembed?url=${encodeURIComponent(`https://www.youtube.com/watch?v=${id}`)}&format=json`, {
+    signal,
+    headers: { "User-Agent": BROWSER_UA, Accept: "application/json" },
+  });
+  if (!res.ok) return null;
+  const j = (await res.json()) as { title?: string; author_name?: string; thumbnail_url?: string };
+  if (!j.title) return null;
+  return {
+    url: raw,
+    title: String(j.title).slice(0, 200),
+    description: j.author_name ? `YouTube · ${j.author_name}` : "YouTube",
+    // oEmbed 는 작은 썸네일을 주므로 큰 것으로 바꿔 쓴다 (없으면 브라우저가 못 불러와 숨겨진다)
+    image: `https://i.ytimg.com/vi/${id}/hqdefault.jpg`,
+    site: "YouTube",
+  };
+}
+
+/** 네이버 블로그 PC 주소는 껍데기 페이지라 메타가 비어 있다. 모바일 주소로 읽는다. */
+function fetchTarget(u: URL): string {
+  const host = u.hostname.toLowerCase();
+  if (host === "blog.naver.com") {
+    const m = u.pathname.match(/^\/([^/]+)\/(\d+)/);
+    if (m) return `https://m.blog.naver.com/${m[1]}/${m[2]}`;
+    const id = u.searchParams.get("blogId");
+    const no = u.searchParams.get("logNo");
+    if (id && no) return `https://m.blog.naver.com/${id}/${no}`;
+  }
+  return u.toString();
+}
+
 export async function fetchLinkPreview(raw: string): Promise<LinkPreview | null> {
   const hit = CACHE.get(raw);
   if (hit && Date.now() - hit.at < CACHE_TTL) return hit.data;
@@ -106,16 +156,26 @@ export async function fetchLinkPreview(raw: string): Promise<LinkPreview | null>
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), TIMEOUT);
   try {
-    const res = await fetch(u.toString(), {
+    const yt = youtubeId(u);
+    if (yt) {
+      data = await fetchYoutube(raw, yt, ctrl.signal);
+      if (data) {
+        CACHE.set(raw, { at: Date.now(), data });
+        return data;
+      }
+    }
+
+    const res = await fetch(fetchTarget(u), {
       signal: ctrl.signal,
       redirect: "follow",
       headers: {
-        // 일부 사이트는 브라우저처럼 보이지 않으면 메타를 안 준다
-        "User-Agent": "Mozilla/5.0 (compatible; BcountLinkPreview/1.0; +https://blackcopy.kr)",
-        Accept: "text/html,application/xhtml+xml",
-        "Accept-Language": "ko,en;q=0.8",
+        // 브라우저처럼 보이지 않으면 메타를 안 주거나 거절하는 사이트가 많다
+        "User-Agent": BROWSER_UA,
+        Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "ko-KR,ko;q=0.9,en;q=0.8",
       },
     });
+    if (!res.ok) console.warn(`[link-preview] ${res.status} ${raw}`);
     const type = res.headers.get("content-type") || "";
     if (res.ok && type.includes("html") && res.body) {
       // 앞부분만 읽는다
@@ -133,7 +193,9 @@ export async function fetchLinkPreview(raw: string): Promise<LinkPreview | null>
       const meta = parseMeta(html);
 
       const finalUrl = res.url || u.toString();
-      let image = meta["og:image"] || meta["og:image:url"] || meta["twitter:image"] || "";
+      // og:image 가 없으면 <link rel="image_src"> 도 본다
+      const imageSrc = html.match(/<link[^>]+rel=["']image_src["'][^>]+href=["']([^"']+)["']/i)?.[1] || "";
+      let image = meta["og:image"] || meta["og:image:url"] || meta["twitter:image"] || imageSrc || "";
       if (image && !/^https?:\/\//i.test(image)) {
         try {
           image = new URL(image, finalUrl).toString();

@@ -231,6 +231,40 @@ export default function MemoView() {
       photos: m.photos,
     });
     setDirty(false);
+    refreshThinPreviews(m);
+  }
+
+  /** 예전에 이미지·제목 없이 저장된 카드는 열 때 다시 읽어와 조용히 채워 둔다 */
+  async function refreshThinPreviews(m: Memo) {
+    const thin = (m.link_previews || []).filter((p) => !p.image || !p.title);
+    if (thin.length === 0) return;
+    let changed = false;
+    const next = [...(m.link_previews || [])];
+    await Promise.all(
+      thin.map(async (p) => {
+        try {
+          const r = await fetch(`/api/hub/link-preview?url=${encodeURIComponent(p.url)}`);
+          const data: LinkPreview | null = r.ok ? (await r.json()).preview : null;
+          if (data && (data.image || data.title) && (data.image !== p.image || data.title !== p.title)) {
+            const i = next.findIndex((x) => x.url === p.url);
+            if (i >= 0) next[i] = data;
+            previewCache.current.set(p.url, data);
+            changed = true;
+          }
+        } catch {
+          /* 그대로 둔다 */
+        }
+      }),
+    );
+    if (!changed) return;
+    setDraft((d) => (d && d.id === m.id ? { ...d, previews: next } : d));
+    setMemos((prev) => prev.map((x) => (x.id === m.id ? { ...x, link_previews: next } : x)));
+    // 다시 저장 버튼을 누르지 않아도 되게 카드만 조용히 반영한다
+    fetch(`/api/hub/memos/${m.id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ link_previews: next }),
+    }).catch(() => {});
   }
   function newMemo() {
     setDraft({ id: null, title: "", content: "", tagText: "", pinned: false, share_token: null, previews: [], photos: [] });
