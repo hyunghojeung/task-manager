@@ -10,18 +10,40 @@ import { splitContent } from "@/lib/memo-text";
  * 글상자 대신 링크 카드를 보여준다. 글 → 카드 → 글 순서가 그대로 유지된다.
  */
 
+/** 붙여넣기·끌어놓기로 들어온 이미지 파일만 골라낸다 */
+function imageFiles(dt: DataTransfer | null): File[] {
+  if (!dt) return [];
+  const out: File[] = [];
+  if (dt.files && dt.files.length) {
+    Array.from(dt.files).forEach((f) => {
+      if (f.type.startsWith("image/")) out.push(f);
+    });
+  }
+  if (out.length === 0 && dt.items) {
+    Array.from(dt.items).forEach((it) => {
+      if (it.kind === "file" && it.type.startsWith("image/")) {
+        const f = it.getAsFile();
+        if (f) out.push(f);
+      }
+    });
+  }
+  return out;
+}
+
 function AutoTextarea({
   value,
   onChange,
   placeholder,
   focusRef,
   minHeight,
+  onFiles,
 }: {
   value: string;
   onChange: (v: string) => void;
   placeholder?: string;
   focusRef?: (el: HTMLTextAreaElement | null) => void;
   minHeight?: number;
+  onFiles?: (files: File[]) => void;
 }) {
   const ref = useRef<HTMLTextAreaElement>(null);
   useEffect(() => {
@@ -39,6 +61,14 @@ function AutoTextarea({
       rows={1}
       value={value}
       onChange={(e) => onChange(e.target.value)}
+      onPaste={(e) => {
+        // 키보드의 이미지 삽입, 복사한 사진 붙여넣기 → 첨부로 넘긴다
+        const files = imageFiles(e.clipboardData);
+        if (files.length && onFiles) {
+          e.preventDefault();
+          onFiles(files);
+        }
+      }}
       placeholder={placeholder}
       className="w-full resize-none outline-none text-base leading-relaxed placeholder:text-gray-300 bg-transparent block"
       style={{ minHeight: minHeight ? `${minHeight}px` : undefined }}
@@ -52,6 +82,7 @@ export default function BlockEditor({
   loadingUrls,
   onChange,
   onRemoveLink,
+  onFiles,
   placeholder,
 }: {
   content: string;
@@ -59,8 +90,11 @@ export default function BlockEditor({
   loadingUrls: string[];
   onChange: (content: string) => void;
   onRemoveLink: (url: string) => void;
+  /** 본문에 붙여넣거나 끌어다 놓은 이미지 */
+  onFiles?: (files: File[]) => void;
   placeholder?: string;
 }) {
+  const [dragging, setDragging] = useState(false);
   const [segs, setSegs] = useState<string[]>(() => splitContent(content));
   const [seenContent, setSeenContent] = useState(content);
   const areaRefs = useRef<Record<number, HTMLTextAreaElement | null>>({});
@@ -123,7 +157,22 @@ export default function BlockEditor({
   const onlyText = segs.length === 1;
 
   return (
-    <div className="flex flex-col gap-1.5">
+    <div
+      className={`flex flex-col gap-1.5 rounded-lg transition-colors ${dragging ? "bg-[#FEE500]/20 ring-2 ring-[#FEE500]" : ""}`}
+      onDragOver={(e) => {
+        if (!onFiles) return;
+        e.preventDefault();
+        if (!dragging) setDragging(true);
+      }}
+      onDragLeave={() => setDragging(false)}
+      onDrop={(e) => {
+        if (!onFiles) return;
+        e.preventDefault();
+        setDragging(false);
+        const files = imageFiles(e.dataTransfer);
+        if (files.length) onFiles(files);
+      }}
+    >
       {segs.map((s, i) =>
         i % 2 === 1 ? (
           <LinkCard
@@ -142,6 +191,7 @@ export default function BlockEditor({
               areaRefs.current[i] = el;
             }}
             minHeight={onlyText ? 140 : i === segs.length - 1 ? 40 : undefined}
+            onFiles={onFiles}
           />
         ),
       )}

@@ -330,11 +330,14 @@ export default function MemoView() {
     alert(ok ? "링크를 복사했습니다" : url);
   }
 
-  async function attach(files: FileList | null) {
+  async function attach(files: FileList | File[] | null) {
     if (!files || !draft) return;
+    const list = Array.from(files)
+      .filter((f) => f.type.startsWith("image/"))
+      .slice(0, 10);
+    if (list.length === 0) return;
     const memoId = await ensureSaved();
     if (!memoId) return;
-    const list = Array.from(files).slice(0, 10);
     setUploading(list.length);
     try {
       for (const file of list) {
@@ -494,7 +497,8 @@ export default function MemoView() {
                 setDraft((d) => (d ? { ...d, previews: d.previews.filter((x) => x.url !== u) } : d));
                 setDirty(true);
               }}
-              placeholder="내용을 입력하세요. 주소를 적으면 그 자리에 미리보기 카드가 붙습니다."
+              onFiles={(files) => attach(files)}
+              placeholder="내용을 입력하세요. 주소를 적으면 카드가 붙고, 사진을 붙여넣으면 첨부됩니다."
             />
 
             {uploading > 0 && <div className="text-xs text-gray-500">사진 올리는 중… {uploading}장 남음</div>}
