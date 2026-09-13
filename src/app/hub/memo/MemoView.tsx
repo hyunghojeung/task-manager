@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useBackToClose } from "../useBackToClose";
 import LinkCard, { type LinkPreview } from "./LinkCard";
 import BlockEditor from "./BlockEditor";
+import CategoryChips, { type Category } from "./CategoryChips";
 import { extractUrls, textOnly } from "@/lib/memo-text";
 
 interface Photo {
@@ -20,6 +21,7 @@ interface Memo {
   pinned: boolean;
   share_token?: string | null;
   link_previews?: LinkPreview[];
+  category_id?: string | null;
   updated_at: string;
   photos: Photo[];
 }
@@ -32,6 +34,7 @@ interface Draft {
   pinned: boolean;
   share_token: string | null;
   previews: LinkPreview[];
+  category_id: string | null;
   photos: Photo[];
 }
 
@@ -83,14 +86,29 @@ export default function MemoView() {
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(0);
   const [fetchingUrls, setFetchingUrls] = useState<string[]>([]);
+  const [cats, setCats] = useState<Category[]>([]);
+  const [noneCount, setNoneCount] = useState(0);
+  const [totalCount, setTotalCount] = useState(0);
+  const [filter, setFilter] = useState<string>("all"); // all | none | 카테고리 id
   const fileRef = useRef<HTMLInputElement>(null);
   const cameraRef = useRef<HTMLInputElement>(null);
   const previewCache = useRef<Map<string, LinkPreview | null>>(new Map());
 
-  const load = useCallback(async (keyword: string) => {
+  const loadCats = useCallback(async () => {
+    const r = await fetch(`/api/hub/memo-categories?_=${Date.now()}`);
+    if (r.ok) {
+      const d = await r.json();
+      setCats(d.categories || []);
+      setNoneCount(d.none || 0);
+      setTotalCount(d.total || 0);
+    }
+  }, []);
+
+  const load = useCallback(async (keyword: string, cat: string = "all") => {
     setLoading(true);
     try {
-      const r = await fetch(`/api/hub/memos?q=${encodeURIComponent(keyword)}&_=${Date.now()}`);
+      const c = cat === "all" ? "" : cat;
+      const r = await fetch(`/api/hub/memos?q=${encodeURIComponent(keyword)}&category=${encodeURIComponent(c)}&_=${Date.now()}`);
       if (r.ok) setMemos((await r.json()).memos || []);
     } finally {
       setLoading(false);
@@ -98,9 +116,13 @@ export default function MemoView() {
   }, []);
 
   useEffect(() => {
-    const t = setTimeout(() => load(q), q ? 250 : 0);
+    const t = setTimeout(() => load(q, filter), q ? 250 : 0);
     return () => clearTimeout(t);
-  }, [q, load]);
+  }, [q, filter, load]);
+
+  useEffect(() => {
+    loadCats();
+  }, [loadCats]);
 
   // ----- 본문에 적은 주소의 미리보기를 읽어온다 -----
   // 주소는 본문 속 제자리에 그대로 두고, 편집기가 그 자리를 카드로 보여준다.
@@ -155,6 +177,7 @@ export default function MemoView() {
       content: d.content,
       tags: parseTags(d.tagText),
       link_previews: d.previews,
+      category_id: d.category_id,
     };
   }
 
@@ -202,19 +225,57 @@ export default function MemoView() {
       }
       setDirty(false);
       setDraft(null);
-      await load(q);
+      await load(q, filter);
+      loadCats();
     } finally {
       setSaving(false);
     }
+  }
+
+  // ----- 카테고리 -----
+  async function addCategory(applyToDraft: boolean) {
+    const name = window.prompt("새 카테고리 이름", "")?.trim();
+    if (!name) return;
+    const r = await fetch("/api/hub/memo-categories", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name }),
+    });
+    if (!r.ok) {
+      alert((await r.json().catch(() => ({}))).error || "카테고리를 만들지 못했습니다");
+      return;
+    }
+    const c: Category = await r.json();
+    await loadCats();
+    if (applyToDraft) edit({ category_id: c.id });
+    else setFilter(c.id);
+  }
+  async function renameCategory(c: Category) {
+    const r = await fetch(`/api/hub/memo-categories/${c.id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: c.name }),
+    });
+    if (r.ok) loadCats();
+    else alert("이름을 바꾸지 못했습니다");
+  }
+  async function deleteCategory(c: Category) {
+    const r = await fetch(`/api/hub/memo-categories/${c.id}`, { method: "DELETE" });
+    if (r.ok) {
+      if (filter === c.id) setFilter("all");
+      setDraft((d) => (d && d.category_id === c.id ? { ...d, category_id: null } : d));
+      await loadCats();
+      load(q, filter === c.id ? "all" : filter);
+    } else alert("삭제하지 못했습니다");
   }
 
   const close = useCallback(() => {
     if (dirty && !confirm("저장하지 않고 닫을까요? 적은 내용이 사라집니다.")) return false;
     setDraft(null);
     setDirty(false);
-    load(q);
+    load(q, filter);
     return true;
-  }, [dirty, load, q]);
+  }, [dirty, load, q, filter]);
 
   useBackToClose(draft !== null, close);
 
@@ -228,6 +289,7 @@ export default function MemoView() {
       pinned: m.pinned,
       share_token: m.share_token ?? null,
       previews: m.link_previews || [],
+      category_id: m.category_id ?? null,
       photos: m.photos,
     });
     setDirty(false);
@@ -267,7 +329,9 @@ export default function MemoView() {
     }).catch(() => {});
   }
   function newMemo() {
-    setDraft({ id: null, title: "", content: "", tagText: "", pinned: false, share_token: null, previews: [], photos: [] });
+    // 목록에서 카테고리를 보고 있었으면 새 메모도 그 카테고리로 시작한다
+    const startCat = filter !== "all" && filter !== "none" ? filter : null;
+    setDraft({ id: null, title: "", content: "", tagText: "", pinned: false, share_token: null, previews: [], category_id: startCat, photos: [] });
     setDirty(false);
   }
 
@@ -298,6 +362,7 @@ export default function MemoView() {
       setMemos((prev) => prev.filter((p) => p.id !== id));
       setDraft(null);
       setDirty(false);
+      loadCats();
     }
   }
 
@@ -400,6 +465,22 @@ export default function MemoView() {
         </button>
       </div>
 
+      {/* 카테고리 — 하나라도 있을 때만 보인다 */}
+      {cats.length > 0 && (
+        <CategoryChips
+          categories={cats}
+          value={filter}
+          onSelect={setFilter}
+          onAdd={() => addCategory(false)}
+          onRename={renameCategory}
+          onDelete={deleteCategory}
+          allLabel="전체"
+          allCount={totalCount}
+          noneCount={noneCount}
+          showNone={noneCount > 0}
+        />
+      )}
+
       {/* 목록 */}
       {loading ? (
         <div className="text-center text-xs text-gray-400 py-10">불러오는 중…</div>
@@ -432,7 +513,10 @@ export default function MemoView() {
                   ))}
                 </span>
               )}
-              <span className="flex gap-2.5 text-[11px] text-gray-400">
+              <span className="flex flex-wrap gap-2.5 text-[11px] text-gray-400">
+                {m.category_id && cats.find((c) => c.id === m.category_id) && (
+                  <span className="text-gray-600 bg-gray-100 rounded px-1.5">{cats.find((c) => c.id === m.category_id)!.name}</span>
+                )}
                 <span>{when(m.updated_at)}</span>
                 {m.photos.length > 0 && <span>🖼 {m.photos.length}</span>}
                 {m.share_token && <span className="text-[#8a6d00] font-bold">🔗 공유 중</span>}
@@ -478,6 +562,17 @@ export default function MemoView() {
                 </button>
               </div>
             </div>
+
+            {/* 카테고리 고르기 — 없으면 "+ 추가"만 보인다 */}
+            <CategoryChips
+              categories={cats}
+              value={draft.category_id ?? "none"}
+              onSelect={(v) => edit({ category_id: v === "none" || v === "all" ? null : v })}
+              onAdd={() => addCategory(true)}
+              onRename={renameCategory}
+              onDelete={deleteCategory}
+              showNone={cats.length > 0}
+            />
 
             <input
               value={draft.title}

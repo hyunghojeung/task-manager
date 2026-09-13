@@ -4,7 +4,14 @@ import { getSupabase } from "@/lib/supabase-admin";
 import { requireHub, normalizeTags } from "@/lib/hub";
 import { sanitizePreviews } from "@/lib/link-preview";
 
-const FIELDS = "id, title, content, tags, pinned, share_token, link_previews, updated_at";
+/** 본인 카테고리만 붙일 수 있게 확인한다. 아니면 미분류로 둔다 */
+async function ownCategory(supabase: ReturnType<typeof getSupabase>, userId: string, v: unknown): Promise<string | null> {
+  if (typeof v !== "string" || !v) return null;
+  const { data } = await supabase.from("hub_memo_categories").select("id").eq("id", v).eq("user_id", userId).maybeSingle();
+  return data ? data.id : null;
+}
+
+const FIELDS = "id, title, content, tags, pinned, share_token, link_previews, category_id, updated_at";
 
 // 목록: /api/hub/memos?q=검색어
 export async function GET(request: NextRequest) {
@@ -13,6 +20,8 @@ export async function GET(request: NextRequest) {
 
   const { searchParams } = new URL(request.url);
   const q = (searchParams.get("q") || "").replace(/^#/, "").trim();
+  // category=ID 그 카테고리만, category=none 미분류만, 없으면 전체
+  const category = (searchParams.get("category") || "").trim();
 
   const supabase = getSupabase();
   let query = supabase
@@ -22,6 +31,9 @@ export async function GET(request: NextRequest) {
     .order("pinned", { ascending: false })
     .order("updated_at", { ascending: false })
     .limit(200);
+
+  if (category === "none") query = query.is("category_id", null);
+  else if (category) query = query.eq("category_id", category);
 
   if (q) {
     // 제목·본문 글자 또는 태그로 찾는다
@@ -63,6 +75,7 @@ export async function POST(request: NextRequest) {
   const content = String(body.content || "");
 
   const supabase = getSupabase();
+  const categoryId = await ownCategory(supabase, auth.session.user.id, body.category_id);
   const { data, error } = await supabase
     .from("hub_memos")
     .insert({
@@ -72,6 +85,7 @@ export async function POST(request: NextRequest) {
       content,
       tags: normalizeTags(body.tags),
       link_previews: sanitizePreviews(body.link_previews),
+      category_id: categoryId,
     })
     .select(FIELDS)
     .single();
