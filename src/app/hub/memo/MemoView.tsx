@@ -444,11 +444,14 @@ export default function MemoView() {
       {/* 검색 */}
       <div className="flex items-center gap-2">
         <div className="flex-1 flex items-center gap-2 border border-gray-300 bg-white rounded-full px-4 py-2.5">
-          <span className="font-bold text-gray-900">#</span>
+          <svg viewBox="0 0 24 24" aria-hidden="true" className="w-5 h-5 shrink-0 text-gray-500" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round">
+            <circle cx="11" cy="11" r="7" />
+            <path d="m20 20-3.5-3.5" />
+          </svg>
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="태그나 내용으로 검색"
+            aria-label="메모 검색"
             className="flex-1 min-w-0 outline-none text-base bg-transparent"
           />
           {q && (
