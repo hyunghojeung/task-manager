@@ -1,4 +1,4 @@
-/** 메모에 적은 주소의 미리보기 카드 — 카톡 링크 카드처럼 이미지·제목·설명·사이트 */
+/** 메모에 적은 주소의 미리보기 카드 — 카톡 링크 카드와 같은 모양 */
 export interface LinkPreview {
   url: string;
   title: string;
@@ -26,11 +26,12 @@ export default function LinkCard({
   loading?: boolean;
   onRemove?: () => void;
 }) {
-  const host = preview.site || hostOf(preview.url);
+  const host = hostOf(preview.url);
   // 아직 읽어오는 중이거나, 사이트가 정보를 주지 않은 경우
   const bare = !preview.title && !preview.description && !preview.image;
-  const titleText = preview.title || (loading ? "미리보기 불러오는 중…" : preview.url);
+  const titleText = preview.title || preview.description || (loading ? "미리보기 불러오는 중…" : preview.url);
 
+  // 목록용 — 작은 가로형
   if (compact) {
     return (
       <span className="flex items-center gap-2 border border-gray-200 rounded-md overflow-hidden bg-gray-50">
@@ -46,32 +47,39 @@ export default function LinkCard({
     );
   }
 
+  // 카톡식 — 큰 이미지 위, 제목 두 줄, 주소 한 줄
   return (
-    <div className="relative border border-gray-200 rounded-lg overflow-hidden bg-white">
-      <a
-        href={preview.url}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="flex items-stretch no-underline text-inherit hover:bg-gray-50"
-      >
+    <div className="relative max-w-sm border border-gray-200 rounded-xl overflow-hidden bg-white shadow-sm">
+      <a href={preview.url} target="_blank" rel="noopener noreferrer" className="block no-underline text-inherit hover:bg-gray-50">
         {preview.image && (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={preview.image} alt="" className="w-24 md:w-28 shrink-0 object-cover bg-gray-100" loading="lazy" />
+          <img
+            src={preview.image}
+            alt=""
+            className="w-full aspect-[1.91/1] object-cover bg-gray-100 border-b border-gray-100"
+            loading="lazy"
+          />
         )}
-        <span className="min-w-0 flex-1 flex flex-col gap-0.5 px-3 py-2.5">
-          <span className="text-[10.5px] text-gray-400 truncate">{host}</span>
-          <span className={`text-[13.5px] leading-snug ${bare ? "text-gray-500 break-all line-clamp-2" : "font-bold text-gray-900 line-clamp-2"}`}>
+        <span className="block px-3.5 pt-3 pb-3">
+          <span
+            className={`block text-[15px] leading-snug ${
+              bare ? "text-gray-500 break-all line-clamp-2" : "font-bold text-gray-900 line-clamp-2"
+            }`}
+          >
             {titleText}
           </span>
-          {preview.description && <span className="text-[12px] text-gray-500 line-clamp-2 leading-snug">{preview.description}</span>}
+          {preview.description && preview.title && (
+            <span className="block text-[13px] text-gray-500 leading-snug line-clamp-3 mt-1.5">{preview.description}</span>
+          )}
+          <span className="block text-[12.5px] text-blue-600 underline underline-offset-2 truncate mt-2">{host}</span>
         </span>
       </a>
       {onRemove && (
         <button
           onClick={onRemove}
-          aria-label="미리보기 지우기"
-          title="미리보기 지우기"
-          className="absolute top-1 right-1 w-6 h-6 rounded-full bg-white/90 border border-gray-200 text-gray-400 text-[11px] grid place-items-center hover:text-gray-900"
+          aria-label="링크 카드 지우기"
+          title="링크 카드 지우기"
+          className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-black/45 text-white text-[11px] grid place-items-center hover:bg-black/65"
         >
           ✕
         </button>
