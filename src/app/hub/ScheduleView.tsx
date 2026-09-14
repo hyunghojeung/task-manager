@@ -528,9 +528,14 @@ export default function ScheduleView() {
               {loading ? (
                 <div className="text-center text-xs text-gray-400 py-8">불러오는 중…</div>
               ) : selItems.length === 0 ? (
-                <div className="text-center text-xs text-gray-400 py-8 border border-dashed border-gray-300 rounded-lg whitespace-pre-line">
-                  {"적어둔 것이 없습니다\n+ 를 눌러 추가하세요"}
-                </div>
+                // 빈 안내 상자를 눌러도 그 날짜에 일정 추가창이 열린다
+                <button
+                  type="button"
+                  onClick={() => setForm({ title: "", content: "", color: "yellow", bold: false, previews: [] })}
+                  className="w-full text-center text-xs text-gray-400 py-8 border border-dashed border-gray-300 rounded-lg whitespace-pre-line hover:bg-gray-50 hover:text-gray-600"
+                >
+                  {"적어둔 것이 없습니다\n여기를 누르거나 + 를 눌러 추가하세요"}
+                </button>
               ) : (
                 <div className="flex flex-col gap-2">
                   {selItems.map((it) => (
