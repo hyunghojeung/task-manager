@@ -5,13 +5,15 @@ import React, { useState, useEffect, useCallback } from "react";
 interface OrderData {
   id: string; order_no: string; client_name: string; orderer: string; contact: string;
   title: string; total_amount: number; discount: number; product_type: string; payment: string; tax_invoice?: string; status: string; is_highlighted?: boolean; author: string;
+  source?: string; external_order_id?: string;
 }
 
 export default function DashboardPage() {
   const [orders, setOrders] = useState<OrderData[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
-  const [category, setCategory] = useState("전체");
+  // 구분 탭. 카테고리 목록을 받은 뒤 기본 카테고리(없으면 첫 번째)로 정해진다
+  const [category, setCategory] = useState<string | null>(null);
   const [searchField, setSearchField] = useState("전체");
   const [keyword, setKeyword] = useState("");
   const [loading, setLoading] = useState(true);
@@ -23,8 +25,12 @@ export default function DashboardPage() {
 
   useEffect(() => {
     fetch(`/api/categories?_=${Date.now()}`).then(r => r.json()).then(d => {
-      if (Array.isArray(d)) setCategoryList(d);
-    }).catch(() => {});
+      if (Array.isArray(d)) {
+        setCategoryList(d);
+        const def = d.find((c: {is_default?: boolean}) => c.is_default) || d[0];
+        setCategory(def ? def.name : "전체");
+      } else setCategory("전체");
+    }).catch(() => setCategory("전체"));
   }, []);
 
   useEffect(() => {
@@ -38,6 +44,7 @@ export default function DashboardPage() {
   }
 
   const fetchOrders = useCallback(async () => {
+    if (category === null) return;
     setLoading(true);
     const params = new URLSearchParams({ page: String(page), limit: "20", _: String(Date.now()) });
     if (category !== "전체") params.set("category", category);
@@ -140,10 +147,14 @@ export default function DashboardPage() {
   return (
     <div>
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 mb-4">
-        <select value={category} onChange={e => setCategory(e.target.value)} className="px-3 py-1.5 border border-gray-300 rounded text-sm">
-          <option value="전체">전체</option>
-          {categoryList.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
-        </select>
+        <div className="flex border border-gray-300 rounded overflow-hidden bg-white overflow-x-auto" role="tablist" aria-label="구분">
+          {[{ id: "all", name: "전체" }, ...categoryList].map(c => (
+            <button key={c.id} role="tab" aria-selected={category === c.name} onClick={() => { setCategory(c.name); setPage(1); }}
+              className={`px-4 py-2 text-sm whitespace-nowrap border-r border-gray-300 last:border-r-0 transition ${category === c.name ? "bg-[#3b4b5b] text-white font-bold" : "text-gray-600 hover:bg-gray-50"}`}>
+              {c.name}
+            </button>
+          ))}
+        </div>
         <div className="flex flex-wrap gap-2 items-center">
           <select value={fontSize} onChange={e => changeFontSize(e.target.value)} className="px-2 py-1.5 border border-gray-300 rounded text-xs" title="글자 크기">
             <option value="text-xs">글자: 작게</option>
@@ -193,6 +204,7 @@ export default function DashboardPage() {
                 <td className="border border-gray-200 px-1.5 py-[7px] text-center whitespace-nowrap">
                   <button onClick={() => toggleHighlight(o.id, !!o.is_highlighted)} className={`mr-1 text-sm leading-none ${o.is_highlighted ? "text-red-500" : "text-gray-300 hover:text-red-400"}`} title={o.is_highlighted ? "강조 해제" : "제목 강조 (빨간색 볼드)"}>★</button>
                   <a href={`/dashboard/write?id=${o.id}`} className="hover:text-blue-600 hover:underline">{o.order_no}</a>
+                  {o.source === "shop" && <span className="ml-1 px-1 rounded text-[10px] font-bold bg-amber-100 text-amber-700 align-[1px]" title={`쇼핑몰 주문 ${o.external_order_id || ""}`}>몰</span>}
                 </td>
                 <td className="border border-gray-200 px-1.5 py-[7px] text-left"><button onClick={() => { setSearchField("거래처"); setKeyword(o.client_name || ""); setPage(1); }} className="hover:text-blue-600 hover:underline text-left" title="이 거래처 글만 보기">{highlight(o.client_name, "거래처")}</button></td>
                 <td className="border border-gray-200 px-1.5 py-[7px] text-left"><button onClick={() => { setSearchField("주문자"); setKeyword(o.orderer || ""); setPage(1); }} className="hover:text-blue-600 hover:underline text-left" title="이 주문자 글만 보기">{highlight(o.orderer, "주문자")}</button></td>
