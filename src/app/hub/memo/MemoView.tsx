@@ -503,9 +503,14 @@ export default function MemoView() {
       {loading ? (
         <div className="text-center text-xs text-gray-400 py-10">불러오는 중…</div>
       ) : memos.length === 0 ? (
-        <div className="text-center text-xs text-gray-400 py-12 border border-dashed border-gray-300 rounded-lg whitespace-pre-line">
-          {q ? `'${q}' 로 찾은 메모가 없습니다` : "메모가 없습니다\n+ 를 눌러 적어보세요"}
-        </div>
+        // 빈 안내 상자를 눌러도 새 메모 작성창이 열린다
+        <button
+          type="button"
+          onClick={q ? undefined : newMemo}
+          className={`w-full text-center text-xs text-gray-400 py-12 border border-dashed border-gray-300 rounded-lg whitespace-pre-line ${q ? "cursor-default" : "hover:bg-gray-50 hover:text-gray-600 cursor-pointer"}`}
+        >
+          {q ? `'${q}' 로 찾은 메모가 없습니다` : "메모가 없습니다\n여기를 누르거나 + 를 눌러 적어보세요"}
+        </button>
       ) : (
         <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-3">
           {memos.map((m) => (
