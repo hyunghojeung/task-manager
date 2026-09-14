@@ -78,6 +78,7 @@ function fmtMd(iso?: string) {
 export function buildDetailSpec(p: ShopOrderPayload) {
   const lines: string[] = [];
   lines.push(`[쇼핑몰 주문 ${p.external_order_id}] ${fmtKst(p.ordered_at)}`);
+  if (p.customer.company) lines.push(`업체명: ${p.customer.company}`);
 
   lines.push("■ 품목");
   for (const it of p.items) {
@@ -207,7 +208,7 @@ export async function registerShopOrder(
     company_id: companyId,
     order_no: orderNo,
     ...(orderDate ? { order_date: orderDate } : {}),
-    client_name: p.customer.company || "",          // 거래처는 비워두고 직접 입력한다
+    client_name: "",                                // 거래처는 비워두고 직접 입력한다
     orderer: p.customer.name,
     contact: p.customer.phone || "",
     email: p.customer.email || "",
