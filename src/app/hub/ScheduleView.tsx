@@ -55,6 +55,27 @@ export default function ScheduleView() {
   const [detail, setDetail] = useState<Item | null>(null);
   const [form, setForm] = useState<{ id?: string; title: string; content: string; color: string } | null>(null);
 
+  // 아래 목록: "open" = 완료 안 된 일정 전체 (첫 화면), "day" = 달력에서 고른 날
+  const [listMode, setListMode] = useState<"open" | "day">("open");
+  const [openItems, setOpenItems] = useState<Item[]>([]);
+  const [openHolidays, setOpenHolidays] = useState<Record<string, string>>({});
+
+  const loadOpen = useCallback(async () => {
+    const r = await fetch(`/api/hub/schedules?open=1&_=${Date.now()}`);
+    if (!r.ok) return;
+    const d = await r.json();
+    setOpenItems(d.schedules || []);
+    const map: Record<string, string> = {};
+    (d.holidays || []).forEach((h: Holiday) => {
+      map[h.on_date.slice(0, 10)] = h.name;
+    });
+    setOpenHolidays(map);
+  }, []);
+
+  useEffect(() => {
+    loadOpen();
+  }, [loadOpen]);
+
   const load = useCallback(async () => {
     setLoading(true);
     const last = new Date(view.y, view.m, 0).getDate();
@@ -90,6 +111,18 @@ export default function ScheduleView() {
   }, [items]);
 
   const selItems = byDate[sel] || [];
+  const todayKey = ymd(today.y, today.m, today.d);
+  // 미완료 전체를 날짜별로 묶는다 (이미 날짜순 정렬되어 옴)
+  const openGroups = useMemo(() => {
+    const out: Array<[string, Item[]]> = [];
+    openItems.forEach((it) => {
+      const k = it.on_date.slice(0, 10);
+      const last = out[out.length - 1];
+      if (last && last[0] === k) last[1].push(it);
+      else out.push([k, [it]]);
+    });
+    return out;
+  }, [openItems]);
   const monthHolidays = useMemo(
     () =>
       Object.entries(holidays)
@@ -114,6 +147,20 @@ export default function ScheduleView() {
   function goToday() {
     setView({ y: today.y, m: today.m });
     setSel(ymd(today.y, today.m, today.d));
+    setListMode("day");
+  }
+  function pickDay(key: string) {
+    setSel(key);
+    setListMode("day");
+  }
+
+  /** 미완료 전체 목록을 바뀐 항목에 맞춰 손본다 */
+  function syncOpen(next: Item) {
+    setOpenItems((prev) => {
+      const rest = prev.filter((p) => p.id !== next.id);
+      if (next.done) return rest;
+      return [...rest, next].sort((a, b) => a.on_date.localeCompare(b.on_date));
+    });
   }
 
   async function toggleDone(it: Item) {
@@ -128,6 +175,7 @@ export default function ScheduleView() {
         const next = await r.json();
         setItems((prev) => prev.map((p) => (p.id === next.id ? next : p)));
         setDetail((prev) => (prev && prev.id === next.id ? next : prev));
+        syncOpen(next);
       }
     } finally {
       setBusy(false);
@@ -150,6 +198,7 @@ export default function ScheduleView() {
           setItems((prev) => prev.map((p) => (p.id === next.id ? next : p)));
           setDetail(next);
           setForm(null);
+          syncOpen(next);
         } else alert((await r.json().catch(() => ({}))).error || "수정 실패");
       } else {
         const r = await fetch("/api/hub/schedules", {
@@ -161,6 +210,7 @@ export default function ScheduleView() {
           const created = await r.json();
           setItems((prev) => [...prev, created]);
           setForm(null);
+          syncOpen(created);
         } else alert((await r.json().catch(() => ({}))).error || "저장 실패");
       }
     } finally {
@@ -175,6 +225,7 @@ export default function ScheduleView() {
       const r = await fetch(`/api/hub/schedules/${it.id}`, { method: "DELETE" });
       if (r.ok) {
         setItems((prev) => prev.filter((p) => p.id !== it.id));
+        setOpenItems((prev) => prev.filter((p) => p.id !== it.id));
         setDetail(null);
       }
     } finally {
@@ -256,7 +307,7 @@ export default function ScheduleView() {
                 return (
                   <button
                     key={c.key}
-                    onClick={() => setSel(c.key)}
+                    onClick={() => pickDay(c.key)}
                     className={`aspect-square rounded flex flex-col items-center justify-center gap-1 text-base tabular-nums ${
                       selected ? "bg-[#FEE500] font-bold text-[#191919]" : c.other ? "text-[#191919]/25" : off ? "text-[#D93A33]" : "text-[#191919]"
                     } ${c.key === ymd(today.y, today.m, today.d) && !selected ? "font-bold underline underline-offset-4" : ""}`}
@@ -296,7 +347,7 @@ export default function ScheduleView() {
               return (
                 <button
                   key={c.key}
-                  onClick={() => setSel(c.key)}
+                  onClick={() => pickDay(c.key)}
                   className={`border-r border-b border-gray-200/70 min-h-[112px] xl:min-h-[132px] p-2 flex flex-col gap-1 text-left overflow-hidden ${
                     selected ? "bg-[#FEE500]/25 ring-1 ring-inset ring-[#FEE500]" : c.other ? "bg-gray-50/60 hover:bg-gray-100" : "hover:bg-gray-50"
                   }`}
@@ -325,30 +376,86 @@ export default function ScheduleView() {
           </div>
         </div>
 
-        {/* ===== 선택한 날짜 ===== */}
+        {/* ===== 아래 목록: 미완료 전체 / 고른 날 ===== */}
         <aside className="flex flex-col gap-3">
-          <button onClick={() => setDayOpen(true)} className="w-full flex items-baseline justify-between gap-2 text-left group">
-            <span className="text-lg font-bold text-gray-900">
-              {labelOf(sel)}
-              {holidays[sel] && <em className="not-italic text-sm text-[#D93A33] ml-2">{holidays[sel]}</em>}
-            </span>
-            <span className="text-xs text-gray-400 shrink-0">
-              {selItems.length > 0 ? `${selItems.length}건` : ""} <span className="text-base align-middle">›</span>
-            </span>
-          </button>
+          {/* 모드 전환 칩 */}
+          <div className="flex items-center gap-1.5 text-[13px]">
+            <button
+              onClick={() => setListMode("open")}
+              className={`px-3 py-1 rounded-full border font-semibold ${
+                listMode === "open" ? "bg-[#FEE500] border-[#FEE500] text-[#191919]" : "border-gray-300 text-gray-500"
+              }`}
+            >
+              미완료 전체 {openItems.length > 0 && <span className="font-normal">{openItems.length}</span>}
+            </button>
+            <button
+              onClick={() => setListMode("day")}
+              className={`px-3 py-1 rounded-full border font-semibold ${
+                listMode === "day" ? "bg-[#FEE500] border-[#FEE500] text-[#191919]" : "border-gray-300 text-gray-500"
+              }`}
+            >
+              {labelOf(sel).replace(/ .요일$/, "")}
+            </button>
+          </div>
 
-          {loading ? (
-            <div className="text-center text-xs text-gray-400 py-8">불러오는 중…</div>
-          ) : selItems.length === 0 ? (
-            <div className="text-center text-xs text-gray-400 py-8 border border-dashed border-gray-300 rounded-lg whitespace-pre-line">
-              {"적어둔 것이 없습니다\n+ 를 눌러 추가하세요"}
-            </div>
+          {listMode === "open" ? (
+            openItems.length === 0 ? (
+              <div className="text-center text-xs text-gray-400 py-8 border border-dashed border-gray-300 rounded-lg whitespace-pre-line">
+                {"완료하지 않은 일정이 없습니다\n달력에서 날짜를 고르고 + 를 눌러 추가하세요"}
+              </div>
+            ) : (
+              <div className="flex flex-col gap-4">
+                {openGroups.map(([key, list]) => {
+                  const past = key < todayKey;
+                  const isToday = key === todayKey;
+                  return (
+                    <section key={key} className="flex flex-col gap-2">
+                      <button
+                        onClick={() => pickDay(key)}
+                        className="flex items-baseline justify-between gap-2 text-left"
+                      >
+                        <span className={`text-[15px] font-bold ${past ? "text-[#D93A33]" : "text-gray-900"}`}>
+                          {labelOf(key)}
+                          {isToday && <em className="not-italic text-xs text-gray-500 ml-1.5">오늘</em>}
+                          {past && <em className="not-italic text-xs ml-1.5">지남</em>}
+                          {openHolidays[key] && <em className="not-italic text-xs text-[#D93A33] ml-1.5">{openHolidays[key]}</em>}
+                        </span>
+                        <span className="text-xs text-gray-400 shrink-0">{list.length}건</span>
+                      </button>
+                      {list.map((it) => (
+                        <ItemRow key={it.id} it={it} onOpen={() => setDetail(it)} onToggle={() => toggleDone(it)} busy={busy} />
+                      ))}
+                    </section>
+                  );
+                })}
+              </div>
+            )
           ) : (
-            <div className="flex flex-col gap-2">
-              {selItems.map((it) => (
-                <ItemRow key={it.id} it={it} onOpen={() => setDetail(it)} onToggle={() => toggleDone(it)} busy={busy} />
-              ))}
-            </div>
+            <>
+              <button onClick={() => setDayOpen(true)} className="w-full flex items-baseline justify-between gap-2 text-left group">
+                <span className="text-lg font-bold text-gray-900">
+                  {labelOf(sel)}
+                  {holidays[sel] && <em className="not-italic text-sm text-[#D93A33] ml-2">{holidays[sel]}</em>}
+                </span>
+                <span className="text-xs text-gray-400 shrink-0">
+                  {selItems.length > 0 ? `${selItems.length}건` : ""} <span className="text-base align-middle">›</span>
+                </span>
+              </button>
+
+              {loading ? (
+                <div className="text-center text-xs text-gray-400 py-8">불러오는 중…</div>
+              ) : selItems.length === 0 ? (
+                <div className="text-center text-xs text-gray-400 py-8 border border-dashed border-gray-300 rounded-lg whitespace-pre-line">
+                  {"적어둔 것이 없습니다\n+ 를 눌러 추가하세요"}
+                </div>
+              ) : (
+                <div className="flex flex-col gap-2">
+                  {selItems.map((it) => (
+                    <ItemRow key={it.id} it={it} onOpen={() => setDetail(it)} onToggle={() => toggleDone(it)} busy={busy} />
+                  ))}
+                </div>
+              )}
+            </>
           )}
         </aside>
       </div>
