@@ -517,14 +517,7 @@ export default function ScheduleView() {
           <p className={`whitespace-pre-line leading-relaxed ${detail.content ? "text-gray-800 text-base" : "text-gray-400 text-sm"}`}>
             {detail.content || "적어둔 내용이 없습니다"}
           </p>
-          <button
-            onClick={() => toggleDone(detail)}
-            disabled={busy}
-            className="w-full py-3 rounded border border-gray-300 text-sm font-medium hover:bg-gray-50 disabled:opacity-50"
-          >
-            {detail.done ? "✓ 완료됨 — 해제하기" : "완료로 표시"}
-          </button>
-          <div className="flex justify-between gap-2">
+          <div className="flex justify-between items-center gap-2">
             <button
               onClick={() => remove(detail)}
               disabled={busy}
@@ -532,12 +525,32 @@ export default function ScheduleView() {
             >
               삭제
             </button>
-            <button
-              onClick={() => setForm({ id: detail.id, title: detail.title, content: detail.content || "", color: detail.color, bold: !!detail.bold })}
-              className="px-5 py-2.5 rounded bg-[#FEE500] text-[#191919] text-sm font-bold"
-            >
-              수정
-            </button>
+            <div className="flex items-center gap-3">
+              {/* 완료 체크 — 목록의 동그라미와 같은 모양 */}
+              <button
+                onClick={() => toggleDone(detail)}
+                disabled={busy}
+                aria-pressed={detail.done}
+                aria-label={detail.done ? "완료 해제" : "완료로 표시"}
+                title={detail.done ? "완료 해제" : "완료로 표시"}
+                className={`flex items-center gap-1.5 text-sm disabled:opacity-50 ${detail.done ? "text-[#191919]" : "text-gray-500"}`}
+              >
+                <span
+                  className={`w-7 h-7 rounded-full border-2 grid place-items-center text-[13px] font-bold ${
+                    detail.done ? "bg-[#FEE500] border-[#FEE500] text-[#191919]" : "border-gray-300 text-transparent"
+                  }`}
+                >
+                  ✓
+                </span>
+                완료
+              </button>
+              <button
+                onClick={() => setForm({ id: detail.id, title: detail.title, content: detail.content || "", color: detail.color, bold: !!detail.bold })}
+                className="px-5 py-2.5 rounded bg-[#FEE500] text-[#191919] text-sm font-bold"
+              >
+                수정
+              </button>
+            </div>
           </div>
         </Modal>
       )}
