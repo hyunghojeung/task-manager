@@ -11,12 +11,9 @@ export default function SearchView() {
   useEffect(() => {
     const read = () => setQ(new URLSearchParams(window.location.search).get("q") || "");
     read();
-    window.dispatchEvent(new Event("hub-search"));   // PC 탭줄 검색창도 같은 검색어를 보여주게
     window.addEventListener("popstate", read);
-    window.addEventListener("hub-search", read);   // PC 탭줄 검색창이 주소를 바꾸면 알려준다
     return () => {
       window.removeEventListener("popstate", read);
-      window.removeEventListener("hub-search", read);
     };
   }, []);
 
@@ -28,10 +25,8 @@ export default function SearchView() {
 
   return (
     <div className="w-full flex flex-col gap-3 pb-28 md:pb-6">
-      {/* 폰: 화면 위 검색창. PC 는 탭줄의 검색창을 쓴다 */}
-      <div className="md:hidden">
-        <SearchBox value={q} onChange={change} autoFocus />
-      </div>
+      {/* 검색창 — 일정·개인메모·갤러리 탭과 같은 자리·모양 */}
+      <SearchBox value={q} onChange={change} autoFocus />
       <SearchResults q={q} />
     </div>
   );
