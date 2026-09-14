@@ -157,7 +157,7 @@ export default function OrdersPage() {
               <th className="border border-gray-200 px-2 py-2">품목명</th>
               <th className="border border-gray-200 px-2 py-2 w-[90px]">규격(원지)</th>
               <th className="border border-gray-200 px-2 py-2 w-[70px]">종이결</th>
-              <th className="border border-gray-200 px-2 py-2 w-[80px]">재단코기</th>
+              <th className="border border-gray-200 px-2 py-2 w-[160px]">재단크기</th>
               <th className="border border-gray-200 px-2 py-2 w-[80px]">주문수량</th>
               <th className="border border-gray-200 px-2 py-2 w-[70px]">입고</th>
             </tr></thead>
