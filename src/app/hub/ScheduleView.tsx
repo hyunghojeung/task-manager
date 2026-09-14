@@ -483,9 +483,14 @@ export default function ScheduleView() {
 
           {listMode === "open" ? (
             openItems.length === 0 ? (
-              <div className="text-center text-xs text-gray-400 py-8 border border-dashed border-gray-300 rounded-lg whitespace-pre-line">
-                {"완료하지 않은 일정이 없습니다\n달력에서 날짜를 고르고 + 를 눌러 추가하세요"}
-              </div>
+              // 빈 안내 상자를 눌러도 (고른 날짜에) 일정 추가창이 열린다
+              <button
+                type="button"
+                onClick={() => setForm({ title: "", content: "", color: "yellow", bold: false, previews: [] })}
+                className="w-full text-center text-xs text-gray-400 py-8 border border-dashed border-gray-300 rounded-lg whitespace-pre-line hover:bg-gray-50 hover:text-gray-600"
+              >
+                {"완료하지 않은 일정이 없습니다\n여기를 누르거나 + 를 눌러 추가하세요"}
+              </button>
             ) : (
               <div className="flex flex-col gap-4">
                 {openGroups.map(([key, list]) => {

@@ -290,9 +290,14 @@ export default function GalleryView() {
         (loading ? (
           <div className="text-center text-xs text-gray-400 py-10">불러오는 중…</div>
         ) : photos.length === 0 ? (
-          <div className="text-center text-xs text-gray-400 py-12 border border-dashed border-gray-300 rounded-lg">
-            {searching ? `'#${q.replace(/^#/, "")}' 로 찾은 사진이 없습니다` : "사진이 없습니다"}
-          </div>
+          // 빈 안내 상자를 눌러도 사진 올리기 창이 열린다
+          <button
+            type="button"
+            onClick={searching ? undefined : () => setUpload({ album: openAlbum?.name || "", tags: "" })}
+            className={`w-full text-center text-xs text-gray-400 py-12 border border-dashed border-gray-300 rounded-lg whitespace-pre-line ${searching ? "cursor-default" : "hover:bg-gray-50 hover:text-gray-600"}`}
+          >
+            {searching ? `'#${q.replace(/^#/, "")}' 로 찾은 사진이 없습니다` : "사진이 없습니다\n여기를 누르거나 + 를 눌러 올려보세요"}
+          </button>
         ) : (
           <div className="grid grid-cols-3 md:grid-cols-6 xl:grid-cols-8 gap-1.5">
             {photos.map((p, i) => (
