@@ -582,9 +582,16 @@ export default function ScheduleView() {
             <button
               onClick={() => remove(detail)}
               disabled={busy}
-              className="px-4 py-2.5 rounded border border-red-300 text-red-600 text-sm hover:bg-red-50 disabled:opacity-50"
+              aria-label="삭제"
+              title="삭제"
+              className="w-11 h-11 grid place-items-center rounded-full text-red-600 hover:bg-red-50 disabled:opacity-50"
             >
-              삭제
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                <path d="M3 6h18" />
+                <path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2" />
+                <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                <path d="M10 11v6M14 11v6" />
+              </svg>
             </button>
             <div className="flex items-center gap-3">
               {/* 완료 체크 — 목록의 동그라미와 같은 모양 */}
