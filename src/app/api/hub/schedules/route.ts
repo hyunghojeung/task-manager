@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
   if (searchParams.get("open")) {
     const { data, error } = await supabase
       .from("hub_schedules")
-      .select("id, on_date, title, content, color, done")
+      .select("id, on_date, title, content, color, done, bold")
       .eq("user_id", auth.session.user.id)
       .eq("done", false)
       .order("on_date")
@@ -44,11 +44,12 @@ export async function GET(request: NextRequest) {
   }
   const { data, error } = await supabase
     .from("hub_schedules")
-    .select("id, on_date, title, content, color, done")
+    .select("id, on_date, title, content, color, done, bold")
     .eq("user_id", auth.session.user.id)
     .gte("on_date", from)
     .lte("on_date", to)
     .order("on_date")
+    .order("done") // 완료한 것은 그날 목록 맨 아래로
     .order("sort_order")
     .order("created_at");
 
@@ -83,8 +84,9 @@ export async function POST(request: NextRequest) {
       title: String(body.title || "").trim().slice(0, 255) || "새 항목",
       content: body.content ? String(body.content) : null,
       color: normalizeColor(body.color),
+      bold: body.bold === true,
     })
-    .select("id, on_date, title, content, color, done")
+    .select("id, on_date, title, content, color, done, bold")
     .single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });

@@ -10,6 +10,7 @@ interface Item {
   content: string | null;
   color: string;
   done: boolean;
+  bold?: boolean;
 }
 interface Holiday {
   on_date: string;
@@ -53,7 +54,7 @@ export default function ScheduleView() {
 
   const [dayOpen, setDayOpen] = useState(false);
   const [detail, setDetail] = useState<Item | null>(null);
-  const [form, setForm] = useState<{ id?: string; title: string; content: string; color: string } | null>(null);
+  const [form, setForm] = useState<{ id?: string; title: string; content: string; color: string; bold: boolean } | null>(null);
 
   // 아래 목록: "open" = 완료 안 된 일정 전체 (첫 화면), "day" = 달력에서 고른 날
   const [listMode, setListMode] = useState<"open" | "day">("open");
@@ -107,6 +108,8 @@ export default function ScheduleView() {
       const k = it.on_date.slice(0, 10);
       (m[k] = m[k] || []).push(it);
     });
+    // 완료 체크한 것은 그날 목록 맨 아래로 (나머지 순서는 그대로)
+    Object.values(m).forEach((list) => list.sort((a, b) => Number(a.done) - Number(b.done)));
     return m;
   }, [items]);
 
@@ -186,7 +189,7 @@ export default function ScheduleView() {
     if (!form) return;
     setBusy(true);
     try {
-      const payload = { title: form.title, content: form.content, color: form.color };
+      const payload = { title: form.title, content: form.content, color: form.color, bold: form.bold };
       if (form.id) {
         const r = await fetch(`/api/hub/schedules/${form.id}`, {
           method: "PUT",
@@ -267,7 +270,7 @@ export default function ScheduleView() {
             오늘
           </button>
           <button
-            onClick={() => setForm({ title: "", content: "", color: "yellow" })}
+            onClick={() => setForm({ title: "", content: "", color: "yellow", bold: false })}
             className="hidden md:inline-flex px-3.5 py-1.5 rounded text-xs font-bold bg-[#FEE500] text-[#191919] hover:bg-[#f2da00]"
           >
             + 일정 추가
@@ -366,7 +369,7 @@ export default function ScheduleView() {
                     list.slice(0, 3).map((it) => (
                       <span key={it.id} className="flex items-center gap-1.5 text-xs">
                         <i className={`w-[3px] h-3 rounded-sm shrink-0 ${bar(it.color)}`} />
-                        <span className={`truncate ${it.done ? "line-through text-gray-400" : "text-gray-700"}`}>{it.title}</span>
+                        <span className={`truncate ${it.bold ? "font-bold" : ""} ${it.done ? "line-through text-gray-400" : "text-gray-700"}`}>{it.title}</span>
                       </span>
                     ))}
                   {!c.other && list.length > 3 && <span className="text-[11px] text-gray-500 pl-2">+{list.length - 3}개 더</span>}
@@ -462,7 +465,7 @@ export default function ScheduleView() {
 
       {/* 모바일 추가 버튼 */}
       <button
-        onClick={() => setForm({ title: "", content: "", color: "yellow" })}
+        onClick={() => setForm({ title: "", content: "", color: "yellow", bold: false })}
         aria-label="일정 추가"
         style={{ bottom: "calc(5.25rem + env(safe-area-inset-bottom))" }}
         className="md:hidden fixed right-5 w-14 h-14 rounded-full bg-[#FEE500] text-[#191919] text-3xl font-bold shadow-lg grid place-items-center leading-none"
@@ -491,7 +494,7 @@ export default function ScheduleView() {
           <button
             onClick={() => {
               setDayOpen(false);
-              setForm({ title: "", content: "", color: "yellow" });
+              setForm({ title: "", content: "", color: "yellow", bold: false });
             }}
             className="w-full py-3 rounded bg-[#FEE500] text-[#191919] text-sm font-bold"
           >
@@ -510,7 +513,7 @@ export default function ScheduleView() {
               {holidays[detail.on_date.slice(0, 10)] ? ` · ${holidays[detail.on_date.slice(0, 10)]}` : ""}
             </span>
           </div>
-          <h3 className={`text-2xl font-bold ${detail.done ? "line-through text-gray-400" : "text-gray-900"}`}>{detail.title}</h3>
+          <h3 className={`text-2xl ${detail.bold ? "font-extrabold" : "font-bold"} ${detail.done ? "line-through text-gray-400" : "text-gray-900"}`}>{detail.title}</h3>
           <p className={`whitespace-pre-line leading-relaxed ${detail.content ? "text-gray-800 text-base" : "text-gray-400 text-sm"}`}>
             {detail.content || "적어둔 내용이 없습니다"}
           </p>
@@ -530,7 +533,7 @@ export default function ScheduleView() {
               삭제
             </button>
             <button
-              onClick={() => setForm({ id: detail.id, title: detail.title, content: detail.content || "", color: detail.color })}
+              onClick={() => setForm({ id: detail.id, title: detail.title, content: detail.content || "", color: detail.color, bold: !!detail.bold })}
               className="px-5 py-2.5 rounded bg-[#FEE500] text-[#191919] text-sm font-bold"
             >
               수정
@@ -544,13 +547,26 @@ export default function ScheduleView() {
         <Modal onClose={() => setForm(null)} title={form.id ? "일정 수정" : "일정 추가"} sub={form.id ? undefined : labelOf(sel)}>
           <label className="flex flex-col gap-1.5">
             <span className="text-xs font-semibold text-gray-600">제목</span>
-            <input
-              autoFocus
-              value={form.title}
-              onChange={(e) => setForm({ ...form, title: e.target.value })}
-              placeholder="예: 치과 예약"
-              className="border border-gray-300 rounded px-3 py-2.5 text-base outline-none focus:border-gray-900"
-            />
+            <div className="flex gap-2">
+              <input
+                autoFocus
+                value={form.title}
+                onChange={(e) => setForm({ ...form, title: e.target.value })}
+                placeholder="예: 치과 예약"
+                className={`flex-1 min-w-0 border border-gray-300 rounded px-3 py-2.5 text-base outline-none focus:border-gray-900 ${form.bold ? "font-bold" : ""}`}
+              />
+              <button
+                type="button"
+                onClick={() => setForm({ ...form, bold: !form.bold })}
+                aria-pressed={form.bold}
+                title="제목 굵게"
+                className={`w-11 shrink-0 rounded border text-base font-extrabold ${
+                  form.bold ? "bg-[#191919] border-[#191919] text-white" : "border-gray-300 text-gray-500"
+                }`}
+              >
+                B
+              </button>
+            </div>
           </label>
           <label className="flex flex-col gap-1.5">
             <span className="text-xs font-semibold text-gray-600">내용</span>
@@ -598,7 +614,7 @@ function ItemRow({ it, onOpen, onToggle, busy }: { it: Item; onOpen: () => void;
     >
       <i className={`w-[3px] self-stretch min-h-[22px] rounded-sm shrink-0 ${bar(it.color)}`} />
       <div className="flex-1 min-w-0">
-        <div className={`text-[15px] font-medium leading-snug ${it.done ? "line-through text-gray-400" : "text-gray-900"}`}>{it.title}</div>
+        <div className={`text-[15px] leading-snug ${it.bold ? "font-bold" : "font-medium"} ${it.done ? "line-through text-gray-400" : "text-gray-900"}`}>{it.title}</div>
         {it.content && <div className={`text-[13px] whitespace-pre-line ${it.done ? "text-gray-400" : "text-gray-600"}`}>{it.content}</div>}
       </div>
       <button

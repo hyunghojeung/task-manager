@@ -1,0 +1,2 @@
+-- 일정 제목 굵게 표시 여부
+ALTER TABLE hub_schedules ADD COLUMN IF NOT EXISTS bold BOOLEAN NOT NULL DEFAULT FALSE;

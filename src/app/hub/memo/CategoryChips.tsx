@@ -11,7 +11,7 @@ export interface Category {
 /**
  * 카테고리 칩 한 줄.
  * - 누르면 선택
- * - 길게 누르면(0.6초) 이름 바꾸기·삭제
+ * - 선택된 칩을 한 번 더 누르거나(PC), 길게 누르면(폰, 0.6초) 이름 바꾸기·삭제
  * - 맨 뒤 "+ 추가"
  */
 export default function CategoryChips({
@@ -43,17 +43,21 @@ export default function CategoryChips({
   const pressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const longPressed = useRef(false);
 
+  function editCategory(c: Category) {
+    const action = window.prompt(`"${c.name}" 카테고리\n\n새 이름을 적으면 바꾸고, 비워서 확인하면 삭제합니다.\n(삭제해도 메모는 지워지지 않고 미분류가 됩니다)`, c.name);
+    if (action === null) return;
+    const name = action.trim();
+    if (!name) {
+      if (confirm(`"${c.name}" 카테고리를 삭제할까요?\n안의 메모 ${c.count}개는 미분류로 옮겨집니다.`)) onDelete(c);
+    } else if (name !== c.name) onRename({ ...c, name });
+  }
+
   function startPress(c: Category) {
     longPressed.current = false;
     pressTimer.current = setTimeout(() => {
       longPressed.current = true;
       if (navigator.vibrate) navigator.vibrate(15);
-      const action = window.prompt(`"${c.name}" 카테고리\n\n새 이름을 적으면 바꾸고, 비워서 확인하면 삭제합니다.\n(삭제해도 메모는 지워지지 않고 미분류가 됩니다)`, c.name);
-      if (action === null) return;
-      const name = action.trim();
-      if (!name) {
-        if (confirm(`"${c.name}" 카테고리를 삭제할까요?\n안의 메모 ${c.count}개는 미분류로 옮겨집니다.`)) onDelete(c);
-      } else if (name !== c.name) onRename({ ...c, name });
+      editCategory(c);
     }, 600);
   }
   function endPress() {
@@ -82,7 +86,9 @@ export default function CategoryChips({
               longPressed.current = false;
               return;
             }
-            onSelect(c.id);
+            // 이미 선택된 칩을 다시 누르면 이름 바꾸기·삭제
+            if (value === c.id) editCategory(c);
+            else onSelect(c.id);
           }}
           onPointerDown={() => startPress(c)}
           onPointerUp={endPress}
@@ -90,10 +96,11 @@ export default function CategoryChips({
           onPointerCancel={endPress}
           onContextMenu={(e) => e.preventDefault()}
           className={chip(value === c.id)}
-          title="길게 누르면 이름 바꾸기·삭제"
+          title="선택된 상태에서 한 번 더 누르면 이름 바꾸기·삭제"
         >
           {c.name}
           <span className="opacity-60 ml-1">{c.count}</span>
+          {value === c.id && <span className="ml-1.5 opacity-70" aria-hidden>✎</span>}
         </button>
       ))}
       {showNone && (

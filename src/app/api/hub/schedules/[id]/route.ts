@@ -15,6 +15,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
   if ("content" in body) patch.content = body.content ? String(body.content) : null;
   if ("color" in body) patch.color = normalizeColor(body.color);
   if (typeof body.done === "boolean") patch.done = body.done;
+  if (typeof body.bold === "boolean") patch.bold = body.bold;
 
   const supabase = getSupabase();
   // user_id 조건으로 본인 것만 수정되게 한다
@@ -23,7 +24,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     .update(patch)
     .eq("id", id)
     .eq("user_id", auth.session.user.id)
-    .select("id, on_date, title, content, color, done")
+    .select("id, on_date, title, content, color, done, bold")
     .maybeSingle();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
