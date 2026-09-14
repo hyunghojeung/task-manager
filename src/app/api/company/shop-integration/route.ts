@@ -15,7 +15,7 @@ export async function GET() {
 
   const { data: integ } = await supabase
     .from("company_integrations")
-    .select("id, api_key_hint, shop_url, category_name, template_name, last_received_at, created_at")
+    .select("id, api_key_hint, shop_url, template_name, last_received_at, created_at")
     .eq("company_id", companyId).eq("kind", "shop").maybeSingle();
 
   const { data: events } = await supabase
@@ -27,14 +27,12 @@ export async function GET() {
     .from("shop_events").select("id", { count: "exact", head: true })
     .eq("company_id", companyId).eq("kind", "order").gte("created_at", since.toISOString());
 
-  const { data: categories } = await supabase.from("categories").select("name").eq("company_id", companyId).order("sort_order");
   const { data: templates } = await supabase.from("form_templates").select("name").eq("company_id", companyId).order("sort_order");
 
   return NextResponse.json({
     integration: integ || null,
     events: events || [],
     todayCount: todayCount || 0,
-    categories: (categories || []).map((c) => c.name),
     templates: (templates || []).map((t) => t.name),
   });
 }
@@ -70,7 +68,6 @@ export async function PUT(request: NextRequest) {
 
   const patch = {
     shop_url: String(body.shop_url || "").trim() || null,
-    category_name: String(body.category_name || "").trim() || null,
     template_name: String(body.template_name || "").trim() || null,
     updated_at: new Date().toISOString(),
   };

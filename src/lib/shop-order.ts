@@ -4,6 +4,9 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 // 쇼핑몰(blackcopy.co.kr) → Bcount 단방향 연동.
 // 쇼핑몰이 보낸 주문을 기존 작업(orders) 한 건으로 만든다. 화면 칸은 그대로 두고 값만 채운다.
 
+/** 쇼핑몰 주문이 들어갈 카테고리 — 설정으로 바꿀 수 없다 */
+export const SHOP_CATEGORY = "블랙카피";
+
 /* ===== API 키 ===== */
 
 export function generateApiKey() {
@@ -22,7 +25,7 @@ export async function findIntegrationByKey(supabase: SupabaseClient, authHeader:
   if (!m) return null;
   const { data } = await supabase
     .from("company_integrations")
-    .select("id, company_id, category_name, template_name")
+    .select("id, company_id, template_name")
     .eq("kind", "shop")
     .eq("api_key_hash", hashApiKey(m[1]))
     .maybeSingle();
@@ -164,7 +167,7 @@ export function paidLine(paidAt?: string, depositor?: string) {
 /** 쇼핑몰 주문 한 건을 작업으로 등록한다. 같은 주문번호가 있으면 기존 것을 돌려준다 */
 export async function registerShopOrder(
   supabase: SupabaseClient,
-  integ: { company_id: string; category_name: string | null; template_name: string | null },
+  integ: { company_id: string; template_name: string | null },
   p: ShopOrderPayload,
 ): Promise<{ order_no: string; duplicate: boolean; error?: string }> {
   const companyId = integ.company_id;
@@ -173,8 +176,12 @@ export async function registerShopOrder(
     .from("orders").select("order_no").eq("company_id", companyId).eq("external_order_id", p.external_order_id).maybeSingle();
   if (existing) return { order_no: existing.order_no, duplicate: true };
 
-  // 카테고리: 설정된 이름(기본 '블랙카피')과 같은 것. 없으면 비움
-  const { data: cat } = await supabase.from("categories").select("id").eq("company_id", companyId).eq("name", integ.category_name || "블랙카피").maybeSingle();
+  // 카테고리: 쇼핑몰 주문은 무조건 '블랙카피'. 없으면 만든다
+  let { data: cat } = await supabase.from("categories").select("id").eq("company_id", companyId).eq("name", SHOP_CATEGORY).maybeSingle();
+  if (!cat) {
+    const { data: created } = await supabase.from("categories").insert({ company_id: companyId, name: SHOP_CATEGORY, sort_order: 99 }).select("id").single();
+    cat = created;
+  }
 
   // 표양식: 설정된 이름 → '단가계산…'으로 시작하는 것 → 업체 기본
   let templateName = integ.template_name || null;

@@ -945,16 +945,15 @@ function CompanyTab() {
 }
 
 // ===== 쇼핑몰 연동 =====
-interface ShopIntegration { id: string; api_key_hint: string | null; shop_url: string | null; category_name: string | null; template_name: string | null; last_received_at: string | null }
+interface ShopIntegration { id: string; api_key_hint: string | null; shop_url: string | null; template_name: string | null; last_received_at: string | null }
 interface ShopEvent { created_at: string; external_order_id: string | null; kind: string; result: string | null }
 
 function ShopTab() {
   const [integ, setInteg] = useState<ShopIntegration | null>(null);
   const [events, setEvents] = useState<ShopEvent[]>([]);
   const [todayCount, setTodayCount] = useState(0);
-  const [categories, setCategories] = useState<string[]>([]);
   const [templates, setTemplates] = useState<string[]>([]);
-  const [form, setForm] = useState({ shop_url: "", category_name: "", template_name: "" });
+  const [form, setForm] = useState({ shop_url: "", template_name: "" });
   const [newKey, setNewKey] = useState<string | null>(null);   // 발급 직후 한 번만 보여준다
   const [busy, setBusy] = useState(false);
   const [origin, setOrigin] = useState("");
@@ -964,9 +963,8 @@ function ShopTab() {
     setInteg(d.integration);
     setEvents(d.events || []);
     setTodayCount(d.todayCount || 0);
-    setCategories(d.categories || []);
     setTemplates(d.templates || []);
-    setForm({ shop_url: d.integration?.shop_url || "", category_name: d.integration?.category_name || "블랙카피", template_name: d.integration?.template_name || "" });
+    setForm({ shop_url: d.integration?.shop_url || "", template_name: d.integration?.template_name || "" });
   }, []);
   useEffect(() => { load(); setOrigin(window.location.origin); }, [load]);
 
@@ -1042,9 +1040,7 @@ function ShopTab() {
           <input value={form.shop_url} onChange={e => setForm(p => ({ ...p, shop_url: e.target.value }))} placeholder="https://www.blackcopy.co.kr" className="px-2 py-1.5 border border-gray-300 rounded text-sm w-full md:max-w-md" />
 
           <span className="text-xs font-bold text-gray-600">등록 카테고리</span>
-          <select value={form.category_name} onChange={e => setForm(p => ({ ...p, category_name: e.target.value }))} className="px-2 py-1.5 border border-gray-300 rounded text-sm w-full md:max-w-xs">
-            {[form.category_name, ...categories].filter((v, i, a) => v && a.indexOf(v) === i).map(c => <option key={c} value={c}>{c}</option>)}
-          </select>
+          <span><b>블랙카피</b> <span className="text-xs text-gray-500">— 쇼핑몰 주문은 항상 이 카테고리로 들어갑니다 (없으면 자동 생성)</span></span>
 
           <span className="text-xs font-bold text-gray-600">품목 표양식</span>
           <select value={form.template_name} onChange={e => setForm(p => ({ ...p, template_name: e.target.value }))} className="px-2 py-1.5 border border-gray-300 rounded text-sm w-full md:max-w-xs">
