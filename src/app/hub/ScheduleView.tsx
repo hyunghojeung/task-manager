@@ -1,7 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useBackToClose } from "./useBackToClose";
+import BlockEditor from "./memo/BlockEditor";
+import LinkCard, { type LinkPreview } from "./memo/LinkCard";
+import { extractUrls, splitContent, textOnly } from "@/lib/memo-text";
 
 interface Item {
   id: string;
@@ -11,6 +14,7 @@ interface Item {
   color: string;
   done: boolean;
   bold?: boolean;
+  link_previews?: LinkPreview[];
 }
 interface Holiday {
   on_date: string;
@@ -54,7 +58,16 @@ export default function ScheduleView() {
 
   const [dayOpen, setDayOpen] = useState(false);
   const [detail, setDetail] = useState<Item | null>(null);
-  const [form, setForm] = useState<{ id?: string; title: string; content: string; color: string; bold: boolean } | null>(null);
+  const [form, setForm] = useState<{
+    id?: string;
+    title: string;
+    content: string;
+    color: string;
+    bold: boolean;
+    previews: LinkPreview[];
+  } | null>(null);
+  const [fetchingUrls, setFetchingUrls] = useState<string[]>([]);
+  const previewCache = useRef<Map<string, LinkPreview | null>>(new Map());
 
   // 아래 목록: "open" = 완료 안 된 일정 전체 (첫 화면), "day" = 달력에서 고른 날
   const [listMode, setListMode] = useState<"open" | "day">("open");
@@ -126,6 +139,45 @@ export default function ScheduleView() {
     });
     return out;
   }, [openItems]);
+  // ----- 내용에 적은 주소의 미리보기를 읽어온다 (개인메모와 같은 방식) -----
+  const formContent = form?.content ?? "";
+  const formOpen = form !== null;
+  useEffect(() => {
+    if (!formOpen) return;
+    const urls = extractUrls(formContent);
+    if (urls.length === 0) return;
+
+    const t = setTimeout(async () => {
+      setForm((f) => {
+        if (!f) return f;
+        const add = urls
+          .map((u) => previewCache.current.get(u))
+          .filter((p): p is LinkPreview => !!p && !f.previews.some((x) => x.url === p.url));
+        return add.length ? { ...f, previews: [...f.previews, ...add] } : f;
+      });
+
+      const missing = urls.filter((u) => !previewCache.current.has(u));
+      if (missing.length === 0) return;
+      setFetchingUrls(missing);
+      await Promise.all(
+        missing.map(async (u) => {
+          try {
+            const r = await fetch(`/api/hub/link-preview?url=${encodeURIComponent(u)}`);
+            const data = r.ok ? (await r.json()).preview : null;
+            previewCache.current.set(u, data);
+            if (data) {
+              setForm((f) => (f && !f.previews.some((p) => p.url === u) ? { ...f, previews: [...f.previews, data] } : f));
+            }
+          } catch {
+            previewCache.current.set(u, null);
+          }
+        }),
+      );
+      setFetchingUrls([]);
+    }, 700);
+    return () => clearTimeout(t);
+  }, [formContent, formOpen]);
+
   const monthHolidays = useMemo(
     () =>
       Object.entries(holidays)
@@ -189,7 +241,14 @@ export default function ScheduleView() {
     if (!form) return;
     setBusy(true);
     try {
-      const payload = { title: form.title, content: form.content, color: form.color, bold: form.bold };
+      const payload = {
+        title: form.title,
+        content: form.content,
+        color: form.color,
+        bold: form.bold,
+        // 본문에 남아 있는 주소의 카드만 저장한다
+        link_previews: form.previews.filter((p) => form.content.includes(p.url)),
+      };
       if (form.id) {
         const r = await fetch(`/api/hub/schedules/${form.id}`, {
           method: "PUT",
@@ -270,7 +329,7 @@ export default function ScheduleView() {
             오늘
           </button>
           <button
-            onClick={() => setForm({ title: "", content: "", color: "yellow", bold: false })}
+            onClick={() => setForm({ title: "", content: "", color: "yellow", bold: false, previews: [] })}
             className="hidden md:inline-flex px-3.5 py-1.5 rounded text-xs font-bold bg-[#FEE500] text-[#191919] hover:bg-[#f2da00]"
           >
             + 일정 추가
@@ -465,7 +524,7 @@ export default function ScheduleView() {
 
       {/* 모바일 추가 버튼 */}
       <button
-        onClick={() => setForm({ title: "", content: "", color: "yellow", bold: false })}
+        onClick={() => setForm({ title: "", content: "", color: "yellow", bold: false, previews: [] })}
         aria-label="일정 추가"
         style={{ bottom: "calc(5.25rem + env(safe-area-inset-bottom))" }}
         className="md:hidden fixed right-5 w-14 h-14 rounded-full bg-[#FEE500] text-[#191919] text-3xl font-bold shadow-lg grid place-items-center leading-none"
@@ -494,7 +553,7 @@ export default function ScheduleView() {
           <button
             onClick={() => {
               setDayOpen(false);
-              setForm({ title: "", content: "", color: "yellow", bold: false });
+              setForm({ title: "", content: "", color: "yellow", bold: false, previews: [] });
             }}
             className="w-full py-3 rounded bg-[#FEE500] text-[#191919] text-sm font-bold"
           >
@@ -514,9 +573,11 @@ export default function ScheduleView() {
             </span>
           </div>
           <h3 className={`text-2xl ${detail.bold ? "font-extrabold" : "font-bold"} ${detail.done ? "line-through text-gray-400" : "text-gray-900"}`}>{detail.title}</h3>
-          <p className={`whitespace-pre-line leading-relaxed ${detail.content ? "text-gray-800 text-base" : "text-gray-400 text-sm"}`}>
-            {detail.content || "적어둔 내용이 없습니다"}
-          </p>
+          {detail.content ? (
+            <ContentBody content={detail.content} previews={detail.link_previews || []} />
+          ) : (
+            <p className="text-gray-400 text-sm">적어둔 내용이 없습니다</p>
+          )}
           <div className="flex justify-between items-center gap-2">
             <button
               onClick={() => remove(detail)}
@@ -545,7 +606,14 @@ export default function ScheduleView() {
                 완료
               </button>
               <button
-                onClick={() => setForm({ id: detail.id, title: detail.title, content: detail.content || "", color: detail.color, bold: !!detail.bold })}
+                onClick={() => setForm({
+                    id: detail.id,
+                    title: detail.title,
+                    content: detail.content || "",
+                    color: detail.color,
+                    bold: !!detail.bold,
+                    previews: detail.link_previews || [],
+                  })}
                 className="px-5 py-2.5 rounded bg-[#FEE500] text-[#191919] text-sm font-bold"
               >
                 수정
@@ -581,16 +649,21 @@ export default function ScheduleView() {
               </button>
             </div>
           </label>
-          <label className="flex flex-col gap-1.5">
+          <div className="flex flex-col gap-1.5">
             <span className="text-xs font-semibold text-gray-600">내용</span>
-            <textarea
-              value={form.content}
-              onChange={(e) => setForm({ ...form, content: e.target.value })}
-              placeholder="자유롭게 적으세요"
-              rows={4}
-              className="border border-gray-300 rounded px-3 py-2.5 text-base outline-none focus:border-gray-900 resize-y"
-            />
-          </label>
+            {/* 주소를 적으면 그 자리가 카드로 바뀐다 (개인메모와 같은 편집기) */}
+            <div className="border border-gray-300 rounded px-3 py-2 focus-within:border-gray-900">
+              <BlockEditor
+                key={form.id ?? "new"}
+                content={form.content}
+                previews={form.previews}
+                loadingUrls={fetchingUrls}
+                onChange={(c) => setForm((f) => (f ? { ...f, content: c } : f))}
+                onRemoveLink={(u) => setForm((f) => (f ? { ...f, previews: f.previews.filter((x) => x.url !== u) } : f))}
+                placeholder="자유롭게 적으세요. 주소를 적으면 카드가 붙습니다."
+              />
+            </div>
+          </div>
           <div className="flex flex-col gap-1.5">
             <span className="text-xs font-semibold text-gray-600">색상</span>
             <div className="flex gap-3">
@@ -619,6 +692,29 @@ export default function ScheduleView() {
   );
 }
 
+/** 내용을 글과 링크 카드가 섞인 순서 그대로 보여준다 */
+function ContentBody({ content, previews }: { content: string; previews: LinkPreview[] }) {
+  const segs = splitContent(content);
+  const inContent = new Set(segs.filter((_, i) => i % 2 === 1));
+  const orphan = previews.filter((p) => !inContent.has(p.url));
+  return (
+    <div className="flex flex-col gap-2">
+      {segs.map((s, i) =>
+        i % 2 === 1 ? (
+          <LinkCard key={`u${i}`} preview={previews.find((p) => p.url === s) || { url: s, title: "", description: "", image: "", site: "" }} />
+        ) : s.trim() ? (
+          <p key={`t${i}`} className="whitespace-pre-line leading-relaxed text-gray-800 text-base">
+            {s.replace(/^\n+|\n+$/g, "")}
+          </p>
+        ) : null,
+      )}
+      {orphan.map((p) => (
+        <LinkCard key={`o-${p.url}`} preview={p} />
+      ))}
+    </div>
+  );
+}
+
 function ItemRow({ it, onOpen, onToggle, busy }: { it: Item; onOpen: () => void; onToggle: () => void; busy: boolean }) {
   return (
     <div
@@ -628,7 +724,14 @@ function ItemRow({ it, onOpen, onToggle, busy }: { it: Item; onOpen: () => void;
       <i className={`w-[3px] self-stretch min-h-[22px] rounded-sm shrink-0 ${bar(it.color)}`} />
       <div className="flex-1 min-w-0">
         <div className={`text-[15px] leading-snug ${it.bold ? "font-bold" : "font-medium"} ${it.done ? "line-through text-gray-400" : "text-gray-900"}`}>{it.title}</div>
-        {it.content && <div className={`text-[13px] whitespace-pre-line ${it.done ? "text-gray-400" : "text-gray-600"}`}>{it.content}</div>}
+        {textOnly(it.content || "") && (
+          <div className={`text-[13px] whitespace-pre-line ${it.done ? "text-gray-400" : "text-gray-600"}`}>{textOnly(it.content || "")}</div>
+        )}
+        {(it.link_previews || []).length > 0 && (
+          <div className="mt-1.5">
+            <LinkCard preview={it.link_previews![0]} compact />
+          </div>
+        )}
       </div>
       <button
         onClick={(e) => {

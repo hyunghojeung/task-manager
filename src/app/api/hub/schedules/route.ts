@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabase } from "@/lib/supabase-admin";
 import { requireHub, normalizeColor } from "@/lib/hub";
+import { sanitizePreviews } from "@/lib/link-preview";
 
 // 한 달치 조회: /api/hub/schedules?from=2026-09-01&to=2026-09-30
 // 미완료 전체:  /api/hub/schedules?open=1   (날짜와 상관없이 완료 안 된 것 모두)
@@ -15,7 +16,7 @@ export async function GET(request: NextRequest) {
   if (searchParams.get("open")) {
     const { data, error } = await supabase
       .from("hub_schedules")
-      .select("id, on_date, title, content, color, done, bold")
+      .select("id, on_date, title, content, color, done, bold, link_previews")
       .eq("user_id", auth.session.user.id)
       .eq("done", false)
       .order("on_date")
@@ -44,7 +45,7 @@ export async function GET(request: NextRequest) {
   }
   const { data, error } = await supabase
     .from("hub_schedules")
-    .select("id, on_date, title, content, color, done, bold")
+    .select("id, on_date, title, content, color, done, bold, link_previews")
     .eq("user_id", auth.session.user.id)
     .gte("on_date", from)
     .lte("on_date", to)
@@ -85,8 +86,9 @@ export async function POST(request: NextRequest) {
       content: body.content ? String(body.content) : null,
       color: normalizeColor(body.color),
       bold: body.bold === true,
+      link_previews: sanitizePreviews(body.link_previews),
     })
-    .select("id, on_date, title, content, color, done, bold")
+    .select("id, on_date, title, content, color, done, bold, link_previews")
     .single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
