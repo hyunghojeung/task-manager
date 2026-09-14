@@ -13,6 +13,22 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const supabase = getSupabase();
 
+  // 검색: /api/hub/schedules?q=글자 — 제목·내용에서 찾는다 (완료한 것 포함, 최근 날짜부터)
+  const q = (searchParams.get("q") || "").replace(/^#/, "").trim();
+  if (q) {
+    const like = `%${q.replace(/[%_,]/g, "")}%`;
+    const { data, error } = await supabase
+      .from("hub_schedules")
+      .select("id, on_date, title, content, color, done, bold, link_previews")
+      .eq("user_id", auth.session.user.id)
+      .or(`title.ilike.${like},content.ilike.${like}`)
+      .order("on_date", { ascending: false })
+      .order("sort_order")
+      .limit(200);
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ schedules: data || [], holidays: [] });
+  }
+
   if (searchParams.get("open")) {
     const { data, error } = await supabase
       .from("hub_schedules")

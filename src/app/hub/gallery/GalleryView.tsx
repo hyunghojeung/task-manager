@@ -60,6 +60,19 @@ export default function GalleryView() {
   const [mode, setMode] = useState<"album" | "all">(SHOW_ALBUMS ? "album" : "all");
   const [loading, setLoading] = useState(true);
   const [viewer, setViewer] = useState<number | null>(null);
+  // 통합검색에서 넘어온 경우: ?q= 는 검색창에, ?open= 은 사진을 받은 뒤 크게 연다
+  const openId = useRef<string | null>(null);
+  useEffect(() => {
+    const sp = new URLSearchParams(window.location.search);
+    const q0 = sp.get("q") || "";
+    if (q0) setQ(q0);
+    openId.current = sp.get("open");
+  }, []);
+  useEffect(() => {
+    if (!openId.current) return;
+    const i = photos.findIndex((p) => p.id === openId.current);
+    if (i >= 0) { openId.current = null; setViewer(i); }
+  }, [photos]);
   const [upload, setUpload] = useState<{ album: string; tags: string } | null>(null);
   const [busy, setBusy] = useState(0);
   const fileRef = useRef<HTMLInputElement>(null);

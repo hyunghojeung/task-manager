@@ -20,6 +20,7 @@ const TABS = [
   { href: "/hub", label: "일정", path: "M4 5.5h16v15H4zM4 10h16M8.5 3v4M15.5 3v4" },
   { href: "/hub/gallery", label: "갤러리", path: "M4 5h16v14H4zM4 15l4.5-4.5 4 4L16 11l4 4" },
   { href: "/hub/memo", label: "개인메모", path: "M6 3h9l4 4v14H6zM15 3v4h4M9 12h7M9 16h5" },
+  { href: "/hub/search", label: "검색", path: "M11 4a7 7 0 1 1 0 14 7 7 0 0 1 0-14zM20 20l-3.5-3.5" },
 ];
 
 function activeOf(pathname: string) {

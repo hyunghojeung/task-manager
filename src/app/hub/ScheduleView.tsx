@@ -58,6 +58,23 @@ export default function ScheduleView() {
 
   const [dayOpen, setDayOpen] = useState(false);
   const [detail, setDetail] = useState<Item | null>(null);
+  // 통합검색에서 넘어온 경우: ?d= 그 날짜를 고르고, ?id= 는 일정을 받은 뒤 상세를 연다
+  const openId = useRef<string | null>(null);
+  useEffect(() => {
+    const sp = new URLSearchParams(window.location.search);
+    const d = sp.get("d");
+    if (d && /^\d{4}-\d{2}-\d{2}$/.test(d)) {
+      setView({ y: Number(d.slice(0, 4)), m: Number(d.slice(5, 7)) });
+      setSel(d);
+      setListMode("day");
+    }
+    openId.current = sp.get("id");
+  }, []);
+  useEffect(() => {
+    if (!openId.current) return;
+    const it = items.find((x) => x.id === openId.current);
+    if (it) { openId.current = null; setDetail(it); }
+  }, [items]);
   const [form, setForm] = useState<{
     id?: string;
     title: string;
