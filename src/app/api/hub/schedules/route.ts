@@ -4,18 +4,44 @@ import { getSupabase } from "@/lib/supabase-admin";
 import { requireHub, normalizeColor } from "@/lib/hub";
 
 // 한 달치 조회: /api/hub/schedules?from=2026-09-01&to=2026-09-30
+// 미완료 전체:  /api/hub/schedules?open=1   (날짜와 상관없이 완료 안 된 것 모두)
 export async function GET(request: NextRequest) {
   const auth = await requireHub();
   if (!auth.ok) return auth.res;
 
   const { searchParams } = new URL(request.url);
+  const supabase = getSupabase();
+
+  if (searchParams.get("open")) {
+    const { data, error } = await supabase
+      .from("hub_schedules")
+      .select("id, on_date, title, content, color, done")
+      .eq("user_id", auth.session.user.id)
+      .eq("done", false)
+      .order("on_date")
+      .order("sort_order")
+      .order("created_at")
+      .limit(500);
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+    const list = data || [];
+    let holidays: { on_date: string; name: string }[] = [];
+    if (list.length) {
+      const { data: h } = await supabase
+        .from("hub_holidays")
+        .select("on_date, name")
+        .gte("on_date", list[0].on_date)
+        .lte("on_date", list[list.length - 1].on_date);
+      holidays = h || [];
+    }
+    return NextResponse.json({ schedules: list, holidays });
+  }
+
   const from = searchParams.get("from");
   const to = searchParams.get("to");
   if (!from || !to) {
     return NextResponse.json({ error: "조회 기간이 필요합니다." }, { status: 400 });
   }
-
-  const supabase = getSupabase();
   const { data, error } = await supabase
     .from("hub_schedules")
     .select("id, on_date, title, content, color, done")
