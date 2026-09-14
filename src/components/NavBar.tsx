@@ -10,7 +10,7 @@ export default function NavBar({ role, hubEnabled }: { role?: string; hubEnabled
     ...(hubEnabled
       ? [{ href: "/hub", label: "업무관리", color: "bg-[#FEE500] hover:bg-[#f2da00]", text: "text-[#191919] font-bold" }]
       : []),
-    { href: "/tools/taekbae.html", label: "송장변환", color: "bg-amber-500 hover:bg-amber-600", external: true },
+    { href: "/dashboard/taekbae", label: "송장변환", color: "bg-amber-500 hover:bg-amber-600" },
     { href: "/dashboard", label: "작업리스트", color: "bg-blue-600 hover:bg-blue-700" },
     { href: "/dashboard/write", label: "작업등록", color: "bg-blue-600 hover:bg-blue-700" },
     { href: "/dashboard/estimates", label: "견적서", color: "bg-purple-600 hover:bg-purple-700" },
