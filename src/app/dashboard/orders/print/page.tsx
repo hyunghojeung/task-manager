@@ -49,12 +49,12 @@ export default function PrintPage() {
         <table className="w-full border-collapse text-sm">
           <thead>
             <tr>
-              <th className="border border-gray-800 bg-gray-100 px-2 py-2 w-10">순번</th>
-              <th className="border border-gray-800 bg-gray-100 px-2 py-2">품목명</th>
-              <th className="border border-gray-800 bg-gray-100 px-2 py-2 w-[80px]">규격(원지)</th>
-              <th className="border border-gray-800 bg-gray-100 px-2 py-2 w-[55px]">종이결</th>
-              <th className="border border-gray-800 bg-gray-100 px-2 py-2 w-[70px]">주문수량</th>
-              <th className="border border-gray-800 bg-gray-100 px-2 py-2 w-[70px]">재단사이즈</th>
+              <th className="border border-gray-800 bg-gray-100 px-2 py-2 w-12 whitespace-nowrap">순번</th>
+              <th className="border border-gray-800 bg-gray-100 px-2 py-2 whitespace-nowrap">품목명</th>
+              <th className="border border-gray-800 bg-gray-100 px-2 py-2 w-[92px] whitespace-nowrap">규격(원지)</th>
+              <th className="border border-gray-800 bg-gray-100 px-2 py-2 w-[64px] whitespace-nowrap">종이결</th>
+              <th className="border border-gray-800 bg-gray-100 px-2 py-2 w-[96px] whitespace-nowrap">주문수량</th>
+              <th className="border border-gray-800 bg-gray-100 px-2 py-2 w-[110px] whitespace-nowrap">재단사이즈</th>
             </tr>
           </thead>
           <tbody>
