@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 
 /** 헤더·메뉴 아래 남는 높이를 전부 차지하는 iframe */
-export default function ToolFrame({ src, title }: { src: string; title: string }) {
+export default function ToolFrame({ src, title, id }: { src: string; title: string; id?: string }) {
   const ref = useRef<HTMLIFrameElement>(null);
   const [height, setHeight] = useState<number | null>(null);
 
@@ -27,6 +27,7 @@ export default function ToolFrame({ src, title }: { src: string; title: string }
     <div className="-m-4 md:-m-6">
       <iframe
         ref={ref}
+        id={id}
         src={src}
         title={title}
         className="block w-full border-0 bg-white"
