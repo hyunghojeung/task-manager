@@ -139,6 +139,8 @@ export default function EstimatesListPage() {
 
   return (
     <div>
+      {/* 견적서 화면임을 한눈에 — 메뉴 버튼과 같은 보라색 */}
+      <h2 className="text-base font-bold text-purple-700 border-l-4 border-purple-600 pl-3 mb-3">견적서 리스트</h2>
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 mb-4">
         <select value={category} onChange={e => setCategory(e.target.value)} className="px-3 py-1.5 border border-gray-300 rounded text-sm">
           <option value="전체">전체</option>
@@ -172,11 +174,11 @@ export default function EstimatesListPage() {
       </div>
       <div className="overflow-x-auto">
         <table className={`w-full border-collapse border border-gray-300 ${fontSize}`}>
-          <thead><tr className="bg-[#3b4b5b] text-white">
-            <th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap">순번</th><th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap">거래처</th><th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap">주문자</th><th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap">연락처</th><th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap">제목</th><th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap">금액</th><th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap">제품형태</th><th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap">MEMO</th>
-            <th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap">세금계산서</th>
-            <th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap" style={{minWidth:"80px"}}>작업리스트 복귀</th>
-            <th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap" style={{minWidth:"60px"}}>거래명세서</th><th className="border border-[#2d3a47] px-1.5 py-2.5 whitespace-nowrap" style={{minWidth:"60px"}}>견적서</th>
+          <thead><tr className="bg-purple-600 text-white">
+            <th className="border border-purple-800 px-1.5 py-2.5 whitespace-nowrap">순번</th><th className="border border-purple-800 px-1.5 py-2.5 whitespace-nowrap">거래처</th><th className="border border-purple-800 px-1.5 py-2.5 whitespace-nowrap">주문자</th><th className="border border-purple-800 px-1.5 py-2.5 whitespace-nowrap">연락처</th><th className="border border-purple-800 px-1.5 py-2.5 whitespace-nowrap">제목</th><th className="border border-purple-800 px-1.5 py-2.5 whitespace-nowrap">금액</th><th className="border border-purple-800 px-1.5 py-2.5 whitespace-nowrap">제품형태</th><th className="border border-purple-800 px-1.5 py-2.5 whitespace-nowrap">MEMO</th>
+            <th className="border border-purple-800 px-1.5 py-2.5 whitespace-nowrap">세금계산서</th>
+            <th className="border border-purple-800 px-1.5 py-2.5 whitespace-nowrap" style={{minWidth:"80px"}}>작업리스트 복귀</th>
+            <th className="border border-purple-800 px-1.5 py-2.5 whitespace-nowrap" style={{minWidth:"60px"}}>거래명세서</th><th className="border border-purple-800 px-1.5 py-2.5 whitespace-nowrap" style={{minWidth:"60px"}}>견적서</th>
           </tr></thead>
           <tbody>
             {(() => {
