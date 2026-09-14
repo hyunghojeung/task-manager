@@ -82,6 +82,14 @@ export default function MemoView() {
   const [q, setQ] = useState("");
   const [loading, setLoading] = useState(true);
   const [draft, setDraft] = useState<Draft | null>(null);
+  // 통합검색에서 넘어온 경우: ?q= 는 검색창에, ?open= 은 목록을 받은 뒤 그 메모를 연다
+  const openId = useRef<string | null>(null);
+  useEffect(() => {
+    const sp = new URLSearchParams(window.location.search);
+    const q0 = sp.get("q") || "";
+    if (q0) setQ(q0);
+    openId.current = sp.get("open");
+  }, []);
   const [dirty, setDirty] = useState(false);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(0);
@@ -278,6 +286,13 @@ export default function MemoView() {
   }, [dirty, load, q, filter]);
 
   useBackToClose(draft !== null, close);
+
+  useEffect(() => {
+    if (!openId.current) return;
+    const m = memos.find((x) => x.id === openId.current);
+    if (m) { openId.current = null; openMemo(m); }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [memos]);
 
   function openMemo(m: Memo) {
     (m.link_previews || []).forEach((p) => previewCache.current.set(p.url, p));
