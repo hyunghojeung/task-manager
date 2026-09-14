@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useBackToClose } from "./useBackToClose";
+import SearchEntry from "./SearchEntry";
 import BlockEditor from "./memo/BlockEditor";
 import LinkCard, { type LinkPreview } from "./memo/LinkCard";
 import { extractUrls, splitContent, textOnly } from "@/lib/memo-text";
@@ -339,8 +340,11 @@ export default function ScheduleView() {
 
   return (
     <div className="w-full flex flex-col gap-4 pb-28 md:pb-6">
-      {/* 머리말 */}
+      {/* 머리말 — PC 는 개인메모·갤러리와 같은 자리에 통합검색창 */}
       <div className="flex items-center justify-between gap-3">
+        <div className="hidden md:block flex-1 min-w-0">
+          <SearchEntry />
+        </div>
         <div className="flex items-center gap-2 ml-auto">
           <button onClick={goToday} className="px-3 py-1.5 border border-gray-300 rounded text-xs bg-white hover:bg-gray-50">
             오늘
