@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 
-type Tab = "notice" | "users" | "category" | "client" | "supplier" | "template" | "company" | "import";
+type Tab = "notice" | "users" | "category" | "client" | "supplier" | "template" | "company" | "import" | "shop";
 
 export default function AdminPage() {
   const [tab, setTab] = useState<Tab>("notice");
@@ -10,7 +10,7 @@ export default function AdminPage() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const t = params.get("tab") as Tab;
-    if (t && ["notice","users","category","client","supplier","template","company","import"].includes(t)) {
+    if (t && ["notice","users","category","client","supplier","template","company","import","shop"].includes(t)) {
       setTab(t);
     }
   }, []);
@@ -19,6 +19,7 @@ export default function AdminPage() {
     { key: "category", label: "카테고리관리" }, { key: "client", label: "거래처관리" },
     { key: "supplier", label: "발주처관리" }, { key: "template", label: "양식폼관리" },
     { key: "company", label: "업체정보설정" }, { key: "import", label: "CSV가져오기" },
+    { key: "shop", label: "쇼핑몰연동" },
   ];
 
   return (
@@ -40,6 +41,7 @@ export default function AdminPage() {
         {tab === "template" && <TemplateTab />}
         {tab === "company" && <CompanyTab />}
         {tab === "import" && <ImportTab />}
+        {tab === "shop" && <ShopTab />}
       </div>
     </div>
   );
@@ -938,6 +940,156 @@ function CompanyTab() {
         </div>
       </div>
       <div className="flex justify-center py-3"><button onClick={save} disabled={saving} className="px-10 py-2.5 bg-blue-600 text-white rounded text-sm font-medium disabled:opacity-50">{saving?"저장중...":"저장"}</button></div>
+    </div>
+  );
+}
+
+// ===== 쇼핑몰 연동 =====
+interface ShopIntegration { id: string; api_key_hint: string | null; shop_url: string | null; category_name: string | null; template_name: string | null; last_received_at: string | null }
+interface ShopEvent { created_at: string; external_order_id: string | null; kind: string; result: string | null }
+
+function ShopTab() {
+  const [integ, setInteg] = useState<ShopIntegration | null>(null);
+  const [events, setEvents] = useState<ShopEvent[]>([]);
+  const [todayCount, setTodayCount] = useState(0);
+  const [categories, setCategories] = useState<string[]>([]);
+  const [templates, setTemplates] = useState<string[]>([]);
+  const [form, setForm] = useState({ shop_url: "", category_name: "", template_name: "" });
+  const [newKey, setNewKey] = useState<string | null>(null);   // 발급 직후 한 번만 보여준다
+  const [busy, setBusy] = useState(false);
+  const [origin, setOrigin] = useState("");
+
+  const load = useCallback(async () => {
+    const d = await fetch(`/api/company/shop-integration?_=${Date.now()}`).then(r => r.json());
+    setInteg(d.integration);
+    setEvents(d.events || []);
+    setTodayCount(d.todayCount || 0);
+    setCategories(d.categories || []);
+    setTemplates(d.templates || []);
+    setForm({ shop_url: d.integration?.shop_url || "", category_name: d.integration?.category_name || "블랙카피", template_name: d.integration?.template_name || "" });
+  }, []);
+  useEffect(() => { load(); setOrigin(window.location.origin); }, [load]);
+
+  async function issueKey() {
+    const msg = integ ? "재발급하면 기존 키는 즉시 무효가 됩니다. 쇼핑몰 쪽 설정도 바꿔야 합니다. 계속할까요?" : "쇼핑몰이 Bcount로 주문을 보낼 때 쓸 API 키를 발급합니다.";
+    if (!confirm(msg)) return;
+    setBusy(true);
+    const res = await fetch("/api/company/shop-integration", { method: "POST" });
+    const d = await res.json().catch(() => ({}));
+    setBusy(false);
+    if (!res.ok) { alert("발급 실패: " + (d.error || res.status)); return; }
+    setNewKey(d.api_key);
+    load();
+  }
+
+  async function save() {
+    setBusy(true);
+    const res = await fetch("/api/company/shop-integration", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(form) });
+    const d = await res.json().catch(() => ({}));
+    setBusy(false);
+    if (res.ok) { alert("저장되었습니다."); load(); } else alert("저장 실패: " + (d.error || res.status));
+  }
+
+  function copy(text: string) {
+    navigator.clipboard?.writeText(text).then(() => alert("복사되었습니다.")).catch(() => prompt("복사해서 쓰세요:", text));
+  }
+
+  const fmt = (iso: string | null) => iso ? new Date(iso).toLocaleString("ko-KR", { timeZone: "Asia/Seoul", hour12: false }).replace(/\. /g, ".").replace(/\.$/, "") : "-";
+  const kindLabel: Record<string, string> = { order: "주문 접수", paid: "입금 확인", duplicate: "중복(무시)", error: "오류" };
+  const endpoint = `${origin}/api/shop/orders`;
+
+  return (
+    <div className="space-y-6">
+      <div className="bg-white rounded p-4 md:p-6 border border-gray-200">
+        <h3 className="text-base font-bold text-gray-800 mb-4 pb-2 border-b-2 border-gray-200">쇼핑몰 연동</h3>
+        <p className="text-xs text-gray-500 mb-4">쇼핑몰이 주문을 보내면 작업리스트에 새 작업으로 자동 등록됩니다(단방향). 배송지는 송장변환의 &quot;쇼핑몰 주문 불러오기&quot;에서 씁니다.</p>
+
+        <div className="grid grid-cols-1 md:grid-cols-[120px_1fr] gap-y-3 gap-x-4 items-center text-sm">
+          <span className="text-xs font-bold text-gray-600">API 키</span>
+          <div className="flex flex-wrap items-center gap-2">
+            <code className="px-2 py-1.5 bg-gray-100 border border-gray-300 rounded text-sm">{integ?.api_key_hint ? `${integ.api_key_hint}••••••••••••••••••••••••••••` : "아직 발급 안 됨"}</code>
+            <button onClick={issueKey} disabled={busy} className={`px-3 py-1.5 rounded text-xs font-medium border ${integ ? "border-red-300 text-red-600 hover:bg-red-50" : "bg-blue-600 border-blue-600 text-white"} disabled:opacity-50`}>{integ ? "재발급" : "키 발급"}</button>
+          </div>
+
+          {newKey && (
+            <>
+              <span className="text-xs font-bold text-red-600">새 키</span>
+              <div className="bg-amber-50 border border-amber-300 rounded p-3">
+                <div className="flex flex-wrap items-center gap-2">
+                  <code className="text-sm break-all">{newKey}</code>
+                  <button onClick={() => copy(newKey)} className="px-3 py-1 border border-gray-300 rounded text-xs bg-white">복사</button>
+                </div>
+                <p className="text-xs text-amber-700 mt-2">이 키는 지금만 보입니다. 쇼핑몰(Replit) 환경변수 <code>BCOUNT_API_KEY</code>에 넣어주세요. 창을 닫으면 다시 볼 수 없고, 잃어버리면 재발급해야 합니다.</p>
+              </div>
+            </>
+          )}
+
+          <span className="text-xs font-bold text-gray-600">상태</span>
+          <div>
+            {integ?.last_received_at
+              ? <span><span className="text-emerald-600 font-bold">● 수신 중</span> <span className="text-xs text-gray-500">마지막 수신 {fmt(integ.last_received_at)} · 오늘 주문 {todayCount}건</span></span>
+              : <span className="text-gray-400">{integ ? "아직 받은 주문 없음" : "키를 발급하면 연동이 시작됩니다"}</span>}
+          </div>
+
+          <span className="text-xs font-bold text-gray-600">받는 주소</span>
+          <div className="flex flex-wrap items-center gap-2 text-xs">
+            <code className="px-2 py-1 bg-gray-100 rounded">POST {endpoint}</code>
+            <code className="px-2 py-1 bg-gray-100 rounded">PATCH {endpoint}/&lt;쇼핑몰주문번호&gt;</code>
+            <button onClick={() => copy(endpoint)} className="px-2 py-1 border border-gray-300 rounded bg-white">복사</button>
+          </div>
+
+          <span className="text-xs font-bold text-gray-600">쇼핑몰 주소</span>
+          <input value={form.shop_url} onChange={e => setForm(p => ({ ...p, shop_url: e.target.value }))} placeholder="https://www.blackcopy.co.kr" className="px-2 py-1.5 border border-gray-300 rounded text-sm w-full md:max-w-md" />
+
+          <span className="text-xs font-bold text-gray-600">등록 카테고리</span>
+          <select value={form.category_name} onChange={e => setForm(p => ({ ...p, category_name: e.target.value }))} className="px-2 py-1.5 border border-gray-300 rounded text-sm w-full md:max-w-xs">
+            {[form.category_name, ...categories].filter((v, i, a) => v && a.indexOf(v) === i).map(c => <option key={c} value={c}>{c}</option>)}
+          </select>
+
+          <span className="text-xs font-bold text-gray-600">품목 표양식</span>
+          <select value={form.template_name} onChange={e => setForm(p => ({ ...p, template_name: e.target.value }))} className="px-2 py-1.5 border border-gray-300 rounded text-sm w-full md:max-w-xs">
+            <option value="">자동 (&quot;단가계산없이…&quot; 양식, 없으면 기본 양식)</option>
+            {templates.map(t => <option key={t} value={t}>{t}</option>)}
+          </select>
+        </div>
+
+        <div className="mt-4 text-xs text-gray-500 space-y-1">
+          <p>· 쇼핑몰 주문은 거래처 빈칸, 제목 <code>[몰] 쇼핑몰주문번호</code>로 들어옵니다. 리스트에서 열어 제목·거래처를 직접 고치세요.</p>
+          <p>· 주문 내용 전체(품목·사양·금액·결제·배송·파일·요청사항)는 세부사양 칸에 들어갑니다.</p>
+        </div>
+        <div className="flex justify-end mt-4">
+          <button onClick={save} disabled={busy || !integ} className="px-8 py-2 bg-blue-600 text-white rounded text-sm font-medium disabled:opacity-50">설정 저장</button>
+        </div>
+      </div>
+
+      <div className="bg-white rounded p-4 md:p-6 border border-gray-200">
+        <div className="flex items-center justify-between mb-3 pb-2 border-b-2 border-gray-200">
+          <h3 className="text-base font-bold text-gray-800">최근 수신</h3>
+          <button onClick={load} className="px-3 py-1 border border-gray-300 rounded text-xs">새로고침</button>
+        </div>
+        {events.length === 0 ? <p className="text-sm text-gray-400 py-4 text-center">아직 받은 것이 없습니다.</p> : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs border-collapse">
+              <thead><tr className="bg-gray-100 text-gray-700">
+                <th className="border border-gray-200 px-2 py-1.5 text-left whitespace-nowrap">시각</th>
+                <th className="border border-gray-200 px-2 py-1.5 text-left whitespace-nowrap">쇼핑몰 주문번호</th>
+                <th className="border border-gray-200 px-2 py-1.5 text-left whitespace-nowrap">종류</th>
+                <th className="border border-gray-200 px-2 py-1.5 text-left">결과</th>
+              </tr></thead>
+              <tbody>
+                {events.map((e, i) => (
+                  <tr key={i} className={e.kind === "error" ? "bg-red-50" : ""}>
+                    <td className="border border-gray-200 px-2 py-1.5 whitespace-nowrap">{fmt(e.created_at)}</td>
+                    <td className="border border-gray-200 px-2 py-1.5 whitespace-nowrap">{e.external_order_id || "-"}</td>
+                    <td className="border border-gray-200 px-2 py-1.5 whitespace-nowrap">{kindLabel[e.kind] || e.kind}</td>
+                    <td className={`border border-gray-200 px-2 py-1.5 ${e.kind === "error" ? "text-red-600" : ""}`}>{e.result}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
