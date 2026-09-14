@@ -30,6 +30,9 @@ export async function GET(request: NextRequest) {
   // 견적서 이동 여부 필터 (DB 필터, .or() 사용하지 않음)
   if (mode === "estimates") {
     query = query.eq("is_estimate", true);
+  } else {
+    // 견적서로 이동된 것과 빈 제목은 DB 에서 미리 뺀다 — 화면에서 빼면 한 페이지가 20건이 안 찬다
+    query = query.not("is_estimate", "is", true).neq("title", "");
   }
 
   if (category && category !== "전체") {
