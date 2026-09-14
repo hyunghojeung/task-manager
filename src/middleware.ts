@@ -15,6 +15,11 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
+  // 쇼핑몰 연동 API — 세션 대신 업체 API 키(Bearer)로 인증한다
+  if (pathname.startsWith("/api/shop/")) {
+    return NextResponse.next();
+  }
+
   // 공유 링크로 받은 메모 — 로그인 없이 열람만 가능
   if (pathname.startsWith("/s/")) {
     return NextResponse.next();
