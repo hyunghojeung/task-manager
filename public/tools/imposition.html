@@ -292,7 +292,7 @@ input[type=number]{width:56px;text-align:right}
 (function(){
 var $=function(i){return document.getElementById(i)};
 var S={type:"booklet",file:null,pages:0,srcW:210,srcH:297,side:"f",sheet:0,slotRot:{f:{},b:{}},back:null};
-function twoFiles(){return (S.type==="cutstack"||S.type==="repeat")&&$("duplex").value!=="single"&&$("sides").value==="two"}
+function twoFiles(){return S.type==="cutstack"&&$("duplex").value!=="single"&&$("sides").value==="two"}
 function openBack(name,pages,w,h,mb){S.back={name:name,pages:pages};$("bk-name").textContent=name;$("bk-sub").textContent=pages+"페이지 · "+w+"×"+h+" mm · "+mb+" MB";$("bk-info").hidden=false;$("bk-drop").hidden=true;S.sheet=0;render()}
 $("bk-drop").addEventListener("click",function(){openBack("졸업작품_도록_뒷면공통.pdf",1,210,297,3)});
 $("bk-change").addEventListener("click",function(){openBack("졸업작품_도록_뒷면공통.pdf",1,210,297,3)});
@@ -402,7 +402,7 @@ function render(){
 
   var tool=S.type==="split"||S.type==="oddeven"||S.type==="merge"||S.type==="dup"||S.type==="rotate";
   $("card-sheet").hidden=tool;$("card-split").hidden=S.type!=="split";$("card-oddeven").hidden=S.type!=="oddeven";$("card-merge").hidden=S.type!=="merge";$("card-dup").hidden=S.type!=="dup";$("card-rotate").hidden=S.type!=="rotate";
-  $("row-sides").hidden=tool||!(S.type==="cutstack"||S.type==="repeat")||$("duplex").value==="single";
+  $("row-sides").hidden=tool||S.type!=="cutstack"||$("duplex").value==="single";
   var two=!tool&&twoFiles();$("sides-opts").hidden=!two;$("bk-box").hidden=!two;
   if(tool){renderTool();return}
   $("row-scale").style.display="";var bk=S.type==="booklet";$("row-rot").hidden=S.type==="cutstack"||bk;
