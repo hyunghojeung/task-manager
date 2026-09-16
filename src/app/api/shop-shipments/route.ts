@@ -31,7 +31,8 @@ export async function GET(request: NextRequest) {
   const rows = ((data || []) as unknown as ShipmentRow[])
     .filter((s) => s.orders)
     .filter((s) => includeUnpaid || s.orders!.paid_at)
-    .filter((s) => includeExported || !s.exported_at)
+    // 변환기에 넣었거나 작업을 완료 처리한 것은 빠진다 (오프라인 발송 등). "이미 내보낸 것도 보기"를 켜면 보인다
+    .filter((s) => includeExported || (!s.exported_at && s.orders!.status !== "complete"))
     .sort((a, b) => (b.orders!.created_at || "").localeCompare(a.orders!.created_at || ""))
     .map((s) => ({
       shipment_id: s.id, order_id: s.order_id, order_no: s.orders!.order_no, orderer: s.orders!.orderer, title: s.orders!.title,

@@ -54,6 +54,16 @@ export default function ShopOrdersBar({ frameId }: { frameId: string }) {
     frame?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
+  // 오프라인으로 보낸 주문 등: 변환기에 넣지 않고 목록에서만 뺀다
+  async function markSent() {
+    if (!pickedRows.length) { alert("주문을 먼저 선택하세요."); return; }
+    if (!confirm(`${pickedRows.length}건을 발송 완료로 표시해 목록에서 뺄까요?\n("이미 내보낸 것·완료된 작업도 보기"를 켜면 다시 보입니다)`)) return;
+    setBusy(true);
+    await fetch("/api/shop-shipments", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ shipment_ids: pickedRows.map((r) => r.shipment_id) }) });
+    setBusy(false);
+    await load();
+  }
+
   const fmt = (iso: string | null) => iso ? new Date(iso).toLocaleString("ko-KR", { timeZone: "Asia/Seoul", month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit", hour12: false }) : "";
 
   return (
@@ -65,7 +75,7 @@ export default function ShopOrdersBar({ frameId }: { frameId: string }) {
         </button>
         <div className="flex flex-wrap items-center gap-3 text-xs text-gray-600">
           <label className="flex items-center gap-1 cursor-pointer"><input type="checkbox" checked={!unpaid} onChange={(e) => setUnpaid(!e.target.checked)} /> 입금대기 건 제외</label>
-          <label className="flex items-center gap-1 cursor-pointer"><input type="checkbox" checked={exported} onChange={(e) => setExported(e.target.checked)} /> 이미 내보낸 것도 보기</label>
+          <label className="flex items-center gap-1 cursor-pointer"><input type="checkbox" checked={exported} onChange={(e) => setExported(e.target.checked)} /> 이미 내보낸 것·완료된 작업도 보기</label>
           <button onClick={load} className="px-2 py-1 border border-gray-300 rounded bg-white">새로고침</button>
         </div>
       </div>
@@ -111,6 +121,9 @@ export default function ShopOrdersBar({ frameId }: { frameId: string }) {
           <div className="flex flex-wrap items-center gap-2 mt-2">
             <button onClick={pushToConverter} disabled={busy || pickedRows.length === 0} className="px-4 py-2 bg-gray-700 text-white rounded text-sm font-medium disabled:opacity-50">
               선택한 주문을 변환기에 넣기{pickedRows.length ? ` (${pickedRows.length}건)` : ""}
+            </button>
+            <button onClick={markSent} disabled={busy || pickedRows.length === 0} className="px-3 py-2 border border-gray-300 rounded text-sm bg-white text-gray-700 disabled:opacity-50">
+              발송 완료로 표시 (목록에서 빼기)
             </button>
             <span className="text-xs text-gray-500">아래 변환기의 붙여넣기 칸에 들어갑니다. 그다음 &quot;표에 넣기&quot; → &quot;엑셀 파일 받기&quot;. 박스가 여러 개면 그 수만큼 줄이 늘어납니다.</span>
           </div>
