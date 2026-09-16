@@ -8,11 +8,11 @@
 <style>
 :root{--slate:#3b4b5b;--slate800:#1e293b;--ink:#111827;--g700:#374151;--g600:#4b5563;--g500:#6b7280;--g400:#9ca3af;--g300:#d1d5db;--g200:#e5e7eb;--g100:#f3f4f6;--g50:#f9fafb;--blue:#2563eb;--amber:#f59e0b;--red:#dc2626;--green:#059669}
 *{box-sizing:border-box}html{color-scheme:light}
-body{margin:0;background:#e5e7eb;color:var(--ink);font-family:"Noto Sans KR","Malgun Gothic",system-ui,sans-serif;font-size:13px;line-height:1.5;padding:16px}
-.note{max-width:1240px;margin:0 auto 14px;background:#fff;border:1px solid var(--g200);border-radius:8px;padding:12px 14px;color:var(--g600)}
+body{margin:0;background:#e5e7eb;color:var(--ink);font-family:"Noto Sans KR","Malgun Gothic",system-ui,sans-serif;font-size:13px;line-height:1.5;padding:10px}
+.note{margin:0 0 14px;background:#fff;border:1px solid var(--g200);border-radius:8px;padding:12px 14px;color:var(--g600)}
 .note b{color:var(--ink)}
 /* ===== 프로그램 창 ===== */
-.app{max-width:1240px;margin:0 auto;background:#fff;border:1px solid var(--g300);border-radius:8px;overflow:hidden;min-height:720px;display:flex;flex-direction:column}
+.app{margin:0;background:#fff;border:1px solid var(--g300);border-radius:8px;overflow:hidden;min-height:720px;display:flex;flex-direction:column}
 .bar{background:var(--slate800);color:#fff;display:flex;align-items:center;gap:12px;padding:10px 16px}
 .bar b{font-size:15px}.bar .v{font-size:11px;background:rgba(255,255,255,.15);border-radius:3px;padding:1px 6px}
 .bar .st{margin-left:auto;font-size:12px;color:#94a3b8}
@@ -101,7 +101,7 @@ input[type=number]{width:56px;text-align:right}
 .prog{height:6px;background:var(--g200);border-radius:3px;overflow:hidden;flex:1;min-width:120px}
 .prog i{display:block;height:100%;background:var(--blue);width:0;transition:width .2s}
 /* ===== Bcount 다운로드 페이지 ===== */
-.dl{max-width:1240px;margin:16px auto 0;background:#fff;border:1px solid var(--g300);border-radius:8px;overflow:hidden}
+.dl{margin:16px 0 0;background:#fff;border:1px solid var(--g300);border-radius:8px;overflow:hidden}
 .dl .nav{display:flex;gap:8px;justify-content:flex-end;padding:8px 20px;border-bottom:1px solid var(--g200)}
 .dl .nav i{font-style:normal;color:#fff;padding:7px 14px;border-radius:4px;font-size:12px;opacity:.5}
 .dl .nav i.on{opacity:1;box-shadow:0 0 0 2px #fff,0 0 0 4px #93c5fd}
