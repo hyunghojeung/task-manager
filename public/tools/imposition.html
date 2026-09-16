@@ -1,0 +1,574 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bcount 임포지션</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap">
+<style>
+:root{--slate:#3b4b5b;--slate800:#1e293b;--ink:#111827;--g700:#374151;--g600:#4b5563;--g500:#6b7280;--g400:#9ca3af;--g300:#d1d5db;--g200:#e5e7eb;--g100:#f3f4f6;--g50:#f9fafb;--blue:#2563eb;--amber:#f59e0b;--red:#dc2626;--green:#059669}
+*{box-sizing:border-box}html{color-scheme:light}
+body{margin:0;background:#e5e7eb;color:var(--ink);font-family:"Noto Sans KR","Malgun Gothic",system-ui,sans-serif;font-size:13px;line-height:1.5;padding:16px}
+.note{max-width:1240px;margin:0 auto 14px;background:#fff;border:1px solid var(--g200);border-radius:8px;padding:12px 14px;color:var(--g600)}
+.note b{color:var(--ink)}
+/* ===== 프로그램 창 ===== */
+.app{max-width:1240px;margin:0 auto;background:#fff;border:1px solid var(--g300);border-radius:8px;overflow:hidden;min-height:720px;display:flex;flex-direction:column}
+.bar{background:var(--slate800);color:#fff;display:flex;align-items:center;gap:12px;padding:10px 16px}
+.bar b{font-size:15px}.bar .v{font-size:11px;background:rgba(255,255,255,.15);border-radius:3px;padding:1px 6px}
+.bar .st{margin-left:auto;font-size:12px;color:#94a3b8}
+.bar .st i{display:inline-block;width:8px;height:8px;border-radius:50%;background:#22c55e;margin-right:5px;font-style:normal}
+.main{display:grid;grid-template-columns:360px 1fr;flex:1;min-height:0}
+@media(max-width:900px){.main{grid-template-columns:1fr}}
+.side{border-right:1px solid var(--g200);padding:14px;display:flex;flex-direction:column;gap:12px;overflow:auto;background:var(--g50)}
+.stage{padding:14px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.card{background:#fff;border:1px solid var(--g200);border-radius:6px;padding:10px 12px}
+.card h3{margin:0 0 8px;font-size:12px;font-weight:700;color:var(--slate);border-left:3px solid var(--slate);padding-left:8px;display:flex;align-items:center;gap:6px}
+.card h3 .r{margin-left:auto;font-weight:400;color:var(--g500);font-size:11px}
+.drop{border:2px dashed var(--g300);border-radius:6px;padding:14px;text-align:center;color:var(--g500);font-size:12px;cursor:pointer;background:#fff}
+.drop:hover{border-color:var(--blue);color:var(--blue)}
+.file{display:flex;justify-content:space-between;gap:8px;font-size:12px;padding:6px 0}
+.file b{font-size:13px}
+.file .m{color:var(--g500)}
+.types{display:grid;grid-template-columns:repeat(3,1fr);gap:4px}
+.types .tool{background:#f0fdf4;border-color:#86efac;color:#166534}
+.types .tool.on{background:#166534;border-color:#166534;color:#fff}
+.split{position:absolute;inset:0;display:grid;place-items:center;font-weight:700;color:#1d4ed8}
+.cut{position:absolute;background:#dc2626}
+.stacks{display:grid;grid-template-columns:1fr 1fr;gap:16px;width:100%;max-width:760px}
+.stacks.one{grid-template-columns:1fr}
+.stack{background:#fff;border:1px solid var(--g300);border-radius:6px;padding:12px}
+.stack h4{margin:0 0 8px;font-size:13px}
+.stack .pg{display:flex;flex-wrap:wrap;gap:4px}
+.stack .pg span{width:38px;height:48px;border:1px solid #93c5fd;background:#eef2ff;border-radius:3px;display:grid;place-items:center;font-size:11px;font-weight:700;color:#1d4ed8;text-align:center;line-height:1.1}
+.stack .pg span.b{background:#fdf2f8;border-color:#f9a8d4;color:#9d174d}
+.stack .pg span.blank{background:#f3f4f6;border-color:#d1d5db;color:#9ca3af;font-weight:400}
+.types button{border:1px solid var(--g300);background:#fff;border-radius:4px;padding:8px 4px;font-size:12px;color:var(--g600);min-height:40px}
+.types button.on{background:var(--slate);border-color:var(--slate);color:#fff;font-weight:700}
+.row{display:grid;grid-template-columns:82px 1fr;gap:6px 8px;align-items:center;margin:4px 0}
+.row label{font-size:12px;color:var(--g600);white-space:nowrap}
+.row .in{display:flex;gap:4px;align-items:center;flex-wrap:wrap}
+input[type=number],input[type=text],select{border:1px solid var(--g300);border-radius:4px;padding:5px 7px;font:inherit;font-size:13px;background:#fff;min-height:32px}
+input[type=number]{width:56px;text-align:right}
+.unit{font-size:11px;color:var(--g400)}
+/* 윈도우 표준 버튼 모양 (파일 열기용) */
+.winbtn{font-family:"Segoe UI","Malgun Gothic",system-ui,sans-serif;font-size:12px;color:#000;background:linear-gradient(#fefefe,#e6e6e6);border:1px solid #adadad;border-radius:3px;padding:4px 12px;min-height:26px;cursor:pointer;box-shadow:inset 0 1px 0 #fff;white-space:nowrap}
+.winbtn:hover{background:#e5f1fb;border-color:#0078d7}
+.winbtn:active{background:#cce4f7;border-color:#005499}
+.winbtn.big{font-size:13px;padding:6px 18px;min-height:32px}
+.winbtn.primary{border-color:#0078d7;box-shadow:inset 0 0 0 1px #0078d7,inset 0 1px 0 #fff}
+.tfile{font-size:12px;color:var(--g600);max-width:190px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tfile:empty::before{content:"파일 없음";color:var(--red)}
+.chk{display:inline-flex;align-items:center;gap:4px;font-size:12px;margin-right:8px;cursor:pointer}
+.btn{border:1px solid var(--g300);background:#fff;border-radius:4px;padding:6px 12px;font-size:12px;min-height:34px;cursor:pointer}
+.btn.pri{background:var(--blue);border-color:var(--blue);color:#fff;font-weight:700}
+.btn.dark{background:var(--slate);border-color:var(--slate);color:#fff}
+.btn.sm{min-height:28px;padding:3px 9px;font-size:11px}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.presets{display:flex;flex-direction:column;gap:4px}
+.preset{display:flex;align-items:center;gap:6px;border:1px solid var(--g200);border-radius:4px;padding:5px 8px;font-size:12px;background:#fff}
+.preset b{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.preset small{color:var(--g400);white-space:nowrap}
+.tabs{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.tabs .sp{flex:1}
+.sheetwrap{flex:1;background:#d1d5db;border-radius:6px;display:grid;place-items:center;padding:16px;min-height:420px;overflow:auto}
+.sheet{position:relative;background:#fff;box-shadow:0 8px 30px rgba(0,0,0,.25)}
+.slot{position:absolute;background:#eef2ff;border:1px solid #93c5fd;display:grid;place-items:center;font-weight:700;color:#1d4ed8;overflow:hidden}
+.slot.bk{background:#fef3c7;border-color:#f59e0b;color:#b45309}
+.slot.blank{background:#f3f4f6;border-color:#d1d5db;color:#9ca3af;font-weight:400}
+.slot.rot span{transform:rotate(180deg)}
+.slot small{position:absolute;left:3px;top:2px;font-size:9px;font-weight:400;color:#6b7280}
+.mark{position:absolute;background:#111;opacity:.7}
+.bleedbox{position:absolute;border:1px dashed #f59e0b;background:rgba(245,158,11,.06);pointer-events:none}
+.rottbl{border-collapse:collapse;font-size:12px;margin-top:4px;width:100%}
+.rottbl th{font-weight:600;color:var(--g500);text-align:left;padding:2px 4px;font-size:11px}
+.rottbl td{padding:2px 4px}
+.rottbl select{min-height:28px;padding:2px 6px;font-size:12px}
+.slotgrid{display:grid;gap:3px;margin-top:4px}
+.slotgrid button{border:1px solid var(--g300);background:#fff;border-radius:3px;min-height:34px;font-size:11px;color:var(--g600);cursor:pointer}
+.slotgrid button.r{background:#fef3c7;border-color:#fcd34d;color:#92400e;font-weight:700}
+.slot.r90 span{transform:rotate(90deg)}.slot.r180 span{transform:rotate(180deg)}.slot.r270 span{transform:rotate(270deg)}
+.dim{position:absolute;font-size:10px;color:#b91c1c;pointer-events:none;white-space:nowrap}
+.dim i{position:absolute;background:#ef4444;opacity:.75}
+.dim b{position:absolute;background:rgba(255,255,255,.9);padding:0 3px;border-radius:2px;font-weight:600;transform:translate(-50%,-50%)}
+.sheetwrap{padding:34px 20px 20px 46px}
+.sidelbl{position:absolute;margin-top:-52px;font-size:12px;font-weight:700;color:var(--g600);background:#fff;border:1px solid var(--g300);border-radius:3px;padding:1px 8px}
+#lbl-f[hidden],#wrap2[hidden]{display:none}
+.info{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;color:var(--g600)}
+.info b{color:var(--ink)}
+.warn{background:#fffbeb;border:1px solid #fde68a;color:#92400e;border-radius:4px;padding:6px 10px;font-size:12px}
+.foot{display:flex;gap:8px;align-items:center;flex-wrap:wrap;border-top:1px solid var(--g200);padding-top:10px}
+.foot .sp{flex:1}
+.prog{height:6px;background:var(--g200);border-radius:3px;overflow:hidden;flex:1;min-width:120px}
+.prog i{display:block;height:100%;background:var(--blue);width:0;transition:width .2s}
+/* ===== Bcount 다운로드 페이지 ===== */
+.dl{max-width:1240px;margin:16px auto 0;background:#fff;border:1px solid var(--g300);border-radius:8px;overflow:hidden}
+.dl .nav{display:flex;gap:8px;justify-content:flex-end;padding:8px 20px;border-bottom:1px solid var(--g200)}
+.dl .nav i{font-style:normal;color:#fff;padding:7px 14px;border-radius:4px;font-size:12px;opacity:.5}
+.dl .nav i.on{opacity:1;box-shadow:0 0 0 2px #fff,0 0 0 4px #93c5fd}
+.dl .body{padding:20px 24px;display:grid;gap:12px;max-width:680px}
+.dl h2{margin:0;font-size:17px}
+.dl .box{border:1px solid var(--g200);border-radius:6px;padding:14px;display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.dl .box .t{flex:1;min-width:200px}
+.dl ol{margin:0;padding-left:18px;color:var(--g600);font-size:12px}
+</style>
+</head>
+<body>
+
+<div class="note"><b>미리보기</b> — Windows에 설치하는 <b>Bcount 임포지션</b> 프로그램의 화면입니다. 실행하면 브라우저에 이 창이 뜨고 계산은 전부 PC 안에서 합니다. <b>왼쪽에서 조판 종류·판 크기·배열을 바꾸면 오른쪽 판 배치가 바로 바뀌고</b>, 앞면/뒷면·판 넘기기가 눌립니다. 프리셋 저장·불러오기도 동작합니다(이 미리보기에서는 브라우저에만 저장). <b>페이지 자르기 · 홀·짝 나누기 · 홀·짝 합치기(1p 자동 복제) · 페이지 복제 · 페이지 회전</b> 도구도 눌러보세요. 판 설정의 <b>배치 간격(가로·세로)·위치 미세조정·뒷면 180° 회전·칸별 회전(왼쪽/오른쪽 칸 따로)</b>도 미리보기에 바로 반영되고, 판 위·왼쪽에 <b>치수선</b>(판 크기·여백·칸·간격, mm)이 표시됩니다. 맨 아래는 Bcount의 다운로드 페이지입니다.<br><b>절대 조건:</b> 원본 페이지를 그림으로 바꾸지 않고 객체 그대로 배치(행렬 변환만) — 벡터·이미지·서체(임베드 안 된 한글 서체 포함) <b>변형 없음</b>. 서체 미임베드는 저장 전 경고.</div>
+
+<div class="app">
+  <div class="bar"><b>Bcount 임포지션</b><span class="v">v1.0.0</span><span class="st"><i></i>PC에서 실행 중 · 파일은 외부로 나가지 않습니다 · <u>새 버전 확인</u></span></div>
+  <div class="main">
+    <!-- ===== 왼쪽: 설정 ===== -->
+    <div class="side">
+      <div class="card">
+        <h3>1. 원본 PDF <span class="r" id="f-meta"></span></h3>
+        <div class="drop" id="drop"><button class="winbtn big" type="button" style="pointer-events:none;margin-bottom:6px">PDF 파일 열기...</button><br>또는 여기에 PDF를 끌어다 놓기<br><span style="font-size:11px">수백 MB 파일도 그대로 (원본은 건드리지 않음)</span></div>
+        <div class="file" id="f-info" hidden><div><b id="f-name"></b><div class="m" id="f-sub"></div></div><div style="display:flex;gap:4px"><button class="winbtn" id="f-change">찾아보기...</button><button class="btn sm" id="f-x">✕</button></div></div>
+        <div id="bk-box" hidden style="margin-top:8px;border-top:1px dashed var(--g300);padding-top:8px">
+          <div style="font-size:12px;font-weight:700;margin-bottom:4px">뒷면 PDF <span style="font-weight:400;color:var(--g500)">(위 파일이 앞면)</span></div>
+          <div class="drop" id="bk-drop" style="padding:10px"><button class="winbtn" type="button" style="pointer-events:none">뒷면 PDF 열기...</button><br><span style="font-size:11px">1페이지 파일이면 앞면 수만큼 자동 반복</span></div>
+          <div class="file" id="bk-info" hidden><div><b id="bk-name"></b><div class="m" id="bk-sub"></div></div><div style="display:flex;gap:4px"><button class="winbtn" id="bk-change">찾아보기...</button><button class="btn sm" id="bk-x">✕</button></div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>2. 조판 종류</h3>
+        <div class="types" id="types">
+          <button data-t="booklet" class="on">중철 책자</button>
+          <button data-t="cutstack">컷앤스택</button>
+          <button data-t="repeat">N업</button>
+          <button data-t="split" class="tool">페이지 자르기</button>
+          <button data-t="oddeven" class="tool">홀·짝 나누기</button>
+          <button data-t="merge" class="tool">홀·짝 합치기</button>
+          <button data-t="dup" class="tool">페이지 복제</button>
+          <button data-t="rotate" class="tool">페이지 회전</button>
+        </div>
+        <div id="type-help" style="font-size:11px;color:var(--g500);margin-top:6px"></div>
+      </div>
+
+      <div class="card" id="card-split" hidden>
+        <h3>3. 자르기</h3>
+        <div class="row"><label>자를 파일</label><div class="in"><span class="tfile"></span><button class="winbtn tpick" type="button">찾아보기...</button></div></div>
+        <div class="row"><label>방향</label><div class="in"><select id="cut-dir"><option value="v">세로로 자르기 (왼쪽 | 오른쪽)</option><option value="h">가로로 자르기 (위 / 아래)</option></select></div></div>
+        <div class="row"><label>등분</label><div class="in"><input type="number" id="cut-n" value="2" min="2" max="4"> 조각 <span class="unit">펼침면은 2</span></div></div>
+        <div class="row"><label>순서</label><div class="in"><select id="cut-order"><option value="lr">왼쪽(위) 먼저</option><option value="rl">오른쪽(아래) 먼저</option></select></div></div>
+        <div class="row"><label>겹침</label><div class="in"><input type="number" id="cut-ov" value="0" min="0" step="1"> <span class="unit">mm — 잘린 면에 여유</span></div></div>
+        <div class="row"><label>대상</label><div class="in"><select id="cut-range"><option value="all">모든 페이지</option><option value="inner">첫·마지막 빼고 (표지 제외)</option></select></div></div>
+        <div style="font-size:11px;color:var(--g500);margin-top:4px">페이지 상자(CropBox)만 바꾸는 방식이라 내용은 그대로 — 화질·서체 손실 없음.</div>
+      </div>
+
+      <div class="card" id="card-oddeven" hidden>
+        <h3>3. 홀·짝 나누기</h3>
+        <div class="row"><label>나눌 파일</label><div class="in"><span class="tfile"></span><button class="winbtn tpick" type="button">찾아보기...</button></div></div>
+        <div class="row"><label>결과</label><div class="in"><span style="font-size:12px">파일 2개: <b>_홀수.pdf</b> / <b>_짝수.pdf</b></span></div></div>
+        <div class="row"><label>짝수 순서</label><div class="in"><label class="chk"><input type="checkbox" id="even-rev" checked> 역순 (양면 뒷면 출력용)</label></div></div>
+        <div class="row"><label>맞춤</label><div class="in"><label class="chk"><input type="checkbox" id="oe-pad" checked> 페이지 수가 홀수면 끝에 빈 페이지 추가</label></div></div>
+        <div style="font-size:11px;color:var(--g500);margin-top:4px">앞면(홀수)을 먼저 출력하고 용지를 뒤집어 뒷면(짝수)을 출력하는 방식에 맞춥니다.</div>
+      </div>
+
+      <div class="card" id="card-merge" hidden>
+        <h3>3. 홀·짝 합치기</h3>
+        <div class="row"><label>홀수 쪽</label><div class="in"><span class="tfile" id="m-a"></span><button class="winbtn tpick" type="button">찾아보기...</button></div></div>
+        <div class="row"><label>짝수 쪽</label><div class="in"><button class="winbtn" id="m-drop" type="button">찾아보기...</button><span id="m-b" style="font-size:12px" hidden></span></div></div>
+        <div class="row"><label>짝수 순서</label><div class="in"><label class="chk"><input type="checkbox" id="m-rev"> 짝수 파일이 역순이면 되돌리기</label></div></div>
+        <div class="row"><label>1페이지 파일</label><div class="in"><label class="chk"><input type="checkbox" id="m-dup" checked> 한 쪽이 1페이지면 상대 길이만큼 복제 (예: 뒷면 1p → 100p)</label></div></div>
+        <div class="row"><label>맞춤</label><div class="in"><label class="chk"><input type="checkbox" id="m-pad" checked> 두 파일 길이가 다르면 짧은 쪽에 빈 페이지</label></div></div>
+        <div style="font-size:11px;color:var(--g500);margin-top:4px">A1, B1, A2, B2 … 순으로 번갈아 한 파일로. 스캔한 앞면·뒷면을 한 권으로 만들 때.</div>
+      </div>
+
+      <div class="card" id="card-dup" hidden>
+        <h3>3. 페이지 복제</h3>
+        <div class="row"><label>원본 파일</label><div class="in"><span class="tfile"></span><button class="winbtn tpick" type="button">찾아보기...</button></div></div>
+        <div class="row"><label>복제할 페이지</label><div class="in"><input type="number" id="dup-page" value="1" min="1"> 번 <span class="unit">원본에서</span></div></div>
+        <div class="row"><label>개수</label><div class="in"><input type="number" id="dup-n" value="100" min="1" max="5000"> 페이지로</div></div>
+        <div style="font-size:11px;color:var(--g500);margin-top:4px">같은 페이지 객체를 참조만 반복하므로 100장으로 만들어도 파일이 100배로 커지지 않습니다. 만든 파일은 바로 조판이나 홀·짝 합치기에 쓸 수 있습니다.</div>
+      </div>
+
+      <div class="card" id="card-rotate" hidden>
+        <h3>3. 페이지 회전</h3>
+        <div class="row"><label>회전할 파일</label><div class="in"><span class="tfile"></span><button class="winbtn tpick" type="button">찾아보기...</button></div></div>
+        <div class="row"><label>대상</label><div class="in"><select id="rot-target"><option value="all">모든 페이지</option><option value="odd">홀수(앞면) 페이지만</option><option value="even">짝수(뒷면) 페이지만</option><option value="range">페이지 범위</option></select></div></div>
+        <div class="row" id="rot-range-row" hidden><label>범위</label><div class="in"><input type="text" id="rot-range" placeholder="예: 3-10, 15" style="width:140px"></div></div>
+        <div class="row"><label>각도</label><div class="in"><select id="rot-deg"><option value="90">90° (시계 방향)</option><option value="180" selected>180°</option><option value="270">270° (반시계 90°)</option></select></div></div>
+        <div style="font-size:11px;color:var(--g500);margin-top:4px">페이지의 회전 속성(Rotate)만 바꿉니다 — 내용은 손대지 않아 화질·서체 그대로. 뒷면이 거꾸로 나오는 파일을 바로잡을 때.</div>
+      </div>
+
+      <div class="card" id="card-sheet">
+        <h3>3. 종이 <span class="r">단위 mm</span></h3>
+        <div class="row" id="row-nup" hidden><label>N업 방식</label><div class="in"><select id="nup-mode"><option value="repeat">같은 페이지 반복 (명함·스티커)</option><option value="seq">페이지 순서대로 배열 (1,2,3…)</option></select></div></div>
+        <div class="row"><label>양면인쇄</label><div class="in"><select id="duplex"><option value="long">긴쪽넘김</option><option value="short">짧은쪽넘김</option><option value="single">단면</option></select></div></div>
+        <select id="bind" hidden><option value="left" selected>left</option></select><select id="sets" hidden><option value="1" selected>1</option></select>
+        <div class="row bkonly" hidden><label>빈 페이지</label><div class="in"><select id="pad-pos"><option value="end">4의 배수로 모자라면 맨 끝에 추가</option><option value="last">뒤표지(마지막 페이지) 앞에 추가</option></select></div></div>
+        <div class="row bkonly" hidden><label>밀림 보정</label><div class="in"><input type="number" id="creep" value="0" min="0" step="0.1" style="width:64px"> mm/판 <span class="unit" style="font-size:11px;color:var(--g500)">안쪽 판일수록 등 쪽으로 이동 (위치만, 축소 없음)</span></div></div>
+        <div class="row bkonly" hidden><label>접는 선</label><div class="in"><label class="chk"><input type="checkbox" id="center" checked> 미리보기에 가운데 접는 선 표시</label></div></div>
+        <div class="row" id="row-sides" hidden><label>앞뒤 구성</label><div class="in" style="flex-direction:column;align-items:flex-start;gap:4px">
+          <select id="sides"><option value="one">한 파일 (1p 앞 · 2p 뒤 · 3p 앞 …)</option><option value="two">앞면 파일 + 뒷면 파일</option></select>
+          <div id="sides-opts" hidden style="display:flex;flex-direction:column;gap:2px">
+            <label class="chk"><input type="checkbox" id="bk-dup" checked> 한 쪽이 1페이지면 상대 페이지 수만큼 반복</label>
+            <label class="chk"><input type="checkbox" id="bk-pad" checked> 두 파일 길이가 다르면 짧은 쪽에 빈 페이지</label>
+          </div>
+        </div></div>
+        <div class="row"><label>종이 크기</label><div class="in"><input type="number" id="sw" value="320" min="50" max="2000"> × <input type="number" id="sh" value="450" min="50" max="2000"> <button class="btn sm" id="rot">↻ 가로/세로</button></div></div>
+        <div class="row"><label>내 종이 크기</label><div class="in" style="flex-direction:column;align-items:stretch">
+          <div style="display:flex;gap:4px"><select id="sheet-sel" style="flex:1;min-width:0"><option value="">저장한 크기에서 고르기</option></select><button class="btn sm" id="sheet-del" title="고른 크기 삭제">삭제</button></div>
+          <div style="display:flex;gap:4px;margin-top:4px"><input type="text" id="sheet-name" placeholder="이름 (예: SRA3, 4×6전지)" style="flex:1;min-width:0"><button class="btn sm dark" id="sheet-save">지금 크기 저장</button></div>
+        </div></div>
+        <div class="row"><label>인쇄 크기</label><div class="in"><input type="number" id="pw" value="210"> × <input type="number" id="ph" value="297"></div></div>
+        <div class="row" id="row-arr"><label>배열</label><div class="in"><input type="number" id="cols" value="2" min="1" max="12"> 열 × <input type="number" id="rows" value="1" min="1" max="12"> 행<button id="autofit" hidden></button></div></div>
+        <div class="row" id="row-gap"><label id="lbl-gap">사이간격</label><div class="in"><span id="gap-lx">가로</span> <input type="number" id="gap" value="0" min="0" step="1"> <span id="gapy-wrap"><span id="gap-ly">세로</span> <input type="number" id="gapy" value="0" min="0" step="1"></span></div></div>
+        <div class="row"><label>블리드</label><div class="in"><input type="number" id="bleed" value="3" min="0" step="1"></div></div>
+        <div class="row"><label>재단선</label><div class="in"><label class="chk"><input type="checkbox" id="marks" checked> 재단선 표시 (모서리, 3mm)</label></div></div>
+        <div class="row" id="row-rot"><label>회전</label><div class="in" style="flex-direction:column;align-items:stretch">
+          <table class="rottbl" id="rottbl"></table>
+          <div style="margin-top:4px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;font-size:12px">
+            <span>앞면 모두 <select id="all-f" style="min-height:26px;padding:1px 4px;font-size:12px"><option>0</option><option>90</option><option>180</option><option>270</option></select>° <button class="btn sm" id="apply-f">적용</button></span>
+            <span>뒷면 모두 <select id="all-b" style="min-height:26px;padding:1px 4px;font-size:12px"><option>0</option><option>90</option><option selected>180</option><option>270</option></select>° <button class="btn sm" id="apply-b">적용</button></span>
+          </div>
+          <button id="slot-reset" hidden></button><button id="back-180" hidden></button>
+          <input type="checkbox" id="rot-back" hidden><input type="checkbox" id="rot-page" hidden>
+        </div></div>
+        <div class="row" id="row-scale"><label>크기</label><div class="in"><select id="scale"><option value="none" selected>원본 크기 그대로 (기본)</option><option value="fit">칸에 맞게 축소/확대</option><option value="pct">배율 직접 입력</option></select><span id="scale-pct-wrap" hidden><input type="number" id="scale-pct" value="100" min="1" max="1000" step="1"> %</span></div></div>
+        <select id="align" hidden><option value="center" selected>center</option></select>
+        <input type="number" id="margin" value="0" hidden>
+        <div class="row"><label>전체 위치이동</label><div class="in" style="flex-direction:column;align-items:flex-start;gap:4px">
+          <div>앞면 &nbsp;가로 <input type="number" id="offx" value="0" step="1"> 세로 <input type="number" id="offy" value="0" step="1"></div>
+          <div>뒷면 &nbsp;가로 <input type="number" id="offx2" value="0" step="1"> 세로 <input type="number" id="offy2" value="0" step="1"> <label class="chk" style="margin-left:6px"><input type="checkbox" id="off-same"> 앞면과 같게</label></div>
+        </div></div>
+      </div>
+
+      <div class="card">
+        <h3>4. 프리셋 <span class="r">이 설정을 저장해 두고 다음에 불러오기</span></h3>
+        <div style="display:flex;gap:4px;margin-bottom:6px"><input type="text" id="p-name" placeholder="예: 명함 SRA3 10업" style="flex:1;min-width:0"><button class="btn sm dark" id="p-save">저장</button></div>
+        <div class="presets" id="p-list"></div>
+      </div>
+    </div>
+
+    <!-- ===== 오른쪽: 미리보기 ===== -->
+    <div class="stage">
+      <div class="tabs">
+        <button class="btn sm" id="first" title="처음">«</button>
+        <button class="btn sm" id="prev" title="이전">‹</button>
+        <b id="sheet-no" style="font-size:13px">판</b>
+        <input type="number" id="sheet-go" value="1" min="1" step="1" style="width:56px;min-height:28px;padding:2px 4px;font-size:13px;text-align:center">
+        <b id="sheet-total" style="font-size:13px">/ 1</b>
+        <button class="btn sm" id="next" title="다음">›</button>
+        <button class="btn sm" id="last" title="끝">»</button>
+        <span style="width:8px"></span>
+        <button class="btn sm" id="side-f" hidden>앞면</button>
+        <button class="btn sm" id="side-b" hidden>뒷면</button>
+        <span class="sp"></span>
+        <span class="info" id="stats"></span>
+      </div>
+      <div class="warn" id="warn" hidden></div>
+      <div class="warn" id="fontwarn" style="background:#eff6ff;border-color:#bfdbfe;color:#1e40af">원본 검사: 벡터·이미지·서체 그대로 유지됩니다. <b>임베드 안 된 서체 2개</b>(맑은 고딕, 나눔명조) — 원본과 같은 PC/장비에서 출력하면 동일하게 나옵니다.</div>
+      <div class="sheetwrap" style="display:flex;gap:48px;justify-content:center;align-items:flex-start">
+        <div><div class="sidelbl" id="lbl-f">앞면</div><div class="sheet" id="sheet"></div></div>
+        <div id="wrap2"><div class="sidelbl">뒷면</div><div class="sheet" id="sheet2"></div></div>
+      </div>
+      <div class="foot">
+        <span class="info"><span>기본 파일명: <b id="outname">원고_중철.pdf</b> <span style="color:var(--g400)">— 저장 창에서 바꿀 수 있음</span></span></span>
+        <span class="sp"></span>
+        <div class="prog" id="prog" hidden><i></i></div>
+        <button id="btn-open" hidden></button>
+        <button class="winbtn big primary" id="btn-save">PDF 저장하기</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Bcount 다운로드 페이지 ===== -->
+<div class="dl">
+  <div class="nav"><i style="background:#FEE500;color:#191919;font-weight:700">업무관리</i><i style="background:#f59e0b">송장변환</i><i class="on" style="background:#0f766e">임포지션</i><i style="background:#2563eb">작업리스트</i><i style="background:#2563eb">작업등록</i><i style="background:#7c3aed">견적서</i><i style="background:#374151">발주서</i><i style="background:#059669">업무용메모</i></div>
+  <div class="body">
+    <h2>PDF 임포지션 프로그램</h2>
+    <p style="margin:0;color:var(--g600)">중철 책자 · 컷앤스택 · N업 같은면 반복 · 페이지 자르기 · 홀·짝 나누기/합치기 · 페이지 복제 · 회전 · 프리셋. 수백 MB PDF도 PC 안에서 처리하고 파일은 밖으로 나가지 않습니다. 매장 직원도 로그인 없이 받을 수 있습니다.</p>
+    <div class="box"><div class="t"><b>Bcount 임포지션 v1.0.0</b> <span style="color:var(--g500);font-size:12px">Windows 10/11 · 38 MB · 2026-09-20</span><div style="font-size:12px;color:var(--g600)">설치 없이 실행 파일 하나. 실행하면 브라우저에 화면이 뜹니다.</div></div><button class="btn pri">다운로드</button></div>
+    <ol><li>다운로드한 <code>BcountImposition.exe</code>를 실행 (처음엔 Windows 보안 경고 → "추가 정보 → 실행")</li><li>브라우저에 임포지션 화면이 열림 (<code>http://localhost:8765</code>)</li><li>PDF를 끌어다 놓고 조판 종류·판 크기를 정한 뒤 "PDF 저장"</li></ol>
+    <p style="margin:0;font-size:12px;color:var(--g500)">새 버전이 나오면 프로그램이 알려줍니다. 이전 버전: v0.9 …</p>
+  </div>
+</div>
+
+<script>
+(function(){
+var $=function(i){return document.getElementById(i)};
+var S={type:"booklet",file:null,pages:0,srcW:210,srcH:297,side:"f",sheet:0,slotRot:{f:{},b:{}},back:null};
+function twoFiles(){return (S.type==="cutstack"||S.type==="repeat")&&$("duplex").value!=="single"&&$("sides").value==="two"}
+function openBack(name,pages,w,h,mb){S.back={name:name,pages:pages};$("bk-name").textContent=name;$("bk-sub").textContent=pages+"페이지 · "+w+"×"+h+" mm · "+mb+" MB";$("bk-info").hidden=false;$("bk-drop").hidden=true;S.sheet=0;render()}
+$("bk-drop").addEventListener("click",function(){openBack("졸업작품_도록_뒷면공통.pdf",1,210,297,3)});
+$("bk-change").addEventListener("click",function(){openBack("졸업작품_도록_뒷면공통.pdf",1,210,297,3)});
+$("bk-x").addEventListener("click",function(){S.back=null;$("bk-info").hidden=true;$("bk-drop").hidden=false;render()});
+var HELP={booklet:"접어서 가운데를 철하는 책자. 페이지 수를 4의 배수로 맞추고(모자라면 빈 페이지) 1·N, 2·N-1 … 순서로 펼침면(2쪽)을 배치합니다. 항상 양면. 회전·배열 항목은 없습니다.",cutstack:"한 판에 여러 페이지를 놓고, 재단한 뒤 그대로 쌓으면 순서가 맞게 배치합니다(무선·하드커버 내지). 열×행을 정하세요.",repeat:"한 판에 열×행만큼 페이지를 놓습니다. '같은 페이지 반복'(명함·스티커) 또는 '순서대로 배열'(1,2,3… 한 판에 여러 페이지)을 고르세요. 양면이면 뒷면은 그다음 페이지들.",split:"펼침면처럼 한 페이지에 두 쪽이 든 PDF를 잘라 낱 페이지로 만듭니다. 96p 펼침면 → 192p.",oddeven:"홀수 페이지와 짝수 페이지를 따로 PDF로 저장합니다. 단면 프린터로 양면 출력할 때.",merge:"두 PDF를 홀수·짝수로 번갈아 끼워 한 파일로 만듭니다. 앞면 100p + 뒷면 1p 처럼 한 쪽이 1페이지면 자동으로 복제해 맞춥니다.",dup:"한 페이지를 원하는 개수만큼 복사해 여러 페이지 PDF로 만듭니다. 뒷면이 모두 같은 인쇄물(명함 뒷면, 안내문 뒷면)에.",rotate:"페이지를 90°·180°·270° 돌립니다. 전체, 홀수만, 짝수만, 또는 범위를 골라서."};
+
+/* ---- 파일 ---- */
+$("drop").addEventListener("click",function(){openFile("2026_졸업작품_도록_최종.pdf",96,210,297,486)});
+$("f-change").addEventListener("click",function(){openFile("행사_리플렛_최종.pdf",12,210,297,38)});
+document.querySelectorAll(".tpick").forEach(function(b){b.addEventListener("click",function(){openFile(S.file?"행사_리플렛_최종.pdf":"2026_졸업작품_도록_최종.pdf",S.file?12:96,210,297,S.file?38:486)})});
+function syncFileLabels(){document.querySelectorAll(".tfile").forEach(function(e){e.textContent=S.file?S.file+" · "+S.pages+"p":""})}
+function openFile(name,pages,w,h,mb){S.file=name;S.pages=pages;S.srcW=w;S.srcH=h;$("f-name").textContent=name;$("f-sub").textContent=pages+"페이지 · "+w+"×"+h+" mm · "+mb+" MB";$("f-info").hidden=false;$("drop").hidden=true;$("f-meta").textContent=pages+"p";$("pw").value=w;$("ph").value=h;S.sheet=0;syncFileLabels();render()}
+$("f-x").addEventListener("click",function(){S.file=null;S.pages=0;$("f-info").hidden=true;$("drop").hidden=false;$("f-meta").textContent="";syncFileLabels();render()});
+
+/* ---- 조판 종류 ---- */
+$("types").addEventListener("click",function(e){var b=e.target.closest("button");if(!b)return;S.type=b.getAttribute("data-t");[].forEach.call($("types").children,function(x){x.classList.toggle("on",x===b)});if(S.type==="booklet"){$("cols").value=2;$("rows").value=1}S.sheet=0;render()});
+
+/* ---- 판 ---- */
+function loadSizes(){try{return JSON.parse(localStorage.getItem("impo-sizes")||"[]")}catch(e){return []}}
+function saveSizes(a){try{localStorage.setItem("impo-sizes",JSON.stringify(a))}catch(e){}}
+function renderSizes(){var a=loadSizes(),sel=$("sheet-sel");sel.innerHTML='<option value="">저장한 크기에서 고르기'+(a.length?" ("+a.length+")":"")+'</option>'+a.map(function(x,i){return '<option value="'+i+'">'+x.name+" — "+x.w+"×"+x.h+"</option>"}).join("")}
+$("sheet-sel").addEventListener("change",function(){var x=loadSizes()[+this.value];if(x){$("sw").value=x.w;$("sh").value=x.h;render()}});
+$("sheet-save").addEventListener("click",function(){var name=$("sheet-name").value.trim();if(!name){alert("종이 크기 이름을 적어주세요.");$("sheet-name").focus();return}var a=loadSizes();var i=a.findIndex(function(x){return x.name===name});var it={name:name,w:$("sw").value,h:$("sh").value};if(i>=0)a[i]=it;else a.push(it);saveSizes(a);renderSizes();$("sheet-sel").value=String(i>=0?i:a.length-1);$("sheet-name").value="";toast("'"+name+" "+it.w+"×"+it.h+"' 저장")});
+$("sheet-del").addEventListener("click",function(){var a=loadSizes(),i=+$("sheet-sel").value;if(!$("sheet-sel").value||!a[i])return;if(!confirm("'"+a[i].name+"' 크기를 지울까요?"))return;a.splice(i,1);saveSizes(a);renderSizes()});
+renderSizes();
+$("rot").addEventListener("click",function(){var a=$("sw").value;$("sw").value=$("sh").value;$("sh").value=a;render()});
+$("autofit").addEventListener("click",function(){var g=geom();var pw=num("pw",S.srcW)+2*num("bleed"),ph=num("ph",S.srcH)+2*num("bleed");if(g.rotPage){var t0=pw;pw=ph;ph=t0}var c=Math.max(1,Math.floor((g.W-2*g.m+g.gap)/(pw+g.gap))),r=Math.max(1,Math.floor((g.H-2*g.m+g.gapy)/(ph+g.gapy)));$("cols").value=c;$("rows").value=r;render()});
+["sw","sh","cols","rows","pw","ph","margin","gap","gapy","offx","offy","offx2","offy2","off-same","bleed","marks","center","duplex","scale","scale-pct","align","nup-mode","sides","bk-dup","bk-pad","pad-pos","creep"].forEach(function(id){$(id).addEventListener("input",function(){if(id==="sw"||id==="sh")$("sheet-sel").value="";S.sheet=0;render()});$(id).addEventListener("change",render)});
+function num(id,def){var v=parseFloat($(id).value);return isNaN(v)?(def||0):v}
+function geom(){var bk=S.type==="booklet";return {W:num("sw",320),H:num("sh",450),cols:bk?2:Math.max(1,num("cols",1)|0),rows:bk?(num("sets",1)|0||1):Math.max(1,num("rows",1)|0),m:num("margin"),gap:num("gap"),gapy:num("gapy"),offx:(S.side==="b"&&!$("off-same").checked)?num("offx2"):num("offx"),offy:(S.side==="b"&&!$("off-same").checked)?num("offy2"):num("offy"),bleed:num("bleed"),rotBack:$("rot-back").checked,rotPage:$("rot-page").checked}}
+
+/* ---- 조판 계산: 판별 앞/뒤 슬롯에 들어갈 페이지 번호 (0=빈 페이지) ---- */
+function planTwo(g,slots,n){
+  var nb=S.back?S.back.pages:0,dup=$("bk-dup").checked,padOn=$("bk-pad").checked,out=[];
+  if(!nb)return out;
+  // 한 쪽이 1p면 상대 길이만큼 반복. 아니면 길이 다를 때 빈 페이지(pad) 또는 짧은 쪽까지만
+  var N=(dup&&(n===1||nb===1))?Math.max(n,nb):(padOn?Math.max(n,nb):Math.min(n,nb));
+  var fp=function(i){return (dup&&n===1)?1:(i<=n?i:0)},bp=function(i){return (dup&&nb===1)?-1:(i<=nb?-i:0)};
+  if(S.type==="cutstack"){var sh=Math.ceil(N/slots);for(var j=0;j<sh;j++){var fr=[],bk=[];for(var k=0;k<slots;k++){var idx=k*sh+j+1;fr.push(idx<=N?fp(idx):0);bk.push(idx<=N?bp(idx):0)}out.push({front:fr,back:mirror(bk,g.cols)})}return out}
+  if($("nup-mode").value==="seq"){var shS=Math.ceil(N/slots);for(var u=0;u<shS;u++){var fr2=[],bk2=[];for(var v=0;v<slots;v++){var i2=u*slots+v+1;fr2.push(i2<=N?fp(i2):0);bk2.push(i2<=N?bp(i2):0)}out.push({front:fr2,back:mirror(bk2,g.cols)})}return out}
+  for(var q=1;q<=N;q++)out.push({front:rep(fp(q),slots),back:rep(bp(q),slots)});
+  return out;
+}
+function plan(){
+  var g=geom(),n=S.pages,slots=g.cols*g.rows,duplex=$("duplex").value!=="single",out=[];
+  if(!n)return out;
+  if(twoFiles())return planTwo(g,slots,n);
+  if(S.type==="booklet"){
+    var N=Math.ceil(n/4)*4,sheets=N/4,right=$("bind").value==="right",padEnd=$("pad-pos").value!=="last",sets=num("sets",1)|0||1;
+    // 빈 페이지: 맨 끝 또는 뒤표지 앞 / 오른쪽 철이면 펼침면 좌우 바꿈 / 2세트면 같은 펼침면을 위아래로
+    var src=function(i){return padEnd?(i<=n?i:0):(i<n?i:(i===N?n:0))};
+    for(var i=0;i<sheets;i++){var f=[N-2*i,1+2*i],b=[2+2*i,N-1-2*i];if(right){f.reverse();b.reverse()}f=f.map(src);b=b.map(src);var F=[],B=[];for(var t=0;t<sets;t++){F=F.concat(f);B=B.concat(b)}out.push({front:F,back:B})}
+    return out;
+  }
+  if(S.type==="cutstack"){
+    var per=duplex?2:1,sheetsC=Math.ceil(n/(slots*per));
+    for(var j=0;j<sheetsC;j++){var fr=[],bk=[];for(var k=0;k<slots;k++){var base=k*sheetsC*per+j*per;fr.push(base+1);bk.push(duplex?base+2:0)}out.push({front:fr,back:duplex?mirror(bk,g.cols):null})}
+    return out.map(fixBlank(n));
+  }
+  if($("nup-mode").value==="seq"){
+    // 순서대로: 앞면에 1..slots, 뒷면에 그다음 slots (양면은 좌우 거울로)
+    var perS=duplex?slots*2:slots,sheetsS=Math.ceil(n/perS);
+    for(var u=0;u<sheetsS;u++){var fr=[],bk=[];for(var v=0;v<slots;v++){var pf=u*perS+v+1,pb=u*perS+slots+v+1;fr.push(pf<=n?pf:0);bk.push(duplex&&pb<=n?pb:0)}out.push({front:fr,back:duplex?mirror(bk,g.cols):null})}
+    return out;
+  }
+  var perR=duplex?2:1,sheetsR=Math.ceil(n/perR);
+  for(var q=0;q<sheetsR;q++){var p1=q*perR+1,p2=duplex?q*perR+2:0;out.push({front:rep(p1,slots),back:duplex?rep(p2<=n?p2:0,slots):null})}
+  return out;
+}
+function pad(a,s){while(a.length<s)a.push(0);return a}
+function rep(p,s){var a=[];for(var i=0;i<s;i++)a.push(p);return a}
+function mirror(a,cols){var o=[];for(var r=0;r<a.length/cols;r++){var row=a.slice(r*cols,(r+1)*cols).reverse();o=o.concat(row)}return o}
+function fixBlank(n){return function(sh){var f=function(p){return p>n?0:p};return {front:sh.front.map(f),back:sh.back?sh.back.map(f):null}}}
+
+/* ---- 칸별 회전 격자 ---- */
+function slotName(g,c,r){if(g.rows===1&&g.cols===2)return c===0?"왼쪽 페이지":"오른쪽 페이지";if(g.rows===1)return (c+1)+"번째 페이지";if(g.cols===1&&g.rows===2)return r===0?"위 페이지":"아래 페이지";return (c+1)+"열 "+(r+1)+"행"}
+function renderSlotGrid(g){
+  var duplex=$("duplex").value!=="single",el=$("rottbl"),h="<tr><th></th>";
+  var opt=function(side,i){var d=(S.slotRot[side]||{})[i]||0;return '<select data-side="'+side+'" data-i="'+i+'">'+[0,90,180,270].map(function(x){return '<option value="'+x+'"'+(x===d?" selected":"")+'>'+x+'°</option>'}).join("")+'</select>'};
+  for(var r=0;r<g.rows;r++)for(var c=0;c<g.cols;c++)h+="<th>"+slotName(g,c,r).replace(" 페이지","")+"</th>";
+  h+="</tr>";
+  var line=function(side,label){var t="<tr><td>"+label+"</td>";for(var r=0;r<g.rows;r++)for(var c=0;c<g.cols;c++)t+="<td>"+opt(side,r*g.cols+c)+"</td>";return t+"</tr>"};
+  h+=line("f","앞면");if(duplex)h+=line("b","뒷면");
+  el.innerHTML=h;
+  el.querySelectorAll("select").forEach(function(sel){sel.addEventListener("change",function(){var side=sel.getAttribute("data-side"),i=+sel.getAttribute("data-i");S.slotRot[side]=S.slotRot[side]||{};S.slotRot[side][i]=+sel.value;render()})});
+}
+function setAll(side,deg){var g=geom();S.slotRot[side]={};for(var i=0;i<g.cols*g.rows;i++)S.slotRot[side][i]=deg;render()}
+$("apply-f").addEventListener("click",function(){setAll("f",+$("all-f").value)});
+$("apply-b").addEventListener("click",function(){setAll("b",+$("all-b").value)});
+function slotDeg(g,c,r){if(S.type==="cutstack"||S.type==="booklet")return 0;var i=r*g.cols+c;return (S.slotRot[S.side]||{})[i]||0}
+
+/* ---- 페이징 (미리보기 판 이동) ---- */
+function pager(label,total){
+  ["first","prev","next","last","sheet-go","sheet-total"].forEach(function(id){$(id).hidden=false});
+  if(S.sheet>=total)S.sheet=Math.max(0,total-1);if(S.sheet<0)S.sheet=0;
+  $("sheet-no").textContent=label;$("sheet-total").textContent="/ "+total;
+  var go=$("sheet-go");if(document.activeElement!==go)go.value=total?S.sheet+1:0;go.max=Math.max(1,total);go.disabled=!total;
+  $("first").disabled=$("prev").disabled=S.sheet<=0;$("next").disabled=$("last").disabled=S.sheet>=total-1;
+  S.total=total;
+}
+function goSheet(v){var t=S.total||0;var i=(parseInt(v,10)||1)-1;if(i<0)i=0;if(i>t-1)i=t-1;S.sheet=i;render();$("sheet-go").value=t?i+1:0}
+$("first").addEventListener("click",function(){S.sheet=0;render()});$("last").addEventListener("click",function(){S.sheet=(S.total||1)-1;render()});
+$("sheet-go").addEventListener("change",function(){goSheet(this.value)});$("sheet-go").addEventListener("keydown",function(e){if(e.key==="Enter"){goSheet(this.value);this.blur()}});
+/* ---- 그리기 ---- */
+function render(){
+  $("type-help").textContent=HELP[S.type];
+
+  var tool=S.type==="split"||S.type==="oddeven"||S.type==="merge"||S.type==="dup"||S.type==="rotate";
+  $("card-sheet").hidden=tool;$("card-split").hidden=S.type!=="split";$("card-oddeven").hidden=S.type!=="oddeven";$("card-merge").hidden=S.type!=="merge";$("card-dup").hidden=S.type!=="dup";$("card-rotate").hidden=S.type!=="rotate";
+  $("row-sides").hidden=tool||!(S.type==="cutstack"||S.type==="repeat")||$("duplex").value==="single";
+  var two=!tool&&twoFiles();$("sides-opts").hidden=!two;$("bk-box").hidden=!two;
+  if(tool){renderTool();return}
+  $("row-scale").style.display="";var bk=S.type==="booklet";$("row-rot").hidden=S.type==="cutstack"||bk;
+  document.querySelectorAll(".bkonly").forEach(function(e){e.hidden=!bk});$("row-arr").hidden=bk;
+  var single=$("duplex").querySelector('[value="single"]');single.hidden=bk;if(bk&&$("duplex").value==="single")$("duplex").value="long";
+  $("lbl-gap").textContent=bk?"등 간격":"사이간격";$("gap-lx").textContent=bk?"":"가로";$("gap-ly").textContent=bk?"세트 간격":"세로";$("gapy-wrap").hidden=bk;
+  $("row-nup").hidden=S.type!=="repeat";
+  var g=geom(),P=plan(),total=P.length,duplex=$("duplex").value!=="single";
+  renderSlotGrid(g);
+  $("offx2").disabled=$("offy2").disabled=$("off-same").checked;
+  pager("판",total);
+  var names={booklet:"중철",cutstack:"컷앤스택",repeat:"N업"};
+  $("outname").textContent=(S.file?S.file.replace(/\.pdf$/i,""):"원고")+"_"+names[S.type]+"_"+g.cols+"x"+g.rows+".pdf";
+
+  // 칸 크기
+  var pw=num("pw",S.srcW),ph=num("ph",S.srcH);   // 완성(재단) 크기 — 박스
+  if(g.rotPage){var t0=pw;pw=ph;ph=t0}
+  var b=g.bleed,needW=pw+2*b,needH=ph+2*b;         // 블리드까지 포함해 자리에 들어가야 하는 크기
+  var availW=g.W-2*g.m-(g.cols-1)*g.gap,availH=g.H-2*g.m-(g.rows-1)*g.gapy;
+  var cellW=availW/g.cols,cellH=availH/g.rows;     // 축소/확대 모드에서 한 자리에 허용되는 크기
+  var mode=$("scale").value,fit=mode==="fit";$("scale-pct-wrap").hidden=mode!=="pct";
+  var sc=fit?Math.min(cellW/needW,cellH/needH):mode==="pct"?Math.max(0.01,(parseFloat($("scale-pct").value)||100)/100):1;var useW=pw*sc,useH=ph*sc,bs=b*sc;
+  // 박스들을 간격만큼만 띄워 붙인 묶음의 크기 → 판 가운데 또는 여백부터
+  var blockW=g.cols*useW+(g.cols-1)*g.gap,blockH=g.rows*useH+(g.rows-1)*g.gapy;
+  var alignC=$("align").value!=="margin";
+  var startX=(alignC?(g.W-blockW)/2:g.m)+g.offx,startY=(alignC?(g.H-blockH)/2:g.m)+g.offy;
+  var over=!fit&&(blockW+2*g.m>g.W+0.01||blockH+2*g.m>g.H+0.01);
+  var needBk=two&&!(S.back&&S.back.pages);
+  $("warn").hidden=!over&&!!S.pages&&!needBk;
+  $("warn").textContent=!S.pages?"원본 PDF를 먼저 열어주세요. (미리보기에서는 위 상자를 클릭하면 예시 파일이 열립니다)":needBk?"뒷면 PDF를 열어주세요. (왼쪽 '뒷면 PDF 열기' — 미리보기에서는 누르면 1페이지 예시 파일이 열립니다)":over?"배치 묶음("+blockW.toFixed(1)+"×"+blockH.toFixed(1)+")이 종이("+g.W+"×"+g.H+")보다 큽니다. 판을 키우거나 배열을 줄이거나 크기를 '칸에 맞게 축소/확대' 또는 배율을 낮춰 주세요.":"";
+  $("stats").innerHTML=S.pages?(two&&S.back?"앞면 <b>"+S.pages+"p</b> + 뒷면 <b>"+S.back.pages+"p</b>"+((S.back.pages===1||S.pages===1)&&$("bk-dup").checked?" (1p 쪽 반복)":""):"원본 <b>"+S.pages+"p</b>")+" · 판 <b>"+total+"장</b>"+(duplex?" (양면 "+(total*2)+"면)":"")+(bk?" · 책자 <b>"+(Math.ceil(S.pages/4)*4)+"p</b>"+(Math.ceil(S.pages/4)*4>S.pages?" (빈 "+(Math.ceil(S.pages/4)*4-S.pages)+"p)":"")+(num("creep")>0?" · 밀림 보정 최대 "+(num("creep")*(total-1)).toFixed(1)+"mm":""):"")+" · 인쇄 <b>"+useW.toFixed(1)+"×"+useH.toFixed(1)+"</b> mm · 묶음 <b>"+blockW.toFixed(1)+"×"+blockH.toFixed(1)+"</b>"+(sc<0.999?" · 축소 "+(sc*100).toFixed(0)+"%":sc>1.001?" · 확대 "+(sc*100).toFixed(0)+"%":""):"";
+
+  // 판 그리기 (화면 비율) — 단면이면 앞면 한 장, 양면이면 앞면·뒷면 나란히
+  var box=document.querySelector(".sheetwrap"),nS=duplex?2:1;
+  var maxW=(box.clientWidth-90-(nS-1)*48)/nS,maxH=Math.max(340,box.clientHeight-70);
+  var k=Math.min(maxW/g.W,maxH/g.H);
+  $("wrap2").hidden=!duplex;$("lbl-f").hidden=!duplex;
+  (duplex?["f","b"]:["f"]).forEach(function(side){
+  S.side=side;g=geom();
+  startX=(alignC?(g.W-blockW)/2:g.m)+g.offx;startY=(alignC?(g.H-blockH)/2:g.m)+g.offy;
+  var el=side==="f"?$("sheet"):$("sheet2");el.style.width=(g.W*k)+"px";el.style.height=(g.H*k)+"px";el.innerHTML="";el.style.background="#fff";el.style.boxShadow="0 8px 30px rgba(0,0,0,.25)";
+  var sh=P[S.sheet];var list=sh?(side==="f"?sh.front:sh.back):null;
+  for(var r=0;r<g.rows;r++)for(var c=0;c<g.cols;c++){
+    var i=r*g.cols+c,pg=list?list[i]:0;
+    var x=startX+c*(useW+g.gap),y=startY+r*(useH+g.gapy);
+    if(S.type==="booklet"){var cr=num("creep")*(total-1-S.sheet);x+=(c===0?cr:-cr)}
+    var deg=slotDeg(g,c,r)%360,q90=deg===90||deg===270;
+    var bw=q90?useH:useW,bh=q90?useW:useH,bx0=x+(useW-bw)/2,by0=y+(useH-bh)/2;
+    var d=document.createElement("div");d.className="slot"+(pg?"":" blank")+(pg<0?" bk":"")+(deg?" r"+deg:"");
+    d.style.cssText="left:"+(bx0*k)+"px;top:"+(by0*k)+"px;width:"+(bw*k)+"px;height:"+(bh*k)+"px;font-size:"+Math.max(11,Math.min(useW,useH)*k*0.28)+"px";
+    d.innerHTML=(pg?"<span>"+(pg<0?"뒷"+(-pg):pg)+(g.rotPage?" ⟳":"")+"</span>":"<span>빈</span>")+"<small>"+(c+1)+"-"+(r+1)+(deg?" ·"+deg+"°":"")+"</small>";
+    el.appendChild(d);
+    if($("marks").checked&&list){var bl=bs*k,L=3*k,gapm=bl+1*k;/* 재단선 3mm, 블리드 바깥 1mm 에서 시작 */[[x*k,y*k],[(x+useW)*k,y*k],[x*k,(y+useH)*k],[(x+useW)*k,(y+useH)*k]].forEach(function(pt,q){
+      var h=document.createElement("i"),v=document.createElement("i");h.className="mark";v.className="mark";
+      var sx=q%2===0?-1:1,sy=q<2?-1:1;
+      // 옆 인쇄물과의 간격이 재단선 자리(블리드+1+3mm)보다 좁으면 그쪽으로 뻗는 선은 뺀다 (겹치는 선만)
+      var need=bs+4;
+      var hNeighbor=sx<0?c>0:c<g.cols-1, vNeighbor=sy<0?r>0:r<g.rows-1;
+      var hideH=hNeighbor&&g.gap<need, hideV=vNeighbor&&g.gapy<need;
+      h.style.cssText="left:"+(pt[0]+(sx<0?-L-gapm:gapm))+"px;top:"+pt[1]+"px;width:"+L+"px;height:1px";
+      v.style.cssText="left:"+pt[0]+"px;top:"+(pt[1]+(sy<0?-L-gapm:gapm))+"px;width:1px;height:"+L+"px";
+      if(!hideH)el.appendChild(h);if(!hideV)el.appendChild(v)})}
+  }
+  // 치수선: 위쪽 = 가로(여백·칸·간격), 왼쪽 = 세로. 전체 크기는 바깥에
+  if(list){
+    var bx=function(c){return startX+c*(useW+g.gap)},by=function(r){return startY+r*(useH+g.gapy)};
+    var segX=[["여백",bx(0)]];for(var cc=0;cc<g.cols;cc++){segX.push(["인쇄",useW]);if(cc<g.cols-1)segX.push(["간격",bx(cc+1)-(bx(cc)+useW)])}segX.push(["여백",g.W-(bx(g.cols-1)+useW)]);
+    var segY=[["여백",by(0)]];for(var rr=0;rr<g.rows;rr++){segY.push(["인쇄",useH]);if(rr<g.rows-1)segY.push(["간격",by(rr+1)-(by(rr)+useH)])}segY.push(["여백",g.H-(by(g.rows-1)+useH)]);
+    var fmt=function(v){return (Math.round(v*10)/10).toString()};
+    var ax=0;segX.forEach(function(sg){var w=sg[1]*k;if(w>0){var d=document.createElement("div");d.className="dim";d.style.cssText="left:"+ax+"px;top:-14px;width:"+w+"px;height:10px";d.innerHTML="<i style='left:0;right:0;top:5px;height:1px'></i><i style='left:0;top:0;width:1px;height:10px'></i><i style='right:0;top:0;width:1px;height:10px'></i>"+(w>22?"<b style='left:50%;top:-6px'>"+fmt(sg[1])+"</b>":"");el.appendChild(d)}ax+=w});
+    var ay=0;segY.forEach(function(sg){var h=sg[1]*k;if(h>0){var d=document.createElement("div");d.className="dim";d.style.cssText="top:"+ay+"px;left:-14px;height:"+h+"px;width:10px";d.innerHTML="<i style='top:0;bottom:0;left:5px;width:1px'></i><i style='top:0;left:0;height:1px;width:10px'></i><i style='bottom:0;left:0;height:1px;width:10px'></i>"+(h>14?"<b style='top:50%;left:-14px;transform:translate(-50%,-50%) rotate(-90deg)'>"+fmt(sg[1])+"</b>":"");el.appendChild(d)}ay+=h});
+    var tw=document.createElement("div");tw.className="dim";tw.style.cssText="left:0;right:0;top:-30px;height:10px";tw.innerHTML="<i style='left:0;right:0;top:5px;height:1px'></i><i style='left:0;top:0;width:1px;height:10px'></i><i style='right:0;top:0;width:1px;height:10px'></i><b style='left:50%;top:-6px'>종이 "+fmt(g.W)+" mm</b>";el.appendChild(tw);
+    var th=document.createElement("div");th.className="dim";th.style.cssText="top:0;bottom:0;left:-32px;width:10px";th.innerHTML="<i style='top:0;bottom:0;left:5px;width:1px'></i><i style='top:0;left:0;height:1px;width:10px'></i><i style='bottom:0;left:0;height:1px;width:10px'></i><b style='top:50%;left:-16px;transform:translate(-50%,-50%) rotate(-90deg)'>종이 "+fmt(g.H)+" mm</b>";el.appendChild(th);
+    var pl=document.createElement("div");pl.className="dim";pl.style.cssText="left:4px;bottom:3px;color:#374151";pl.innerHTML="<span style='background:rgba(255,255,255,.9);padding:1px 4px;border-radius:2px'>완성 "+fmt(useW)+"×"+fmt(useH)+" mm"+(g.bleed?" · 블리드 "+fmt(g.bleed)+" 포함 "+fmt(useW+2*bs)+"×"+fmt(useH+2*bs):"")+"</span>";el.appendChild(pl);
+  }
+  if($("center").checked&&S.type==="booklet"){var cm=document.createElement("i");cm.className="mark";cm.style.cssText="left:"+((startX+useW+g.gap/2)*k)+"px;top:0;width:0;height:"+(g.H*k)+"px;border-left:1px dashed #ef4444;opacity:.6";el.appendChild(cm)}
+  });
+  S.side="f";
+}
+["cut-dir","cut-n","cut-order","cut-ov","cut-range","even-rev","oe-pad","m-rev","m-pad","m-dup","dup-page","dup-n","rot-target","rot-range","rot-deg"].forEach(function(id){$(id).addEventListener("input",render);$(id).addEventListener("change",render)});
+S.fileB=null;S.pagesB=0;
+$("m-drop").addEventListener("click",function(){S.fileB="뒷면_공통.pdf";S.pagesB=1;$("m-b").textContent=S.fileB+" · 1p  ";$("m-b").hidden=false;$("m-drop").textContent="찾아보기...";render()});
+function pgBox(a,cls){return a.slice(0,48).map(function(x){return "<span class='"+(x?cls||"":"blank")+"'>"+(x||"빈")+"</span>"}).join("")+(a.length>48?"<span class='blank'>…</span>":"")}
+function renderTool(){
+  var n=S.pages,box=document.querySelector(".sheetwrap"),el=$("sheet");el.innerHTML="";el.style.boxShadow="none";el.style.background="transparent";el.style.width="";el.style.height="";
+  $("wrap2").hidden=true;$("lbl-f").hidden=true;
+  $("side-f").style.cssText="";$("side-b").style.cssText="";$("side-b").disabled=true;$("warn").hidden=!!n;$("warn").textContent=n?"":"원본 PDF를 먼저 열어주세요.";
+  var base=(S.file?S.file.replace(/\.pdf$/i,""):"원고");
+  if(S.type==="split"){
+    var k=Math.max(2,Math.min(4,num("cut-n",2)|0)),dir=$("cut-dir").value,rl=$("cut-order").value==="rl",inner=$("cut-range").value==="inner";
+    var target=inner?Math.max(0,n-2):n,outPages=inner?(n-target)+target*k:n*k;
+    pager("원본 페이지",n);
+    $("stats").innerHTML=n?"원본 <b>"+n+"p</b> → 결과 <b>"+outPages+"p</b> · "+(dir==="v"?"세로":"가로")+" "+k+"등분":"";
+    $("outname").textContent=base+"_분할.pdf";
+    var W=S.srcW*2,H=S.srcH,maxW=box.clientWidth-32,maxH=Math.max(380,box.clientHeight-32),sc=Math.min(maxW/W,maxH/H)*0.9;
+    el.style.width=(W*sc)+"px";el.style.height=(H*sc)+"px";el.style.background="#fff";el.style.boxShadow="0 8px 30px rgba(0,0,0,.25)";
+    var skip=inner&&(S.sheet===0||S.sheet===n-1);
+    var firstOut=inner?(S.sheet===0?1:2+(S.sheet-1)*k):S.sheet*k+1;
+    var pieces=skip?1:k;
+    for(var i=0;i<pieces;i++){var d=document.createElement("div");d.className="split";
+      if(!skip){if(dir==="v"){d.style.left=(i*100/k)+"%";d.style.width=(100/k)+"%"}else{d.style.top=(i*100/k)+"%";d.style.height=(100/k)+"%"}}
+      var idx=rl?(k-1-i):i;d.innerHTML="<span style='font-size:"+Math.max(14,Math.min(W,H)*sc*0.1)+"px'>"+(skip?"그대로 → "+(S.sheet===0?1:outPages):"→ "+(firstOut+idx))+"</span>";el.appendChild(d)}
+    if(!skip)for(var c=1;c<k;c++){var ln=document.createElement("i");ln.className="cut";if(dir==="v")ln.style.cssText="left:"+(c*100/k)+"%;top:0;bottom:0;width:2px";else ln.style.cssText="top:"+(c*100/k)+"%;left:0;right:0;height:2px";el.appendChild(ln)}
+    return;
+  }
+  ["first","prev","next","last","sheet-go","sheet-total"].forEach(function(id){$(id).hidden=true});
+  if(S.type==="oddeven"){
+    var rev=$("even-rev").checked,padOn=$("oe-pad").checked,N=n+((padOn&&n%2)?1:0),odd=[],even=[];
+    for(var p=1;p<=N;p++)(p%2?odd:even).push(p>n?0:p);if(rev)even.reverse();
+    $("sheet-no").textContent="홀수 "+odd.length+"p · 짝수 "+even.length+"p";
+    $("stats").innerHTML=n?"원본 <b>"+n+"p</b> → 파일 2개"+(rev?" · 짝수는 역순":""):"";$("outname").textContent=base+"_홀수.pdf + "+base+"_짝수.pdf";
+    el.innerHTML="<div class='stacks'><div class='stack'><h4>"+base+"_홀수.pdf <small style='font-weight:400;color:var(--g500)'>앞면 · "+odd.length+"p</small></h4><div class='pg'>"+pgBox(odd)+"</div></div><div class='stack'><h4>"+base+"_짝수.pdf <small style='font-weight:400;color:var(--g500)'>뒷면 · "+even.length+"p"+(rev?" · 역순":"")+"</small></h4><div class='pg'>"+pgBox(even)+"</div></div></div>";
+    return;
+  }
+  if(S.type==="dup"){
+    var dp=Math.min(Math.max(1,num("dup-page",1)|0),Math.max(1,n)),dn=Math.max(1,num("dup-n",1)|0);
+    $("sheet-no").textContent="결과 "+dn+"p";$("stats").innerHTML=n?"원본 "+dp+"번 페이지 × <b>"+dn+"</b> → <b>"+dn+"p</b> (파일 크기는 거의 그대로)":"";$("outname").textContent=base+"_p"+dp+"x"+dn+".pdf";
+    var arr=[];for(var z=0;z<dn;z++)arr.push(dp);
+    el.innerHTML="<div class='stacks one'><div class='stack'><h4>"+base+"_p"+dp+"x"+dn+".pdf <small style='font-weight:400;color:var(--g500)'>"+dp+"번 페이지를 "+dn+"번 반복</small></h4><div class='pg'>"+pgBox(arr)+"</div></div></div>";
+    return;
+  }
+  if(S.type==="rotate"){
+    var tg=$("rot-target").value,deg=$("rot-deg").value;$("rot-range-row").hidden=tg!=="range";
+    var inRange=function(p){if(tg==="all")return true;if(tg==="odd")return p%2===1;if(tg==="even")return p%2===0;
+      return String($("rot-range").value||"").split(",").some(function(seg){var m=seg.trim().match(/^(\d+)(?:-(\d+))?$/);if(!m)return false;var a=+m[1],b=m[2]?+m[2]:a;return p>=a&&p<=b})};
+    var cnt=0,cells=[];for(var p=1;p<=n;p++){var r=inRange(p);if(r)cnt++;cells.push({p:p,r:r})}
+    $("sheet-no").textContent="회전 "+cnt+"p / "+n+"p";$("stats").innerHTML=n?"<b>"+cnt+"</b>페이지를 <b>"+deg+"°</b> 회전 · 내용 변형 없음":"";$("outname").textContent=base+"_회전"+deg+".pdf";
+    el.innerHTML="<div class='stacks one'><div class='stack'><h4>"+base+"_회전"+deg+".pdf <small style='font-weight:400;color:var(--g500)'>돌아간 페이지는 표시</small></h4><div class='pg'>"+cells.slice(0,72).map(function(c){return "<span"+(c.r?" style='transform:rotate("+deg+"deg);background:#fef3c7;border-color:#fcd34d;color:#92400e'":" class='blank'")+">"+c.p+"</span>"}).join("")+(n>72?"<span class='blank'>…</span>":"")+"</div></div></div>";
+    return;
+  }
+  // 홀·짝 합치기
+  var nb=S.pagesB,mrev=$("m-rev").checked,mpad=$("m-pad").checked;
+  if(!nb){$("sheet-no").textContent="짝수 쪽 파일을 열어주세요";$("stats").innerHTML="";$("outname").textContent=base+"_합본.pdf";el.innerHTML="<div class='stacks one'><div class='stack' style='text-align:center;color:var(--g400);padding:30px'>왼쪽에서 짝수 페이지 PDF를 열면 합쳐진 순서가 여기 보입니다</div></div>";return}
+  var na=n,mdup=$("m-dup").checked,dupNote="",aOne=false,bOne=false;
+  if(mdup&&nb===1&&na>1){nb=na;bOne=true;dupNote=" · 짝수 쪽 1p를 "+na+"p로 복제"}else if(mdup&&na===1&&nb>1){na=nb;aOne=true;dupNote=" · 홀수 쪽 1p를 "+nb+"p로 복제"}
+  var L=mpad?Math.max(na,nb):Math.min(na,nb),outM=[];
+  for(var q=0;q<L;q++){outM.push(q<na?"A"+(aOne?1:q+1):0);var bi=mrev?(nb-1-q):q;outM.push(bi>=0&&bi<nb?"B"+(bOne?1:bi+1):0)}
+  $("sheet-no").textContent="합본 "+outM.length+"p";$("stats").innerHTML="홀수 쪽 <b>"+n+"p</b> + 짝수 쪽 <b>"+S.pagesB+"p</b> → <b>"+outM.length+"p</b>"+dupNote+(na!==nb?" · 길이 다름 → "+(mpad?"빈 페이지로 맞춤":"짧은 쪽까지만"):"");
+  $("outname").textContent=base+"_합본.pdf";
+  el.innerHTML="<div class='stacks one'><div class='stack'><h4>"+base+"_합본.pdf <small style='font-weight:400;color:var(--g500)'>A=홀수 쪽 파일, B=짝수 쪽 파일</small></h4><div class='pg'>"+outM.slice(0,60).map(function(x){return "<span class='"+(x?(String(x)[0]==="B"?"b":""):"blank")+"'>"+(x||"빈")+"</span>"}).join("")+(outM.length>60?"<span class='blank'>…</span>":"")+"</div></div></div>";
+}
+$("prev").addEventListener("click",function(){S.sheet--;render()});$("next").addEventListener("click",function(){S.sheet++;render()});
+$("side-f").addEventListener("click",function(){S.side="f";render()});$("side-b").addEventListener("click",function(){S.side="b";render()});
+window.addEventListener("resize",render);
+
+/* ---- 프리셋 (미리보기: 브라우저 저장) ---- */
+var FIELDS=["sw","sh","cols","rows","pw","ph","margin","gap","gapy","offx","offy","offx2","offy2","off-same","align","nup-mode","bleed","marks","center","duplex","scale","scale-pct","sides","bk-dup","bk-pad","pad-pos","creep","rot-back","rot-page","cut-dir","cut-n","cut-order","cut-ov","cut-range","even-rev","oe-pad","m-rev","m-pad","m-dup","dup-page","dup-n","rot-target","rot-range","rot-deg"];
+function snapshot(){var o={type:S.type,slotRot:S.slotRot};FIELDS.forEach(function(id){var e=$(id);o[id]=e.type==="checkbox"?e.checked:e.value});return o}
+function apply(o){S.type=o.type;S.slotRot=(o.slotRot&&o.slotRot.f)?o.slotRot:{f:{},b:{}};[].forEach.call($("types").children,function(x){x.classList.toggle("on",x.getAttribute("data-t")===o.type)});FIELDS.forEach(function(id){var e=$(id);if(o[id]===undefined)return;if(e.type==="checkbox")e.checked=!!o[id];else e.value=o[id]});$("sheet-sel").value="";S.sheet=0;render()}
+function loadPresets(){try{return JSON.parse(localStorage.getItem("impo-presets")||"null")||seed()}catch(e){return seed()}}
+function seed(){return [{name:"명함 SRA3 10업 (90×50)",when:"09.12",cfg:{type:"repeat",sw:"320",sh:"450",cols:"2",rows:"5",pw:"90",ph:"50",margin:"12",gap:"4",bleed:"2",marks:true,center:false,duplex:"long",scale:"fit"}},{name:"A5 중철 SRA3",when:"09.03",cfg:{type:"booklet",sw:"320",sh:"450",cols:"2",rows:"1",pw:"148",ph:"210",margin:"10",gap:"0",bleed:"3",marks:true,center:true,duplex:"long",scale:"fit"}},{name:"A4 내지 컷앤스택 2업",when:"08.28",cfg:{type:"cutstack",sw:"320",sh:"450",cols:"1",rows:"2",pw:"210",ph:"297",margin:"8",gap:"6",bleed:"3",marks:true,center:false,duplex:"long",scale:"fit"}}]}
+function savePresets(p){try{localStorage.setItem("impo-presets",JSON.stringify(p))}catch(e){}}
+function renderPresets(){var p=loadPresets();$("p-list").innerHTML=p.length?p.map(function(x,i){return '<div class="preset"><b title="'+x.name+'">'+x.name+'</b><small>'+x.when+'</small><button class="btn sm" data-load="'+i+'">불러오기</button><button class="btn sm" data-del="'+i+'" style="color:var(--red)">삭제</button></div>'}).join(""):'<div style="font-size:12px;color:var(--g400);text-align:center;padding:8px">저장된 프리셋이 없습니다</div>';
+  $("p-list").querySelectorAll("[data-load]").forEach(function(b){b.addEventListener("click",function(){var x=loadPresets()[+b.getAttribute("data-load")];apply(x.cfg);$("p-name").value=x.name;toast("'"+x.name+"' 불러왔습니다")})});
+  $("p-list").querySelectorAll("[data-del]").forEach(function(b){b.addEventListener("click",function(){var p=loadPresets();var x=p[+b.getAttribute("data-del")];if(!confirm("'"+x.name+"' 프리셋을 지울까요?"))return;p.splice(+b.getAttribute("data-del"),1);savePresets(p);renderPresets()})});}
+$("p-save").addEventListener("click",function(){var name=$("p-name").value.trim();if(!name){alert("프리셋 이름을 적어주세요.");$("p-name").focus();return}var p=loadPresets();var d=new Date(),when=(d.getMonth()+1)+"."+String(d.getDate()).padStart(2,"0");var i=p.findIndex(function(x){return x.name===name});if(i>=0){if(!confirm("같은 이름이 있습니다. 덮어쓸까요?"))return;p[i]={name:name,when:when,cfg:snapshot()}}else p.unshift({name:name,when:when,cfg:snapshot()});savePresets(p);renderPresets();toast("저장했습니다")});
+
+/* ---- 저장 시뮬레이션 ---- */
+$("btn-save").addEventListener("click",function(){if(!S.pages){alert("원본 PDF를 먼저 열어주세요.");return}var pr=$("prog");pr.hidden=false;var i=pr.firstElementChild,w=0;$("btn-save").disabled=true;var t=setInterval(function(){w+=7;i.style.width=Math.min(100,w)+"%";if(w>=100){clearInterval(t);$("btn-save").disabled=false;setTimeout(function(){pr.hidden=true;i.style.width="0";toast("저장했습니다. (실제 프로그램에서는 저장 창이 떠서 위치와 이름을 고른 뒤 저장됩니다)")},300)}},120)});
+$("btn-open").addEventListener("click",function(){toast("저장 폴더를 엽니다 (실제 프로그램)")});
+function toast(m){var t=document.createElement("div");t.textContent=m;t.style.cssText="position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#1e293b;color:#fff;padding:9px 16px;border-radius:6px;font-size:13px;z-index:9;box-shadow:0 8px 24px rgba(0,0,0,.25)";document.body.appendChild(t);setTimeout(function(){t.remove()},2200)}
+
+renderPresets();openFile("2026_졸업작품_도록_최종.pdf",96,210,297,486);$("scale").value="none";render();
+})();
+</script>
+
+</body>
+</html>

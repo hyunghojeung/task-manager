@@ -6,6 +6,7 @@ export default function NavBar({ role, hubEnabled }: { role?: string; hubEnabled
   const pathname = usePathname();
 
   const links: Array<{ href: string; label: string; color: string; text?: string; external?: boolean }> = [
+    { href: "/dashboard/imposition", label: "조판N-up", color: "bg-slate-700 hover:bg-slate-800" },
     // 업무관리: 관리자가 사용자별로 켜 준 사람에게만 보인다
     ...(hubEnabled
       ? [{ href: "/hub", label: "업무관리", color: "bg-[#FEE500] hover:bg-[#f2da00]", text: "text-[#191919] font-bold" }]
