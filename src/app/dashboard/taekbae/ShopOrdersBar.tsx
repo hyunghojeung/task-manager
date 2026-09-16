@@ -38,14 +38,19 @@ export default function ShopOrdersBar({ frameId }: { frameId: string }) {
   async function pushToConverter() {
     if (!pickedRows.length) { alert("주문을 먼저 선택하세요."); return; }
     const frame = document.getElementById(frameId) as HTMLIFrameElement | null;
-    const paste = frame?.contentDocument?.getElementById("paste") as HTMLTextAreaElement | null;
-    if (!paste) { alert("변환기가 아직 열리지 않았습니다. 잠시 후 다시 눌러주세요."); return; }
+    const doc = frame?.contentDocument;
+    const paste = doc?.getElementById("paste") as HTMLTextAreaElement | null;
+    const parseBtn = doc?.getElementById("btn-parse") as HTMLButtonElement | null;
+    if (!paste || !parseBtn) { alert("변환기가 아직 열리지 않았습니다. 잠시 후 다시 눌러주세요."); return; }
 
     const lines: string[] = [];
     for (const r of pickedRows) for (let k = 0; k < r.box_count; k++) lines.push(lineOf(r, k));
-    paste.value = (paste.value ? paste.value + "\n" : "") + lines.join("\n");
-    paste.dispatchEvent(new Event("input", { bubbles: true }));
-    paste.focus();
+    // 붙여넣기 칸을 거치지 않고 바로 수화인 목록에 넣는다:
+    // 칸에 쓰던 글은 잠시 비켜 두고, 우리 줄만 넣어 변환기의 "표에 넣기"를 대신 눌러준 뒤 원래 글을 되돌린다
+    const typed = paste.value;
+    paste.value = lines.join("\n");
+    parseBtn.click();
+    paste.value = typed;
 
     setBusy(true);
     await fetch("/api/shop-shipments", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ shipment_ids: pickedRows.map((r) => r.shipment_id) }) });
@@ -125,7 +130,7 @@ export default function ShopOrdersBar({ frameId }: { frameId: string }) {
             <button onClick={markSent} disabled={busy || pickedRows.length === 0} className="px-3 py-2 border border-gray-300 rounded text-sm bg-white text-gray-700 disabled:opacity-50">
               발송 완료로 표시 (목록에서 빼기)
             </button>
-            <span className="text-xs text-gray-500">아래 변환기의 붙여넣기 칸에 들어갑니다. 그다음 &quot;표에 넣기&quot; → &quot;엑셀 파일 받기&quot;. 박스가 여러 개면 그 수만큼 줄이 늘어납니다.</span>
+            <span className="text-xs text-gray-500">아래 변환기의 수화인 목록에 바로 들어갑니다. 그다음 &quot;엑셀 파일 받기&quot;. 박스가 여러 개면 그 수만큼 줄이 늘어납니다.</span>
           </div>
         </div>
       )}
