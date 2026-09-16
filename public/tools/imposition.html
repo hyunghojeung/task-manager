@@ -116,7 +116,7 @@ input[type=number]{width:56px;text-align:right}
 
 
 <div class="app">
-  <div class="bar"><b>Bcount 임포지션</b><span class="v">v1.0.0</span><span class="st"><i></i>PC에서 실행 중 · 파일은 외부로 나가지 않습니다 · <u>새 버전 확인</u></span></div>
+  <div class="bar"><b>Bcount 임포지션</b><span class="v">v1.0.0</span><button class="winbtn" id="dl-btn" type="button" style="margin-left:18px;font-weight:700;padding:5px 16px">Bcount 임포지션 프로그램 다운로드</button><span class="st"><i></i>PC에서 실행 중 · 파일은 외부로 나가지 않습니다 · <u>새 버전 확인</u></span></div>
   <div class="main">
     <!-- ===== 왼쪽: 설정 ===== -->
     <div class="side">
@@ -277,6 +277,9 @@ input[type=number]{width:56px;text-align:right}
 </div>
 
 <script>
+/* 프로그램 실행 파일 경로 — 파일이 올라오면 여기에 넣는다 */
+var DOWNLOAD_URL="";
+document.getElementById("dl-btn").addEventListener("click",function(){if(DOWNLOAD_URL)window.top.location.href=DOWNLOAD_URL;else alert("프로그램 파일이 준비되면 이 버튼으로 바로 내려받습니다.")});
 (function(){
 var $=function(i){return document.getElementById(i)};
 var S={type:"repeat",file:null,pages:0,srcW:210,srcH:297,side:"f",sheet:0,slotRot:{f:{},b:{}},back:null};
