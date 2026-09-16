@@ -46,6 +46,20 @@ export default function OrdersPage() {
     fetch(`/api/suppliers?_=${Date.now()}`).then(r => r.json()).then(d => setSuppliers(d || []));
   }, []);
 
+  // 발주서 보기(인쇄) 화면의 "복사" 버튼 → /dashboard/orders?copy=ID : 그 발주서를 복사한 새 발주서 입력 화면을 연다
+  useEffect(() => {
+    const copyId = new URLSearchParams(window.location.search).get("copy");
+    if (!copyId) return;
+    fetch(`/api/purchase-orders/${copyId}?_=${Date.now()}`).then(r => r.ok ? r.json() : null).then((po: POData | null) => {
+      if (!po) return;
+      openWrite(po);
+      setEditId(null);                                   // 저장하면 새 발주서로 등록된다
+      setForm(p => ({ ...p, po_date: new Date().toISOString().slice(0, 10) }));
+      window.history.replaceState(null, "", "/dashboard/orders");
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   function openWrite(po?: POData) {
     if (po) {
       setEditId(po.id);
