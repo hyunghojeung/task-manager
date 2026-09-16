@@ -335,7 +335,7 @@ function plan(){
     var N=Math.ceil(n/4)*4,sheets=N/4,right=$("bind").value==="right",padEnd=$("pad-pos").value!=="last",sets=num("sets",1)|0||1;
     // 빈 페이지: 맨 끝 또는 뒤표지 앞 / 오른쪽 철이면 펼침면 좌우 바꿈 / 2세트면 같은 펼침면을 위아래로
     var src=function(i){return padEnd?(i<=n?i:0):(i<n?i:(i===N?n:0))};
-    for(var i=0;i<sheets;i++){var f=[N-2*i,1+2*i],b=[2+2*i,N-1-2*i];if(right){f.reverse();b.reverse()}f=f.map(src);b=b.map(src);var F=[],B=[];for(var t=0;t<sets;t++){F=F.concat(f);B=B.concat(b)}out.push({front:F,back:B})}
+    for(var i=0;i<sheets;i++){var f=[N-2*i,1+2*i],b=[N-1-2*i,2+2*i];if(right){f.reverse();b.reverse()}f=f.map(src);b=mirror(b.map(src),2);var F=[],B=[];for(var t=0;t<sets;t++){F=F.concat(f);B=B.concat(b)}out.push({front:F,back:B})}
     return out;
   }
   if(S.type==="cutstack"){
@@ -355,7 +355,9 @@ function plan(){
 }
 function pad(a,s){while(a.length<s)a.push(0);return a}
 function rep(p,s){var a=[];for(var i=0;i<s;i++)a.push(p);return a}
-function mirror(a,cols){var o=[];for(var r=0;r<a.length/cols;r++){var row=a.slice(r*cols,(r+1)*cols).reverse();o=o.concat(row)}return o}
+function mirrorAxis(){var portrait=num("sw",320)<=num("sh",450);return (($("duplex").value==="long")===portrait)?"cols":"rows"}
+function backBaseDeg(){return ($("duplex").value!=="single"&&mirrorAxis()==="rows")?180:0}
+function mirror(a,cols){var rows=Math.ceil(a.length/cols),grid=[];for(var r=0;r<rows;r++)grid.push(a.slice(r*cols,(r+1)*cols));if(mirrorAxis()==="cols")grid=grid.map(function(row){return row.slice().reverse()});else grid.reverse();var o=[];grid.forEach(function(row){o=o.concat(row)});return o}
 function fixBlank(n){return function(sh){var f=function(p){return p>n?0:p};return {front:sh.front.map(f),back:sh.back?sh.back.map(f):null}}}
 
 /* ---- 칸별 회전 격자 ---- */
@@ -373,7 +375,7 @@ function renderSlotGrid(g){
 function setAll(side,deg){var g=geom();S.slotRot[side]={};for(var i=0;i<g.cols*g.rows;i++)S.slotRot[side][i]=deg;render()}
 $("apply-f").addEventListener("click",function(){setAll("f",+$("all-f").value)});
 $("apply-b").addEventListener("click",function(){setAll("b",+$("all-b").value)});
-function slotDeg(g,c,r){if(S.type==="cutstack"||S.type==="booklet")return 0;var i=r*g.cols+c;return (S.slotRot[S.side]||{})[i]||0}
+function slotDeg(g,c,r){var base=S.side==="b"?backBaseDeg():0;if(S.type==="cutstack"||S.type==="booklet")return base;var i=r*g.cols+c;return (base+((S.slotRot[S.side]||{})[i]||0))%360}
 
 /* ---- 페이징 (미리보기 판 이동) ---- */
 function pager(label,total){
