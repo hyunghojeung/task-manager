@@ -267,7 +267,7 @@ export default function OrdersPage() {
                 <td className="border border-gray-200 px-3 py-2 text-center">{o.po_date}</td>
                 <td className="border border-gray-200 px-3 py-2 text-left">{o.supplier_name}</td>
                 <td className="border border-gray-200 px-3 py-2 text-center">{o.orderer}</td>
-                <td className="border border-gray-200 px-3 py-2 text-left">{(o.purchase_order_items || []).filter(it => it.product_name).map(it => `${it.product_name}${it.spec ? `(${it.spec})` : ""}`).join(", ") || "-"}</td>
+                <td className="border border-gray-200 px-3 py-2 text-left"><button onClick={() => openWrite(o)} className="text-left hover:text-blue-600 hover:underline" title="발주서 열기">{(o.purchase_order_items || []).filter(it => it.product_name).map(it => `${it.product_name}${it.spec ? `(${it.spec})` : ""}`).join(", ") || "-"}</button></td>
                 <td className="border border-gray-200 px-2 py-2 text-center">
                   <button onClick={() => window.open(`/print/purchase-order?id=${o.id}`, '_blank')} className="px-3 py-0.5 bg-red-600 text-white rounded text-xs whitespace-nowrap">인쇄</button>
                 </td>
