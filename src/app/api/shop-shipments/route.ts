@@ -28,11 +28,17 @@ export async function GET(request: NextRequest) {
     .neq("method", "직접수령");
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  const rows = ((data || []) as unknown as ShipmentRow[])
+  const rows0 = ((data || []) as unknown as ShipmentRow[])
     .filter((s) => s.orders)
     .filter((s) => includeUnpaid || s.orders!.paid_at)
-    // 변환기에 넣었거나 작업을 완료 처리한 것은 빠진다 (오프라인 발송 등). "이미 내보낸 것도 보기"를 켜면 보인다
-    .filter((s) => includeExported || (!s.exported_at && s.orders!.status !== "complete"))
+    .sort((a, b) => (b.orders!.created_at || "").localeCompare(a.orders!.created_at || ""));
+
+  // 변환기에 넣었거나 작업을 완료 처리한 것(오프라인 발송 등)은 기본으로 빠진다.
+  // "이미 내보낸 것·완료된 작업도 보기"를 켜면 그중 최근 15건만 더 보여준다.
+  const isDone = (s: ShipmentRow) => !!s.exported_at || s.orders!.status === "complete";
+  const pending = rows0.filter((s) => !isDone(s));
+  const done = includeExported ? rows0.filter(isDone).slice(0, 15) : [];
+  const rows = [...pending, ...done]
     .sort((a, b) => (b.orders!.created_at || "").localeCompare(a.orders!.created_at || ""))
     .map((s) => ({
       shipment_id: s.id, order_id: s.order_id, order_no: s.orders!.order_no, orderer: s.orders!.orderer, title: s.orders!.title,

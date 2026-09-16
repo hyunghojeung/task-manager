@@ -75,7 +75,7 @@ export default function ShopOrdersBar({ frameId }: { frameId: string }) {
         </button>
         <div className="flex flex-wrap items-center gap-3 text-xs text-gray-600">
           <label className="flex items-center gap-1 cursor-pointer"><input type="checkbox" checked={!unpaid} onChange={(e) => setUnpaid(!e.target.checked)} /> 입금대기 건 제외</label>
-          <label className="flex items-center gap-1 cursor-pointer"><input type="checkbox" checked={exported} onChange={(e) => setExported(e.target.checked)} /> 이미 내보낸 것·완료된 작업도 보기</label>
+          <label className="flex items-center gap-1 cursor-pointer"><input type="checkbox" checked={exported} onChange={(e) => setExported(e.target.checked)} /> 이미 내보낸 것·완료된 작업도 보기 (최근 15건)</label>
           <button onClick={load} className="px-2 py-1 border border-gray-300 rounded bg-white">새로고침</button>
         </div>
       </div>
