@@ -279,21 +279,22 @@ input[type=number]{width:56px;text-align:right}
 <script>
 /* 프로그램 실행 파일 경로 — 파일이 올라오면 여기에 넣는다 */
 var DOWNLOAD_URL="";
+var LOCAL=window.BCOUNT_LOCAL||null;if(LOCAL)document.getElementById("dl-btn").hidden=true;
 document.getElementById("dl-btn").addEventListener("click",function(){if(DOWNLOAD_URL)window.top.location.href=DOWNLOAD_URL;else alert("프로그램 파일이 준비되면 이 버튼으로 바로 내려받습니다.")});
 (function(){
 var $=function(i){return document.getElementById(i)};
 var S={type:"repeat",file:null,pages:0,srcW:210,srcH:297,side:"f",sheet:0,slotRot:{f:{},b:{}},back:null};
 function twoFiles(){return S.type==="cutstack"&&$("duplex").value!=="single"&&$("sides").value==="two"}
 function openBack(name,pages,w,h,mb){S.back={name:name,pages:pages};$("bk-name").textContent=name;$("bk-sub").textContent=pages+"페이지 · "+w+"×"+h+" mm · "+mb+" MB";$("bk-info").hidden=false;$("bk-drop").hidden=true;S.sheet=0;render()}
-$("bk-drop").addEventListener("click",function(){openBack("졸업작품_도록_뒷면공통.pdf",1,210,297,3)});
-$("bk-change").addEventListener("click",function(){openBack("졸업작품_도록_뒷면공통.pdf",1,210,297,3)});
+$("bk-drop").addEventListener("click",function(){if(LOCAL){LOCAL.pick("back");return}openBack("졸업작품_도록_뒷면공통.pdf",1,210,297,3)});
+$("bk-change").addEventListener("click",function(){if(LOCAL){LOCAL.pick("back");return}openBack("졸업작품_도록_뒷면공통.pdf",1,210,297,3)});
 $("bk-x").addEventListener("click",function(){S.back=null;$("bk-info").hidden=true;$("bk-drop").hidden=false;render()});
 var HELP={booklet:"접어서 가운데를 철하는 책자. 페이지 수를 4의 배수로 맞추고(모자라면 빈 페이지) 1·N, 2·N-1 … 순서로 펼침면(2쪽)을 배치합니다. 항상 양면. 회전·배열 항목은 없습니다.",cutstack:"한 판에 여러 페이지를 놓고, 재단한 뒤 그대로 쌓으면 순서가 맞게 배치합니다(무선·하드커버 내지). 열×행을 정하세요.",repeat:"한 판에 열×행만큼 페이지를 놓습니다. '같은 페이지 반복'(명함·스티커) 또는 '순서대로 배열'(1,2,3… 한 판에 여러 페이지)을 고르세요. 양면이면 뒷면은 그다음 페이지들.",split:"펼침면처럼 한 페이지에 두 쪽이 든 PDF를 잘라 낱 페이지로 만듭니다. 96p 펼침면 → 192p.",oddeven:"홀수 페이지와 짝수 페이지를 따로 PDF로 저장합니다. 단면 프린터로 양면 출력할 때.",merge:"두 PDF를 홀수·짝수로 번갈아 끼워 한 파일로 만듭니다. 앞면 100p + 뒷면 1p 처럼 한 쪽이 1페이지면 자동으로 복제해 맞춥니다.",dup:"한 페이지를 원하는 개수만큼 복사해 여러 페이지 PDF로 만듭니다. 뒷면이 모두 같은 인쇄물(명함 뒷면, 안내문 뒷면)에.",rotate:"페이지를 90°·180°·270° 돌립니다. 전체, 홀수만, 짝수만, 또는 범위를 골라서."};
 
 /* ---- 파일 ---- */
-$("drop").addEventListener("click",function(){openFile("2026_졸업작품_도록_최종.pdf",96,210,297,486)});
-$("f-change").addEventListener("click",function(){openFile("행사_리플렛_최종.pdf",12,210,297,38)});
-document.querySelectorAll(".tpick").forEach(function(b){b.addEventListener("click",function(){openFile(S.file?"행사_리플렛_최종.pdf":"2026_졸업작품_도록_최종.pdf",S.file?12:96,210,297,S.file?38:486)})});
+$("drop").addEventListener("click",function(){if(LOCAL){LOCAL.pick("front");return}openFile("2026_졸업작품_도록_최종.pdf",96,210,297,486)});
+$("f-change").addEventListener("click",function(){if(LOCAL){LOCAL.pick("front");return}openFile("행사_리플렛_최종.pdf",12,210,297,38)});
+document.querySelectorAll(".tpick").forEach(function(b){b.addEventListener("click",function(){if(LOCAL){LOCAL.pick("front");return}openFile(S.file?"행사_리플렛_최종.pdf":"2026_졸업작품_도록_최종.pdf",S.file?12:96,210,297,S.file?38:486)})});
 function syncFileLabels(){document.querySelectorAll(".tfile").forEach(function(e){e.textContent=S.file?S.file+" · "+S.pages+"p":""})}
 function openFile(name,pages,w,h,mb){S.file=name;S.pages=pages;S.srcW=w;S.srcH=h;$("f-name").textContent=name;$("f-sub").textContent=pages+"페이지 · "+w+"×"+h+" mm · "+mb+" MB";$("f-info").hidden=false;$("drop").hidden=true;$("f-meta").textContent=pages+"p";$("pw").value=w;$("ph").value=h;S.sheet=0;syncFileLabels();render()}
 $("f-x").addEventListener("click",function(){S.file=null;S.pages=0;$("f-info").hidden=true;$("drop").hidden=false;$("f-meta").textContent="";syncFileLabels();render()});
@@ -302,8 +303,8 @@ $("f-x").addEventListener("click",function(){S.file=null;S.pages=0;$("f-info").h
 $("types").addEventListener("click",function(e){var b=e.target.closest("button");if(!b)return;S.type=b.getAttribute("data-t");[].forEach.call($("types").children,function(x){x.classList.toggle("on",x===b)});if(S.type==="booklet"){$("cols").value=2;$("rows").value=1}S.sheet=0;render()});
 
 /* ---- 판 ---- */
-function loadSizes(){try{return JSON.parse(localStorage.getItem("impo-sizes")||"[]")}catch(e){return []}}
-function saveSizes(a){try{localStorage.setItem("impo-sizes",JSON.stringify(a))}catch(e){}}
+function loadSizes(){if(LOCAL)return LOCAL.sizes;try{return JSON.parse(localStorage.getItem("impo-sizes")||"[]")}catch(e){return []}}
+function saveSizes(a){if(LOCAL){LOCAL.sizes=a;LOCAL.post("/api/sizes",a);return}try{localStorage.setItem("impo-sizes",JSON.stringify(a))}catch(e){}}
 function renderSizes(){var a=loadSizes(),sel=$("sheet-sel");sel.innerHTML='<option value="">저장한 크기에서 고르기'+(a.length?" ("+a.length+")":"")+'</option>'+a.map(function(x,i){return '<option value="'+i+'">'+x.name+" — "+x.w+"×"+x.h+"</option>"}).join("")}
 $("sheet-sel").addEventListener("change",function(){var x=loadSizes()[+this.value];if(x){$("sw").value=x.w;$("sh").value=x.h;render()}});
 $("sheet-save").addEventListener("click",function(){var name=$("sheet-name").value.trim();if(!name){alert("종이 크기 이름을 적어주세요.");$("sheet-name").focus();return}var a=loadSizes();var i=a.findIndex(function(x){return x.name===name});var it={name:name,w:$("sw").value,h:$("sh").value};if(i>=0)a[i]=it;else a.push(it);saveSizes(a);renderSizes();$("sheet-sel").value=String(i>=0?i:a.length-1);$("sheet-name").value="";toast("'"+name+" "+it.w+"×"+it.h+"' 저장")});
@@ -425,7 +426,7 @@ function render(){
   var over=!fit&&(blockW+2*g.m>g.W+0.01||blockH+2*g.m>g.H+0.01);
   var needBk=two&&!(S.back&&S.back.pages);
   $("warn").hidden=!over&&!!S.pages&&!needBk;
-  $("warn").textContent=!S.pages?"원본 PDF를 먼저 열어주세요. (미리보기에서는 위 상자를 클릭하면 예시 파일이 열립니다)":needBk?"뒷면 PDF를 열어주세요. (왼쪽 '뒷면 PDF 열기' — 미리보기에서는 누르면 1페이지 예시 파일이 열립니다)":over?"배치 묶음("+blockW.toFixed(1)+"×"+blockH.toFixed(1)+")이 종이("+g.W+"×"+g.H+")보다 큽니다. 판을 키우거나 배열을 줄이거나 크기를 '칸에 맞게 축소/확대' 또는 배율을 낮춰 주세요.":"";
+  $("warn").textContent=!S.pages?(LOCAL?"원본 PDF를 먼저 열어주세요.":"원본 PDF를 먼저 열어주세요. (미리보기에서는 위 상자를 클릭하면 예시 파일이 열립니다)"):needBk?(LOCAL?"뒷면 PDF를 열어주세요. (왼쪽 '뒷면 PDF 열기')":"뒷면 PDF를 열어주세요. (왼쪽 '뒷면 PDF 열기' — 미리보기에서는 누르면 1페이지 예시 파일이 열립니다)"):over?"배치 묶음("+blockW.toFixed(1)+"×"+blockH.toFixed(1)+")이 종이("+g.W+"×"+g.H+")보다 큽니다. 판을 키우거나 배열을 줄이거나 크기를 '칸에 맞게 축소/확대' 또는 배율을 낮춰 주세요.":"";
   $("stats").innerHTML=S.pages?(two&&S.back?"앞면 <b>"+S.pages+"p</b> + 뒷면 <b>"+S.back.pages+"p</b>"+((S.back.pages===1||S.pages===1)&&$("bk-dup").checked?" (1p 쪽 반복)":""):"원본 <b>"+S.pages+"p</b>")+" · 판 <b>"+total+"장</b>"+(duplex?" (양면 "+(total*2)+"면)":"")+(bk?" · 책자 <b>"+(Math.ceil(S.pages/4)*4)+"p</b>"+(Math.ceil(S.pages/4)*4>S.pages?" (빈 "+(Math.ceil(S.pages/4)*4-S.pages)+"p)":"")+(num("creep")>0?" · 밀림 보정 최대 "+(num("creep")*(total-1)).toFixed(1)+"mm":""):"")+" · 인쇄 <b>"+useW.toFixed(1)+"×"+useH.toFixed(1)+"</b> mm · 묶음 <b>"+blockW.toFixed(1)+"×"+blockH.toFixed(1)+"</b>"+(sc<0.999?" · 축소 "+(sc*100).toFixed(0)+"%":sc>1.001?" · 확대 "+(sc*100).toFixed(0)+"%":""):"";
 
   // 판 그리기 (화면 비율) — 단면이면 앞면 한 장, 양면이면 앞면·뒷면 나란히
@@ -477,7 +478,7 @@ function render(){
 }
 ["cut-dir","cut-n","cut-order","cut-ov","cut-range","even-rev","oe-pad","m-rev","m-pad","m-dup","dup-page","dup-n","rot-target","rot-range","rot-deg"].forEach(function(id){$(id).addEventListener("input",render);$(id).addEventListener("change",render)});
 S.fileB=null;S.pagesB=0;
-$("m-drop").addEventListener("click",function(){S.fileB="뒷면_공통.pdf";S.pagesB=1;$("m-b").textContent=S.fileB+" · 1p  ";$("m-b").hidden=false;$("m-drop").textContent="찾아보기...";render()});
+$("m-drop").addEventListener("click",function(){if(LOCAL){LOCAL.pick("mergeB");return}S.fileB="뒷면_공통.pdf";S.pagesB=1;$("m-b").textContent=S.fileB+" · 1p  ";$("m-b").hidden=false;$("m-drop").textContent="찾아보기...";render()});
 function pgBox(a,cls){return a.slice(0,48).map(function(x){return "<span class='"+(x?cls||"":"blank")+"'>"+(x||"빈")+"</span>"}).join("")+(a.length>48?"<span class='blank'>…</span>":"")}
 function renderTool(){
   var n=S.pages,box=document.querySelector(".sheetwrap"),el=$("sheet");el.innerHTML="";el.style.boxShadow="none";el.style.background="transparent";el.style.width="";el.style.height="";
@@ -545,20 +546,20 @@ window.addEventListener("resize",render);
 var FIELDS=["sw","sh","cols","rows","pw","ph","margin","gap","gapy","offx","offy","offx2","offy2","off-same","align","nup-mode","bleed","marks","center","duplex","scale","scale-pct","sides","bk-dup","bk-pad","pad-pos","creep","rot-back","rot-page","cut-dir","cut-n","cut-order","cut-ov","cut-range","even-rev","oe-pad","m-rev","m-pad","m-dup","dup-page","dup-n","rot-target","rot-range","rot-deg"];
 function snapshot(){var o={type:S.type,slotRot:S.slotRot};FIELDS.forEach(function(id){var e=$(id);o[id]=e.type==="checkbox"?e.checked:e.value});return o}
 function apply(o){S.type=o.type;S.slotRot=(o.slotRot&&o.slotRot.f)?o.slotRot:{f:{},b:{}};[].forEach.call($("types").children,function(x){x.classList.toggle("on",x.getAttribute("data-t")===o.type)});FIELDS.forEach(function(id){var e=$(id);if(o[id]===undefined)return;if(e.type==="checkbox")e.checked=!!o[id];else e.value=o[id]});$("sheet-sel").value="";S.sheet=0;render()}
-function loadPresets(){try{return JSON.parse(localStorage.getItem("impo-presets")||"null")||seed()}catch(e){return seed()}}
+function loadPresets(){if(LOCAL)return LOCAL.presets;try{return JSON.parse(localStorage.getItem("impo-presets")||"null")||seed()}catch(e){return seed()}}
 function seed(){return [{name:"명함 SRA3 10업 (90×50)",when:"09.12",cfg:{type:"repeat",sw:"320",sh:"450",cols:"2",rows:"5",pw:"90",ph:"50",margin:"12",gap:"4",bleed:"2",marks:true,center:false,duplex:"long",scale:"fit"}},{name:"A5 중철 SRA3",when:"09.03",cfg:{type:"booklet",sw:"320",sh:"450",cols:"2",rows:"1",pw:"148",ph:"210",margin:"10",gap:"0",bleed:"3",marks:true,center:true,duplex:"long",scale:"fit"}},{name:"A4 내지 컷앤스택 2업",when:"08.28",cfg:{type:"cutstack",sw:"320",sh:"450",cols:"1",rows:"2",pw:"210",ph:"297",margin:"8",gap:"6",bleed:"3",marks:true,center:false,duplex:"long",scale:"fit"}}]}
-function savePresets(p){try{localStorage.setItem("impo-presets",JSON.stringify(p))}catch(e){}}
+function savePresets(p){if(LOCAL){LOCAL.presets=p;LOCAL.post("/api/presets",p);return}try{localStorage.setItem("impo-presets",JSON.stringify(p))}catch(e){}}
 function renderPresets(){var p=loadPresets();$("p-list").innerHTML=p.length?p.map(function(x,i){return '<div class="preset"><b title="'+x.name+'">'+x.name+'</b><small>'+x.when+'</small><button class="btn sm" data-load="'+i+'">불러오기</button><button class="btn sm" data-del="'+i+'" style="color:var(--red)">삭제</button></div>'}).join(""):'<div style="font-size:12px;color:var(--g400);text-align:center;padding:8px">저장된 프리셋이 없습니다</div>';
   $("p-list").querySelectorAll("[data-load]").forEach(function(b){b.addEventListener("click",function(){var x=loadPresets()[+b.getAttribute("data-load")];apply(x.cfg);$("p-name").value=x.name;toast("'"+x.name+"' 불러왔습니다")})});
   $("p-list").querySelectorAll("[data-del]").forEach(function(b){b.addEventListener("click",function(){var p=loadPresets();var x=p[+b.getAttribute("data-del")];if(!confirm("'"+x.name+"' 프리셋을 지울까요?"))return;p.splice(+b.getAttribute("data-del"),1);savePresets(p);renderPresets()})});}
 $("p-save").addEventListener("click",function(){var name=$("p-name").value.trim();if(!name){alert("프리셋 이름을 적어주세요.");$("p-name").focus();return}var p=loadPresets();var d=new Date(),when=(d.getMonth()+1)+"."+String(d.getDate()).padStart(2,"0");var i=p.findIndex(function(x){return x.name===name});if(i>=0){if(!confirm("같은 이름이 있습니다. 덮어쓸까요?"))return;p[i]={name:name,when:when,cfg:snapshot()}}else p.unshift({name:name,when:when,cfg:snapshot()});savePresets(p);renderPresets();toast("저장했습니다")});
 
 /* ---- 저장 시뮬레이션 ---- */
-$("btn-save").addEventListener("click",function(){if(!S.pages){alert("원본 PDF를 먼저 열어주세요.");return}var pr=$("prog");pr.hidden=false;var i=pr.firstElementChild,w=0;$("btn-save").disabled=true;var t=setInterval(function(){w+=7;i.style.width=Math.min(100,w)+"%";if(w>=100){clearInterval(t);$("btn-save").disabled=false;setTimeout(function(){pr.hidden=true;i.style.width="0";toast("저장했습니다. (실제 프로그램에서는 저장 창이 떠서 위치와 이름을 고른 뒤 저장됩니다)")},300)}},120)});
+$("btn-save").addEventListener("click",function(){if(!S.pages){alert("원본 PDF를 먼저 열어주세요.");return}if(LOCAL){LOCAL.save();return}var pr=$("prog");pr.hidden=false;var i=pr.firstElementChild,w=0;$("btn-save").disabled=true;var t=setInterval(function(){w+=7;i.style.width=Math.min(100,w)+"%";if(w>=100){clearInterval(t);$("btn-save").disabled=false;setTimeout(function(){pr.hidden=true;i.style.width="0";toast("저장했습니다. (실제 프로그램에서는 저장 창이 떠서 위치와 이름을 고른 뒤 저장됩니다)")},300)}},120)});
 $("btn-open").addEventListener("click",function(){toast("저장 폴더를 엽니다 (실제 프로그램)")});
 function toast(m){var t=document.createElement("div");t.textContent=m;t.style.cssText="position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#1e293b;color:#fff;padding:9px 16px;border-radius:6px;font-size:13px;z-index:9;box-shadow:0 8px 24px rgba(0,0,0,.25)";document.body.appendChild(t);setTimeout(function(){t.remove()},2200)}
 
-renderPresets();openFile("2026_졸업작품_도록_최종.pdf",96,210,297,486);$("scale").value="none";render();
+renderPresets();if(LOCAL){LOCAL.bind({S:S,openFile:openFile,openBack:openBack,snapshot:snapshot,apply:apply,render:render,toast:toast});$("scale").value="none";LOCAL.ready();render()}else{openFile("2026_졸업작품_도록_최종.pdf",96,210,297,486);$("scale").value="none";render()}
 })();
 </script>
 
