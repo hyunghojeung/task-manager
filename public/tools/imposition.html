@@ -134,9 +134,9 @@ input[type=number]{width:56px;text-align:right}
       <div class="card">
         <h3>2. 조판 종류</h3>
         <div class="types" id="types">
-          <button data-t="repeat">N업</button>
+          <button data-t="repeat" class="on">N업</button>
           <button data-t="cutstack">컷앤스택</button>
-          <button data-t="booklet" class="on">중철 책자</button>
+          <button data-t="booklet">중철 책자</button>
           <button data-t="split" class="tool">페이지 자르기</button>
           <button data-t="oddeven" class="tool">홀·짝 나누기</button>
           <button data-t="merge" class="tool">홀·짝 합치기</button>
@@ -291,7 +291,7 @@ input[type=number]{width:56px;text-align:right}
 <script>
 (function(){
 var $=function(i){return document.getElementById(i)};
-var S={type:"booklet",file:null,pages:0,srcW:210,srcH:297,side:"f",sheet:0,slotRot:{f:{},b:{}},back:null};
+var S={type:"repeat",file:null,pages:0,srcW:210,srcH:297,side:"f",sheet:0,slotRot:{f:{},b:{}},back:null};
 function twoFiles(){return S.type==="cutstack"&&$("duplex").value!=="single"&&$("sides").value==="two"}
 function openBack(name,pages,w,h,mb){S.back={name:name,pages:pages};$("bk-name").textContent=name;$("bk-sub").textContent=pages+"페이지 · "+w+"×"+h+" mm · "+mb+" MB";$("bk-info").hidden=false;$("bk-drop").hidden=true;S.sheet=0;render()}
 $("bk-drop").addEventListener("click",function(){openBack("졸업작품_도록_뒷면공통.pdf",1,210,297,3)});
