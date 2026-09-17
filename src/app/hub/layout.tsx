@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { redirect } from "next/navigation";
+import { getCompanyFeatures } from "@/lib/features";
 import { getSession } from "@/lib/session";
 import { getSupabase } from "@/lib/supabase-admin";
 import Header from "@/components/Header";
@@ -46,7 +47,7 @@ export default async function HubLayout({
     .eq("id", session.user.id)
     .maybeSingle();
 
-  if (!hubUser?.hub_enabled) {
+  if (!hubUser?.hub_enabled || !(await getCompanyFeatures(session.company.id)).hub) {
     redirect("/dashboard");
   }
 

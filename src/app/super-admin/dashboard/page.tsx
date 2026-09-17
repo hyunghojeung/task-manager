@@ -19,6 +19,7 @@ interface CompanyData {
   business_category: string;
   password: string;
   status: string;
+  feat_hub?: boolean;
   feat_imposition?: boolean;
   feat_taekbae?: boolean;
   feat_sales?: boolean;
@@ -89,7 +90,7 @@ export default function SuperAdminDashboard() {
   }
 
   // 업체별 기능 켜기/끄기 (임포지션·송장변환·매출리스트) — 켜 준 업체에만 메뉴가 보인다
-  async function toggleFeature(c: CompanyData, key: "feat_imposition" | "feat_taekbae" | "feat_sales") {
+  async function toggleFeature(c: CompanyData, key: "feat_hub" | "feat_imposition" | "feat_taekbae" | "feat_sales") {
     await fetch(`/api/admin/companies/${c.id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
@@ -98,8 +99,8 @@ export default function SuperAdminDashboard() {
     refreshList();
   }
   function featureButtons(c: CompanyData) {
-    const items: { key: "feat_imposition" | "feat_taekbae" | "feat_sales"; label: string }[] = [
-      { key: "feat_imposition", label: "임포지션" }, { key: "feat_taekbae", label: "송장변환" }, { key: "feat_sales", label: "매출" },
+    const items: { key: "feat_hub" | "feat_imposition" | "feat_taekbae" | "feat_sales"; label: string }[] = [
+      { key: "feat_hub", label: "업무관리" }, { key: "feat_imposition", label: "임포지션" }, { key: "feat_taekbae", label: "송장변환" }, { key: "feat_sales", label: "매출" },
     ];
     return (
       <span className="whitespace-nowrap">
@@ -353,7 +354,7 @@ export default function SuperAdminDashboard() {
         ))}
       </div>
 
-      <div className="max-w-6xl mx-auto p-6">
+      <div className="max-w-[1600px] mx-auto p-6">
         {tab === "dashboard" && (
           <>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">

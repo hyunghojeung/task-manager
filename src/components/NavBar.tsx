@@ -2,15 +2,15 @@
 
 import { usePathname } from "next/navigation";
 
-export default function NavBar({ role, hubEnabled, features }: { role?: string; hubEnabled?: boolean; features?: { imposition: boolean; taekbae: boolean; sales: boolean } }) {
+export default function NavBar({ role, hubEnabled, features }: { role?: string; hubEnabled?: boolean; features?: { hub: boolean; imposition: boolean; taekbae: boolean; sales: boolean } }) {
   // 임포지션·송장변환·매출리스트는 최고관리자가 켜 준 업체에만 보인다
-  const f = features || { imposition: false, taekbae: false, sales: false };
+  const f = features || { hub: false, imposition: false, taekbae: false, sales: false };
   const pathname = usePathname();
 
   const links: Array<{ href: string; label: string; color: string; text?: string; external?: boolean }> = [
     ...(f.imposition ? [{ href: "/dashboard/imposition", label: "Bcount 임포지션", color: "bg-slate-700 hover:bg-slate-800" }] : []),
-    // 업무관리: 관리자가 사용자별로 켜 준 사람에게만 보인다
-    ...(hubEnabled
+    // 업무관리: 최고관리자가 업체에 켜 주고, 관리자가 사용자별로 켜 준 사람에게만 보인다
+    ...(f.hub && hubEnabled
       ? [{ href: "/hub", label: "업무관리", color: "bg-[#FEE500] hover:bg-[#f2da00]", text: "text-[#191919] font-bold" }]
       : []),
     ...(f.taekbae ? [{ href: "/dashboard/taekbae", label: "송장변환", color: "bg-amber-500 hover:bg-amber-600" }] : []),
