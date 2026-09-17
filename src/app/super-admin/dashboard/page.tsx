@@ -22,6 +22,7 @@ interface CompanyData {
   feat_imposition?: boolean;
   feat_taekbae?: boolean;
   feat_sales?: boolean;
+  last_login_at?: string | null;
   user_count: number;
   order_count: number;
   memo_count: number;
@@ -325,6 +326,8 @@ export default function SuperAdminDashboard() {
   const inactiveCount = companies.filter(c => c.status !== "active").length;
   const totalUsers = companies.reduce((sum, c) => sum + (c.user_count || 0), 0);
 
+  // 최종 접속: 로그인 기록. 기록이 없던 업체는 마지막 활동(작업·발주서·메모) 시각으로 채워져 있다
+  const lastLogin = (iso?: string | null) => iso ? new Date(iso).toLocaleString("sv-SE", { timeZone: "Asia/Seoul" }).slice(0, 16) : "-";
   const statusBadge = (s: string) => {
     if (s === "active") return <span className="bg-green-100 text-green-800 px-2 py-0.5 rounded-full text-xs">활성</span>;
     if (s === "inactive") return <span className="bg-red-100 text-red-800 px-2 py-0.5 rounded-full text-xs">비활성</span>;
@@ -372,7 +375,7 @@ export default function SuperAdminDashboard() {
                 <div className="overflow-x-auto">
                   <table className="w-full border-collapse text-xs border border-gray-300">
                     <thead><tr className="bg-slate-900 text-white">
-                      <th className="border border-slate-700 px-2 py-2.5">순번</th><th className="border border-slate-700 px-2 py-2.5">업체ID</th><th className="border border-slate-700 px-2 py-2.5">업체명</th><th className="border border-slate-700 px-2 py-2.5">대표자</th><th className="border border-slate-700 px-2 py-2.5">연락처</th><th className="border border-slate-700 px-2 py-2.5">등록일</th><th className="border border-slate-700 px-2 py-2.5">상태</th><th className="border border-slate-700 px-2 py-2.5">사용자</th><th className="border border-slate-700 px-2 py-2.5">기능</th><th className="border border-slate-700 px-2 py-2.5">관리</th>
+                      <th className="border border-slate-700 px-2 py-2.5">순번</th><th className="border border-slate-700 px-2 py-2.5">업체ID</th><th className="border border-slate-700 px-2 py-2.5">업체명</th><th className="border border-slate-700 px-2 py-2.5">대표자</th><th className="border border-slate-700 px-2 py-2.5">연락처</th><th className="border border-slate-700 px-2 py-2.5">등록일</th><th className="border border-slate-700 px-2 py-2.5">최종접속</th><th className="border border-slate-700 px-2 py-2.5">상태</th><th className="border border-slate-700 px-2 py-2.5">사용자</th><th className="border border-slate-700 px-2 py-2.5">기능</th><th className="border border-slate-700 px-2 py-2.5">관리</th>
                     </tr></thead>
                     <tbody>
                       {companies.map((c, i) => (
@@ -383,6 +386,7 @@ export default function SuperAdminDashboard() {
                           <td className="border border-gray-200 px-2 py-2 text-center">{c.representative}</td>
                           <td className="border border-gray-200 px-2 py-2 text-center">{c.phone}</td>
                           <td className="border border-gray-200 px-2 py-2 text-center">{c.created_at?.slice(0, 10)}</td>
+                          <td className="border border-gray-200 px-2 py-2 text-center whitespace-nowrap">{lastLogin(c.last_login_at)}</td>
                           <td className="border border-gray-200 px-2 py-2 text-center">{statusBadge(c.status)}</td>
                           <td className="border border-gray-200 px-2 py-2 text-center">{c.user_count}명</td>
                           <td className="border border-gray-200 px-2 py-2 text-center">{featureButtons(c)}</td>
@@ -414,7 +418,7 @@ export default function SuperAdminDashboard() {
               <div className="overflow-x-auto">
                 <table className="w-full border-collapse text-xs border border-gray-300">
                   <thead><tr className="bg-slate-900 text-white">
-                    <th className="border border-slate-700 px-2 py-2.5">순번</th><th className="border border-slate-700 px-2 py-2.5">업체ID</th><th className="border border-slate-700 px-2 py-2.5">업체코드</th><th className="border border-slate-700 px-2 py-2.5">업체명</th><th className="border border-slate-700 px-2 py-2.5">사업자번호</th><th className="border border-slate-700 px-2 py-2.5">대표자</th><th className="border border-slate-700 px-2 py-2.5">등록일</th><th className="border border-slate-700 px-2 py-2.5">상태</th><th className="border border-slate-700 px-2 py-2.5">사용자</th><th className="border border-slate-700 px-2 py-2.5">기능</th><th className="border border-slate-700 px-2 py-2.5">작업리스트</th><th className="border border-slate-700 px-2 py-2.5">메모</th><th className="border border-slate-700 px-2 py-2.5">발주서</th><th className="border border-slate-700 px-2 py-2.5">관리</th>
+                    <th className="border border-slate-700 px-2 py-2.5">순번</th><th className="border border-slate-700 px-2 py-2.5">업체ID</th><th className="border border-slate-700 px-2 py-2.5">업체코드</th><th className="border border-slate-700 px-2 py-2.5">업체명</th><th className="border border-slate-700 px-2 py-2.5">사업자번호</th><th className="border border-slate-700 px-2 py-2.5">대표자</th><th className="border border-slate-700 px-2 py-2.5">등록일</th><th className="border border-slate-700 px-2 py-2.5">최종접속</th><th className="border border-slate-700 px-2 py-2.5">상태</th><th className="border border-slate-700 px-2 py-2.5">사용자</th><th className="border border-slate-700 px-2 py-2.5">기능</th><th className="border border-slate-700 px-2 py-2.5">작업리스트</th><th className="border border-slate-700 px-2 py-2.5">메모</th><th className="border border-slate-700 px-2 py-2.5">발주서</th><th className="border border-slate-700 px-2 py-2.5">관리</th>
                   </tr></thead>
                   <tbody>
                     {companies.map((c, i) => (
@@ -426,6 +430,7 @@ export default function SuperAdminDashboard() {
                         <td className="border border-gray-200 px-2 py-2 text-center">{c.business_number}</td>
                         <td className="border border-gray-200 px-2 py-2 text-center">{c.representative}</td>
                         <td className="border border-gray-200 px-2 py-2 text-center">{c.created_at?.slice(0, 10)}</td>
+                          <td className="border border-gray-200 px-2 py-2 text-center whitespace-nowrap">{lastLogin(c.last_login_at)}</td>
                         <td className="border border-gray-200 px-2 py-2 text-center">{statusBadge(c.status)}</td>
                         <td className="border border-gray-200 px-2 py-2 text-center">{c.user_count}명</td>
                         <td className="border border-gray-200 px-2 py-2 text-center">{featureButtons(c)}</td>

@@ -55,6 +55,13 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  // 최종 접속일 기록 (업체·사용자)
+  const now = new Date().toISOString();
+  await Promise.all([
+    getSupabase().from("companies").update({ last_login_at: now }).eq("id", company.id),
+    getSupabase().from("users").update({ last_login_at: now }).eq("id", user.id),
+  ]);
+
   // 3. 세션 쿠키 설정
   const sessionData = JSON.stringify({
     company: {

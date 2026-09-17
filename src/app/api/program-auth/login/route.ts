@@ -23,6 +23,11 @@ export async function POST(request: NextRequest) {
   const { data: user } = await supabase.from("users").select("id, user_id, name, role").eq("company_id", company.id).eq("user_id", userId).eq("password", password).maybeSingle();
   if (!user) return NextResponse.json({ error: "아이디 또는 비밀번호가 올바르지 않습니다." }, { status: 401 });
 
+  const now = new Date().toISOString();
+  await Promise.all([
+    supabase.from("companies").update({ last_login_at: now }).eq("id", company.id),
+    supabase.from("users").update({ last_login_at: now }).eq("id", user.id),
+  ]);
   const token = newToken();
   const { error } = await supabase.from("program_tokens").insert({ token_hash: hashToken(token), user_id: user.id, company_id: company.id, program: "imposition", device });
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
