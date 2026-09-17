@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 
-type Tab = "notice" | "users" | "category" | "client" | "supplier" | "template" | "company" | "import" | "shop";
+type Tab = "notice" | "users" | "category" | "client" | "supplier" | "template" | "company" | "import" | "shop" | "program";
 
 export default function AdminPage() {
   const [tab, setTab] = useState<Tab>("notice");
@@ -10,7 +10,7 @@ export default function AdminPage() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const t = params.get("tab") as Tab;
-    if (t && ["notice","users","category","client","supplier","template","company","import","shop"].includes(t)) {
+    if (t && ["notice","users","category","client","supplier","template","company","import","shop","program"].includes(t)) {
       setTab(t);
     }
   }, []);
@@ -19,7 +19,7 @@ export default function AdminPage() {
     { key: "category", label: "카테고리관리" }, { key: "client", label: "거래처관리" },
     { key: "supplier", label: "발주처관리" }, { key: "template", label: "양식폼관리" },
     { key: "company", label: "업체정보설정" }, { key: "import", label: "CSV가져오기" },
-    { key: "shop", label: "쇼핑몰연동" },
+    { key: "shop", label: "쇼핑몰연동" }, { key: "program", label: "프로그램배포" },
   ];
 
   return (
@@ -42,6 +42,7 @@ export default function AdminPage() {
         {tab === "company" && <CompanyTab />}
         {tab === "import" && <ImportTab />}
         {tab === "shop" && <ShopTab />}
+        {tab === "program" && <ProgramTab />}
       </div>
     </div>
   );
@@ -1090,6 +1091,71 @@ function ShopTab() {
             </table>
           </div>
         )}
+      </div>
+    </div>
+  );
+}
+
+// ===== 프로그램 배포 (Bcount 임포지션 exe) =====
+interface Release { key: string; file_name: string; version: string; size_bytes: number; note: string; uploaded_by: string; updated_at: string }
+function ProgramTab() {
+  const [rows, setRows] = useState<Release[]>([]);
+  const [file, setFile] = useState<File | null>(null);
+  const [version, setVersion] = useState("");
+  const [note, setNote] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  const load = useCallback(async () => {
+    const d = await fetch(`/api/program-releases?_=${Date.now()}`).then(r => r.json());
+    setRows(d.data || []);
+  }, []);
+  useEffect(() => { load(); }, [load]);
+
+  async function upload() {
+    if (!file) { alert("exe 파일을 고르세요."); return; }
+    if (!confirm(`${file.name} (${(file.size / 1048576).toFixed(1)} MB)를 올릴까요? 직원들이 "Bcount 임포지션" 화면에서 바로 이 파일을 내려받게 됩니다.`)) return;
+    const fd = new FormData();
+    fd.append("file", file); fd.append("key", "imposition"); fd.append("version", version); fd.append("note", note);
+    setBusy(true);
+    const res = await fetch("/api/program-releases", { method: "POST", body: fd });
+    const d = await res.json().catch(() => ({}));
+    setBusy(false);
+    if (!res.ok) { alert("올리기 실패: " + (d.error || res.status)); return; }
+    alert("올렸습니다."); setFile(null); setVersion(""); setNote(""); load();
+  }
+
+  const fmt = (iso: string) => iso ? new Date(iso).toLocaleString("ko-KR", { timeZone: "Asia/Seoul", hour12: false }) : "-";
+  const cur = rows.find(r => r.key === "imposition");
+
+  return (
+    <div className="bg-white rounded-lg shadow-sm p-6">
+      <h2 className="text-lg font-bold mb-1">프로그램 배포</h2>
+      <p className="text-sm text-gray-500 mb-5">Bcount 임포지션(윈도우 프로그램) 실행 파일을 올려 두면, 로그인한 직원이 &quot;Bcount 임포지션&quot; 화면의 다운로드 버튼으로 받습니다.</p>
+
+      <div className="border border-gray-200 rounded p-4 mb-6 text-sm">
+        <div className="font-bold mb-2">지금 배포 중인 파일</div>
+        {cur ? (
+          <div className="grid grid-cols-[110px_1fr] gap-y-1">
+            <span className="text-gray-500">파일</span><span>{cur.file_name} <span className="text-gray-400">({(cur.size_bytes / 1048576).toFixed(1)} MB)</span></span>
+            <span className="text-gray-500">버전</span><span>{cur.version || "-"}</span>
+            <span className="text-gray-500">올린 사람</span><span>{cur.uploaded_by || "-"}</span>
+            <span className="text-gray-500">올린 때</span><span>{fmt(cur.updated_at)}</span>
+            {cur.note && <><span className="text-gray-500">메모</span><span className="whitespace-pre-wrap">{cur.note}</span></>}
+            <span className="text-gray-500">받기</span><span><a href="/api/program-releases/imposition/download" className="text-blue-600 hover:underline">지금 파일 내려받기</a></span>
+          </div>
+        ) : (
+          <p className="text-gray-500">아직 올린 파일이 없습니다. 이 경우 저장소에 들어 있는 초기 배포본(v1.0.0)이 내려갑니다.</p>
+        )}
+      </div>
+
+      <div className="border border-gray-200 rounded p-4 text-sm">
+        <div className="font-bold mb-3">새 버전 올리기</div>
+        <div className="flex flex-col gap-3 max-w-xl">
+          <label className="flex items-center gap-3"><span className="w-20 text-gray-600">파일</span><input type="file" accept=".exe,.zip,.msi" onChange={e => setFile(e.target.files?.[0] || null)} className="text-sm" /></label>
+          <label className="flex items-center gap-3"><span className="w-20 text-gray-600">버전</span><input value={version} onChange={e => setVersion(e.target.value)} placeholder="예: 1.0.1" className="px-3 py-1.5 border border-gray-300 rounded w-40" /></label>
+          <label className="flex items-start gap-3"><span className="w-20 text-gray-600 pt-1.5">메모</span><textarea value={note} onChange={e => setNote(e.target.value)} placeholder="바뀐 점 (선택)" rows={2} className="px-3 py-1.5 border border-gray-300 rounded flex-1" /></label>
+          <div><button onClick={upload} disabled={busy || !file} className="px-5 py-2 bg-blue-600 text-white rounded font-medium disabled:opacity-50">{busy ? "올리는 중…" : "올리기"}</button></div>
+        </div>
       </div>
     </div>
   );
