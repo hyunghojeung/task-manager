@@ -22,8 +22,8 @@ export async function verifyToken(token: string): Promise<ProgramUser | null> {
   if (!row) return null;
   const { data: user } = await supabase.from("users").select("id, user_id, name, role, company_id").eq("id", row.user_id).maybeSingle();
   if (!user || user.company_id !== row.company_id) return null;
-  const { data: company } = await supabase.from("companies").select("id, company_name, status").eq("id", row.company_id).maybeSingle();
-  if (!company || company.status !== "active") return null;
+  const { data: company } = await supabase.from("companies").select("id, company_name, status, feat_imposition").eq("id", row.company_id).maybeSingle();
+  if (!company || company.status !== "active" || !company.feat_imposition) return null;
   await supabase.from("program_tokens").update({ last_seen_at: new Date().toISOString() }).eq("token_hash", row.token_hash);
   return { user_id: user.user_id, name: user.name, role: user.role, company_name: company.company_name, company_id: company.id };
 }

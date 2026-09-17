@@ -4,6 +4,7 @@ import { getSupabase } from "@/lib/supabase-admin";
 import Header from "@/components/Header";
 import NavBar from "@/components/NavBar";
 import NoticeBar from "@/components/NoticeBar";
+import { getCompanyFeatures } from "@/lib/features";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -52,6 +53,8 @@ export default async function DashboardLayout({
     .eq("id", session.user.id)
     .maybeSingle();
 
+  const features = await getCompanyFeatures(session.company.id);
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Header
@@ -66,7 +69,7 @@ export default async function DashboardLayout({
         impersonated={session.impersonated}
       />
       <NoticeBar notices={notices || []} />
-      <NavBar role={session.user.role} hubEnabled={hubUser?.hub_enabled ?? false} />
+      <NavBar role={session.user.role} hubEnabled={hubUser?.hub_enabled ?? false} features={features} />
       <main className="p-4 md:p-6">{children}</main>
     </div>
   );

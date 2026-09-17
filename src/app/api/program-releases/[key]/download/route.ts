@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabase } from "@/lib/supabase-admin";
 import { getApiSession, unauthorized } from "@/lib/api-helpers";
+import { getCompanyFeatures } from "@/lib/features";
 
 const BUCKET = "downloads";
 // Storage에 올린 것이 없을 때의 예비 파일 (저장소에 함께 들어 있는 초기 배포본)
@@ -12,6 +13,9 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ key
   const session = await getApiSession();
   if (!session) return unauthorized();
   const { key } = await params;
+  if (key === "imposition" && !(await getCompanyFeatures(session.company.id)).imposition) {
+    return NextResponse.json({ error: "이 업체는 임포지션 기능을 사용할 수 없습니다." }, { status: 403 });
+  }
   const supabase = getSupabase();
   const { data } = await supabase.from("program_releases").select("storage_path, file_name").eq("key", key).maybeSingle();
   if (data?.storage_path) {

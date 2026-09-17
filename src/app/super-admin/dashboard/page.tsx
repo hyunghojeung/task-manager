@@ -19,6 +19,9 @@ interface CompanyData {
   business_category: string;
   password: string;
   status: string;
+  feat_imposition?: boolean;
+  feat_taekbae?: boolean;
+  feat_sales?: boolean;
   user_count: number;
   order_count: number;
   memo_count: number;
@@ -82,6 +85,31 @@ export default function SuperAdminDashboard() {
     } finally {
       setSubmitting(false);
     }
+  }
+
+  // 업체별 기능 켜기/끄기 (임포지션·송장변환·매출리스트) — 켜 준 업체에만 메뉴가 보인다
+  async function toggleFeature(c: CompanyData, key: "feat_imposition" | "feat_taekbae" | "feat_sales") {
+    await fetch(`/api/admin/companies/${c.id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ [key]: !c[key] }),
+    });
+    refreshList();
+  }
+  function featureButtons(c: CompanyData) {
+    const items: { key: "feat_imposition" | "feat_taekbae" | "feat_sales"; label: string }[] = [
+      { key: "feat_imposition", label: "임포지션" }, { key: "feat_taekbae", label: "송장변환" }, { key: "feat_sales", label: "매출" },
+    ];
+    return (
+      <span className="whitespace-nowrap">
+        {items.map(it => (
+          <button key={it.key} onClick={() => toggleFeature(c, it.key)} title={c[it.key] ? "켜짐 — 누르면 끔" : "꺼짐 — 누르면 켬"}
+            className={`px-1.5 py-0.5 rounded text-[11px] mr-1 border ${c[it.key] ? "bg-emerald-600 text-white border-emerald-600" : "text-gray-400 border-gray-300"}`}>
+            {it.label}
+          </button>
+        ))}
+      </span>
+    );
   }
 
   async function handleStatusChange(id: string, newStatus: string) {
@@ -344,7 +372,7 @@ export default function SuperAdminDashboard() {
                 <div className="overflow-x-auto">
                   <table className="w-full border-collapse text-xs border border-gray-300">
                     <thead><tr className="bg-slate-900 text-white">
-                      <th className="border border-slate-700 px-2 py-2.5">순번</th><th className="border border-slate-700 px-2 py-2.5">업체ID</th><th className="border border-slate-700 px-2 py-2.5">업체명</th><th className="border border-slate-700 px-2 py-2.5">대표자</th><th className="border border-slate-700 px-2 py-2.5">연락처</th><th className="border border-slate-700 px-2 py-2.5">등록일</th><th className="border border-slate-700 px-2 py-2.5">상태</th><th className="border border-slate-700 px-2 py-2.5">사용자</th><th className="border border-slate-700 px-2 py-2.5">관리</th>
+                      <th className="border border-slate-700 px-2 py-2.5">순번</th><th className="border border-slate-700 px-2 py-2.5">업체ID</th><th className="border border-slate-700 px-2 py-2.5">업체명</th><th className="border border-slate-700 px-2 py-2.5">대표자</th><th className="border border-slate-700 px-2 py-2.5">연락처</th><th className="border border-slate-700 px-2 py-2.5">등록일</th><th className="border border-slate-700 px-2 py-2.5">상태</th><th className="border border-slate-700 px-2 py-2.5">사용자</th><th className="border border-slate-700 px-2 py-2.5">기능</th><th className="border border-slate-700 px-2 py-2.5">관리</th>
                     </tr></thead>
                     <tbody>
                       {companies.map((c, i) => (
@@ -357,6 +385,7 @@ export default function SuperAdminDashboard() {
                           <td className="border border-gray-200 px-2 py-2 text-center">{c.created_at?.slice(0, 10)}</td>
                           <td className="border border-gray-200 px-2 py-2 text-center">{statusBadge(c.status)}</td>
                           <td className="border border-gray-200 px-2 py-2 text-center">{c.user_count}명</td>
+                          <td className="border border-gray-200 px-2 py-2 text-center">{featureButtons(c)}</td>
                           <td className="border border-gray-200 px-2 py-2 text-center whitespace-nowrap">
                             <button onClick={()=>openEdit(c)} className="text-blue-600 border border-blue-600 px-2 py-0.5 rounded text-xs mr-1">수정</button>
                             <button onClick={()=>handleStatusChange(c.id, c.status==="active"?"inactive":"active")} className={`px-2 py-0.5 rounded text-xs mr-1 border ${c.status==="active"?"text-red-600 border-red-600":"text-emerald-600 border-emerald-600"}`}>{c.status==="active"?"정지":"활성"}</button>
@@ -385,7 +414,7 @@ export default function SuperAdminDashboard() {
               <div className="overflow-x-auto">
                 <table className="w-full border-collapse text-xs border border-gray-300">
                   <thead><tr className="bg-slate-900 text-white">
-                    <th className="border border-slate-700 px-2 py-2.5">순번</th><th className="border border-slate-700 px-2 py-2.5">업체ID</th><th className="border border-slate-700 px-2 py-2.5">업체코드</th><th className="border border-slate-700 px-2 py-2.5">업체명</th><th className="border border-slate-700 px-2 py-2.5">사업자번호</th><th className="border border-slate-700 px-2 py-2.5">대표자</th><th className="border border-slate-700 px-2 py-2.5">등록일</th><th className="border border-slate-700 px-2 py-2.5">상태</th><th className="border border-slate-700 px-2 py-2.5">사용자</th><th className="border border-slate-700 px-2 py-2.5">작업리스트</th><th className="border border-slate-700 px-2 py-2.5">메모</th><th className="border border-slate-700 px-2 py-2.5">발주서</th><th className="border border-slate-700 px-2 py-2.5">관리</th>
+                    <th className="border border-slate-700 px-2 py-2.5">순번</th><th className="border border-slate-700 px-2 py-2.5">업체ID</th><th className="border border-slate-700 px-2 py-2.5">업체코드</th><th className="border border-slate-700 px-2 py-2.5">업체명</th><th className="border border-slate-700 px-2 py-2.5">사업자번호</th><th className="border border-slate-700 px-2 py-2.5">대표자</th><th className="border border-slate-700 px-2 py-2.5">등록일</th><th className="border border-slate-700 px-2 py-2.5">상태</th><th className="border border-slate-700 px-2 py-2.5">사용자</th><th className="border border-slate-700 px-2 py-2.5">기능</th><th className="border border-slate-700 px-2 py-2.5">작업리스트</th><th className="border border-slate-700 px-2 py-2.5">메모</th><th className="border border-slate-700 px-2 py-2.5">발주서</th><th className="border border-slate-700 px-2 py-2.5">관리</th>
                   </tr></thead>
                   <tbody>
                     {companies.map((c, i) => (
@@ -399,6 +428,7 @@ export default function SuperAdminDashboard() {
                         <td className="border border-gray-200 px-2 py-2 text-center">{c.created_at?.slice(0, 10)}</td>
                         <td className="border border-gray-200 px-2 py-2 text-center">{statusBadge(c.status)}</td>
                         <td className="border border-gray-200 px-2 py-2 text-center">{c.user_count}명</td>
+                        <td className="border border-gray-200 px-2 py-2 text-center">{featureButtons(c)}</td>
                         <td className="border border-gray-200 px-2 py-2 text-center"><button onClick={() => impersonate(c.company_id, "/dashboard")} className="text-blue-600 hover:underline font-bold">{c.order_count || 0}</button></td>
                         <td className="border border-gray-200 px-2 py-2 text-center"><button onClick={() => impersonate(c.company_id, "/dashboard/memo")} className="text-blue-600 hover:underline font-bold">{c.memo_count || 0}</button></td>
                         <td className="border border-gray-200 px-2 py-2 text-center"><button onClick={() => impersonate(c.company_id, "/dashboard/orders")} className="text-blue-600 hover:underline font-bold">{c.po_count || 0}</button></td>

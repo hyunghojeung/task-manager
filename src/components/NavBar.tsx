@@ -2,22 +2,24 @@
 
 import { usePathname } from "next/navigation";
 
-export default function NavBar({ role, hubEnabled }: { role?: string; hubEnabled?: boolean }) {
+export default function NavBar({ role, hubEnabled, features }: { role?: string; hubEnabled?: boolean; features?: { imposition: boolean; taekbae: boolean; sales: boolean } }) {
+  // 임포지션·송장변환·매출리스트는 최고관리자가 켜 준 업체에만 보인다
+  const f = features || { imposition: false, taekbae: false, sales: false };
   const pathname = usePathname();
 
   const links: Array<{ href: string; label: string; color: string; text?: string; external?: boolean }> = [
-    { href: "/dashboard/imposition", label: "Bcount 임포지션", color: "bg-slate-700 hover:bg-slate-800" },
+    ...(f.imposition ? [{ href: "/dashboard/imposition", label: "Bcount 임포지션", color: "bg-slate-700 hover:bg-slate-800" }] : []),
     // 업무관리: 관리자가 사용자별로 켜 준 사람에게만 보인다
     ...(hubEnabled
       ? [{ href: "/hub", label: "업무관리", color: "bg-[#FEE500] hover:bg-[#f2da00]", text: "text-[#191919] font-bold" }]
       : []),
-    { href: "/dashboard/taekbae", label: "송장변환", color: "bg-amber-500 hover:bg-amber-600" },
+    ...(f.taekbae ? [{ href: "/dashboard/taekbae", label: "송장변환", color: "bg-amber-500 hover:bg-amber-600" }] : []),
     { href: "/dashboard", label: "작업리스트", color: "bg-blue-600 hover:bg-blue-700" },
     { href: "/dashboard/write", label: "작업등록", color: "bg-blue-600 hover:bg-blue-700" },
     { href: "/dashboard/estimates", label: "견적서", color: "bg-purple-600 hover:bg-purple-700" },
     { href: "/dashboard/orders", label: "발주서", color: "bg-gray-700 hover:bg-gray-800" },
     { href: "/dashboard/memo", label: "업무용메모", color: "bg-emerald-600 hover:bg-emerald-700" },
-    ...(role === "super_admin"
+    ...(role === "super_admin" && f.sales
       ? [{ href: "/dashboard/sales", label: "매출리스트", color: "bg-rose-600 hover:bg-rose-700" }]
       : []),
   ];

@@ -15,9 +15,10 @@ export async function POST(request: NextRequest) {
   if (!companyId || !userId || !password) return NextResponse.json({ error: "업체ID, 아이디, 비밀번호를 모두 입력해주세요." }, { status: 400 });
 
   const supabase = getSupabase();
-  const { data: companies } = await supabase.from("companies").select("id, company_id, company_name").ilike("company_id", escapeLike(companyId)).eq("status", "active");
+  const { data: companies } = await supabase.from("companies").select("id, company_id, company_name, feat_imposition").ilike("company_id", escapeLike(companyId)).eq("status", "active");
   const company = (companies || []).find((c) => c.company_id.toLowerCase() === companyId.toLowerCase());
   if (!company) return NextResponse.json({ error: "존재하지 않는 업체이거나 비활성 상태입니다." }, { status: 401 });
+  if (!company.feat_imposition) return NextResponse.json({ error: "이 업체는 임포지션 프로그램 사용 권한이 없습니다. Bcount 관리자에게 문의하세요." }, { status: 403 });
 
   const { data: user } = await supabase.from("users").select("id, user_id, name, role").eq("company_id", company.id).eq("user_id", userId).eq("password", password).maybeSingle();
   if (!user) return NextResponse.json({ error: "아이디 또는 비밀번호가 올바르지 않습니다." }, { status: 401 });
