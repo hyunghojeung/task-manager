@@ -122,7 +122,7 @@ input[type=number]{width:56px;text-align:right}
     <div class="side">
       <div class="card">
         <h3>1. 원본 PDF <span class="r" id="f-meta"></span></h3>
-        <div class="drop" id="drop"><button class="winbtn big" type="button" style="pointer-events:none;margin-bottom:6px">PDF 파일 열기...</button><br>또는 여기에 PDF를 끌어다 놓기<br><span style="font-size:11px">수백 MB 파일도 그대로 (원본은 건드리지 않음)</span></div>
+        <div class="drop" id="drop"><button class="winbtn big" type="button" style="pointer-events:none;margin-bottom:6px">PDF 파일 열기...</button><br><span id="drop-note" style="font-size:11px">수백 MB 파일도 그대로 (원본은 건드리지 않음)</span></div>
         <div class="file" id="f-info" hidden><div><b id="f-name"></b><div class="m" id="f-sub"></div></div><div style="display:flex;gap:4px"><button class="winbtn" id="f-change">찾아보기...</button><button class="btn sm" id="f-x">✕</button></div></div>
         <div id="bk-box" hidden style="margin-top:8px;border-top:1px dashed var(--g300);padding-top:8px">
           <div style="font-size:12px;font-weight:700;margin-bottom:4px">뒷면 PDF <span style="font-weight:400;color:var(--g500)">(위 파일이 앞면)</span></div>
@@ -280,21 +280,23 @@ input[type=number]{width:56px;text-align:right}
 /* 프로그램 실행 파일 경로 — 파일이 올라오면 여기에 넣는다 */
 var DOWNLOAD_URL="/api/program-releases/imposition/download";
 var LOCAL=window.BCOUNT_LOCAL||null;if(LOCAL)document.getElementById("dl-btn").hidden=true;
+if(!LOCAL){var dn=document.getElementById("drop-note");if(dn)dn.innerHTML="<b>미리보기 화면</b> — 실제 파일은 위 '프로그램 다운로드'로 받은 프로그램에서 엽니다";}
+function webOpenNotice(){if(confirm("이 화면은 미리보기라서 PC의 PDF를 직접 열 수 없습니다.\n실제 파일 열기·저장은 'Bcount 임포지션 프로그램'(윈도우)에서 합니다.\n\n지금 프로그램을 내려받을까요? (취소하면 예시 파일로 계속 봅니다)")){window.top.location.href=DOWNLOAD_URL;return true}return false}
 document.getElementById("dl-btn").addEventListener("click",function(){if(DOWNLOAD_URL)window.top.location.href=DOWNLOAD_URL;else alert("프로그램 파일이 준비되면 이 버튼으로 바로 내려받습니다.")});
 (function(){
 var $=function(i){return document.getElementById(i)};
 var S={type:"repeat",file:null,pages:0,srcW:210,srcH:297,side:"f",sheet:0,slotRot:{f:{},b:{}},back:null};
 function twoFiles(){return S.type==="cutstack"&&$("duplex").value!=="single"&&$("sides").value==="two"}
 function openBack(name,pages,w,h,mb){S.back={name:name,pages:pages};$("bk-name").textContent=name;$("bk-sub").textContent=pages+"페이지 · "+w+"×"+h+" mm · "+mb+" MB";$("bk-info").hidden=false;$("bk-drop").hidden=true;S.sheet=0;render()}
-$("bk-drop").addEventListener("click",function(){if(LOCAL){LOCAL.pick("back");return}openBack("졸업작품_도록_뒷면공통.pdf",1,210,297,3)});
-$("bk-change").addEventListener("click",function(){if(LOCAL){LOCAL.pick("back");return}openBack("졸업작품_도록_뒷면공통.pdf",1,210,297,3)});
+$("bk-drop").addEventListener("click",function(){if(LOCAL){LOCAL.pick("back");return}if(webOpenNotice())return;openBack("졸업작품_도록_뒷면공통.pdf",1,210,297,3)});
+$("bk-change").addEventListener("click",function(){if(LOCAL){LOCAL.pick("back");return}if(webOpenNotice())return;openBack("졸업작품_도록_뒷면공통.pdf",1,210,297,3)});
 $("bk-x").addEventListener("click",function(){S.back=null;$("bk-info").hidden=true;$("bk-drop").hidden=false;render()});
 var HELP={booklet:"접어서 가운데를 철하는 책자. 페이지 수를 4의 배수로 맞추고(모자라면 빈 페이지) 1·N, 2·N-1 … 순서로 펼침면(2쪽)을 배치합니다. 항상 양면. 회전·배열 항목은 없습니다.",cutstack:"한 판에 여러 페이지를 놓고, 재단한 뒤 그대로 쌓으면 순서가 맞게 배치합니다(무선·하드커버 내지). 열×행을 정하세요.",repeat:"한 판에 열×행만큼 페이지를 놓습니다. '같은 페이지 반복'(명함·스티커) 또는 '순서대로 배열'(1,2,3… 한 판에 여러 페이지)을 고르세요. 양면이면 뒷면은 그다음 페이지들.",split:"펼침면처럼 한 페이지에 두 쪽이 든 PDF를 잘라 낱 페이지로 만듭니다. 96p 펼침면 → 192p.",oddeven:"홀수 페이지와 짝수 페이지를 따로 PDF로 저장합니다. 단면 프린터로 양면 출력할 때.",merge:"두 PDF를 홀수·짝수로 번갈아 끼워 한 파일로 만듭니다. 앞면 100p + 뒷면 1p 처럼 한 쪽이 1페이지면 자동으로 복제해 맞춥니다.",dup:"한 페이지를 원하는 개수만큼 복사해 여러 페이지 PDF로 만듭니다. 뒷면이 모두 같은 인쇄물(명함 뒷면, 안내문 뒷면)에.",rotate:"페이지를 90°·180°·270° 돌립니다. 전체, 홀수만, 짝수만, 또는 범위를 골라서."};
 
 /* ---- 파일 ---- */
-$("drop").addEventListener("click",function(){if(LOCAL){LOCAL.pick("front");return}openFile("2026_졸업작품_도록_최종.pdf",96,210,297,486)});
-$("f-change").addEventListener("click",function(){if(LOCAL){LOCAL.pick("front");return}openFile("행사_리플렛_최종.pdf",12,210,297,38)});
-document.querySelectorAll(".tpick").forEach(function(b){b.addEventListener("click",function(){if(LOCAL){LOCAL.pick("front");return}openFile(S.file?"행사_리플렛_최종.pdf":"2026_졸업작품_도록_최종.pdf",S.file?12:96,210,297,S.file?38:486)})});
+$("drop").addEventListener("click",function(){if(LOCAL){LOCAL.pick("front");return}if(webOpenNotice())return;openFile("2026_졸업작품_도록_최종.pdf",96,210,297,486)});
+$("f-change").addEventListener("click",function(){if(LOCAL){LOCAL.pick("front");return}if(webOpenNotice())return;openFile("행사_리플렛_최종.pdf",12,210,297,38)});
+document.querySelectorAll(".tpick").forEach(function(b){b.addEventListener("click",function(){if(LOCAL){LOCAL.pick("front");return}if(webOpenNotice())return;openFile(S.file?"행사_리플렛_최종.pdf":"2026_졸업작품_도록_최종.pdf",S.file?12:96,210,297,S.file?38:486)})});
 function syncFileLabels(){document.querySelectorAll(".tfile").forEach(function(e){e.textContent=S.file?S.file+" · "+S.pages+"p":""})}
 function openFile(name,pages,w,h,mb){S.file=name;S.pages=pages;S.srcW=w;S.srcH=h;$("f-name").textContent=name;$("f-sub").textContent=pages+"페이지 · "+w+"×"+h+" mm · "+mb+" MB";$("f-info").hidden=false;$("drop").hidden=true;$("f-meta").textContent=pages+"p";$("pw").value=w;$("ph").value=h;S.sheet=0;syncFileLabels();render()}
 $("f-x").addEventListener("click",function(){S.file=null;S.pages=0;$("f-info").hidden=true;$("drop").hidden=false;$("f-meta").textContent="";syncFileLabels();render()});
@@ -478,7 +480,7 @@ function render(){
 }
 ["cut-dir","cut-n","cut-order","cut-ov","cut-range","even-rev","oe-pad","m-rev","m-pad","m-dup","dup-page","dup-n","rot-target","rot-range","rot-deg"].forEach(function(id){$(id).addEventListener("input",render);$(id).addEventListener("change",render)});
 S.fileB=null;S.pagesB=0;
-$("m-drop").addEventListener("click",function(){if(LOCAL){LOCAL.pick("mergeB");return}S.fileB="뒷면_공통.pdf";S.pagesB=1;$("m-b").textContent=S.fileB+" · 1p  ";$("m-b").hidden=false;$("m-drop").textContent="찾아보기...";render()});
+$("m-drop").addEventListener("click",function(){if(LOCAL){LOCAL.pick("mergeB");return}if(webOpenNotice())return;S.fileB="뒷면_공통.pdf";S.pagesB=1;$("m-b").textContent=S.fileB+" · 1p  ";$("m-b").hidden=false;$("m-drop").textContent="찾아보기...";render()});
 function pgBox(a,cls){return a.slice(0,48).map(function(x){return "<span class='"+(x?cls||"":"blank")+"'>"+(x||"빈")+"</span>"}).join("")+(a.length>48?"<span class='blank'>…</span>":"")}
 function renderTool(){
   var n=S.pages,box=document.querySelector(".sheetwrap"),el=$("sheet");el.innerHTML="";el.style.boxShadow="none";el.style.background="transparent";el.style.width="";el.style.height="";
