@@ -15,6 +15,11 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
+  // 로컬 프로그램(Bcount 임포지션) 사용자 확인 API — 프로그램 토큰(Bearer)으로 인증한다
+  if (pathname.startsWith("/api/program-auth/")) {
+    return NextResponse.next();
+  }
+
   // 쇼핑몰 연동 API — 세션 대신 업체 API 키(Bearer)로 인증한다
   if (pathname.startsWith("/api/shop/")) {
     return NextResponse.next();
