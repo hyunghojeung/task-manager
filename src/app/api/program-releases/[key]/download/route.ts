@@ -18,6 +18,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ key
     const { data: signed, error } = await supabase.storage.from(BUCKET).createSignedUrl(data.storage_path, 60 * 10, { download: data.file_name });
     if (!error && signed?.signedUrl) return NextResponse.redirect(signed.signedUrl, 302);
   }
-  if (FALLBACK[key]) return NextResponse.redirect(new URL(FALLBACK[key], _req.url), 302);
+  // 프록시 뒤(Railway)에서는 request.url 이 내부 주소(localhost:8080)라 절대 URL을 만들면 안 된다 → 상대 경로로 보낸다
+  if (FALLBACK[key]) return new NextResponse(null, { status: 302, headers: { Location: FALLBACK[key] } });
   return NextResponse.json({ error: "아직 올라온 프로그램이 없습니다." }, { status: 404 });
 }
