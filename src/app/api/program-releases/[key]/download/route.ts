@@ -6,7 +6,7 @@ import { getCompanyFeatures } from "@/lib/features";
 
 const BUCKET = "downloads";
 // Storage에 올린 것이 없을 때의 예비 파일 (저장소에 함께 들어 있는 초기 배포본)
-const FALLBACK: Record<string, string> = { imposition: "/downloads/BcountImposition.exe" };
+const FALLBACK: Record<string, string> = { imposition: "/downloads/BcountImposition.zip" };
 
 // 내려받기: 로그인한 사용자에게 10분짜리 서명 URL로 보낸다
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ key: string }> }) {

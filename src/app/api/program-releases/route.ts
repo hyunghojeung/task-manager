@@ -11,7 +11,7 @@ const BUCKET = "downloads";
 const MAX_SIZE = 200 * 1024 * 1024;
 const KEYS = ["imposition"] as const;
 
-function fallbackInfo(): { version: string; date?: string; size_bytes?: number; notes?: string } | null {
+function fallbackInfo(): { version: string; date?: string; file?: string; size_bytes?: number; notes?: string } | null {
   try {
     return JSON.parse(readFileSync(path.join(process.cwd(), "public", "downloads", "version.json"), "utf-8"));
   } catch {
@@ -29,7 +29,7 @@ export async function GET() {
   // 관리자가 올린 파일이 없으면 저장소에 든 예비 배포본(public/downloads/version.json)의 버전을 보여 준다
   if (!rows.some((r) => r.key === "imposition")) {
     const fb = fallbackInfo();
-    if (fb) rows.push({ key: "imposition", file_name: "BcountImposition.exe", version: fb.version, size_bytes: fb.size_bytes || 0, note: fb.notes || "", uploaded_by: "저장소 예비 배포본", updated_at: fb.date ? fb.date + "T00:00:00+09:00" : "" });
+    if (fb) rows.push({ key: "imposition", file_name: fb.file || "BcountImposition.zip", version: fb.version, size_bytes: fb.size_bytes || 0, note: fb.notes || "", uploaded_by: "저장소 예비 배포본", updated_at: fb.date ? fb.date + "T00:00:00+09:00" : "" });
   }
   return NextResponse.json({ data: rows });
 }

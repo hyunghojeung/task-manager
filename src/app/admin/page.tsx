@@ -1112,7 +1112,7 @@ function ProgramTab() {
   useEffect(() => { load(); }, [load]);
 
   async function upload() {
-    if (!file) { alert("exe 파일을 고르세요."); return; }
+    if (!file) { alert("배포 파일(zip)을 고르세요."); return; }
     if (!confirm(`${file.name} (${(file.size / 1048576).toFixed(1)} MB)를 올릴까요? 직원들이 "Bcount 임포지션" 화면에서 바로 이 파일을 내려받게 됩니다.`)) return;
     const fd = new FormData();
     fd.append("file", file); fd.append("key", "imposition"); fd.append("version", version); fd.append("note", note);
@@ -1130,7 +1130,7 @@ function ProgramTab() {
   return (
     <div className="bg-white rounded-lg shadow-sm p-6">
       <h2 className="text-lg font-bold mb-1">프로그램 배포</h2>
-      <p className="text-sm text-gray-500 mb-5">Bcount 임포지션(윈도우 프로그램) 실행 파일을 올려 두면, 로그인한 직원이 &quot;Bcount 임포지션&quot; 화면의 다운로드 버튼으로 받습니다.</p>
+      <p className="text-sm text-gray-500 mb-5">Bcount 임포지션(윈도우 프로그램) 배포 파일(zip)을 올려 두면, 로그인한 직원이 &quot;Bcount 임포지션&quot; 화면의 다운로드 버튼으로 받습니다. 받은 zip 은 압축을 풀고 폴더 안의 BcountImposition.exe 를 실행합니다.</p>
 
       <div className="border border-gray-200 rounded p-4 mb-6 text-sm">
         <div className="font-bold mb-2">지금 배포 중인 파일</div>
@@ -1144,7 +1144,7 @@ function ProgramTab() {
             <span className="text-gray-500">받기</span><span><a href="/api/program-releases/imposition/download" className="text-blue-600 hover:underline">지금 파일 내려받기</a></span>
           </div>
         ) : (
-          <p className="text-gray-500">아직 올린 파일이 없습니다. 이 경우 저장소에 들어 있는 초기 배포본(v1.0.0)이 내려갑니다.</p>
+          <p className="text-gray-500">아직 올린 파일이 없습니다. 이 경우 저장소에 들어 있는 배포본이 내려갑니다.</p>
         )}
       </div>
 
