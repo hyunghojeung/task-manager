@@ -285,6 +285,7 @@ input[type=number]{width:56px;text-align:right}
 var DOWNLOAD_URL="/api/program-releases/imposition/download";
 var LOCAL=window.BCOUNT_LOCAL||null;if(LOCAL)document.getElementById("dl-btn").hidden=true;
 if(!LOCAL){var dn=document.getElementById("drop-note");if(dn)dn.innerHTML="<b>미리보기 화면</b> — 실제 파일은 위 '프로그램 다운로드'로 받은 프로그램에서 엽니다";}
+if(!LOCAL){try{fetch("/api/program-releases",{credentials:"same-origin"}).then(function(r){return r.ok?r.json():null}).then(function(d){var r=d&&d.data&&d.data.filter(function(x){return x.key==="imposition"})[0];if(!r||!r.version)return;var vb=document.querySelector(".bar .v");if(vb)vb.textContent="v"+r.version;var b=document.getElementById("dl-btn");if(b)b.textContent="Bcount 임포지션 프로그램 다운로드 (v"+r.version+(r.updated_at?" · "+String(r.updated_at).slice(0,10):"")+")"}).catch(function(){})}catch(e){}}
 function webOpenNotice(){if(confirm("이 화면은 미리보기라서 PC의 PDF를 직접 열 수 없습니다.\n실제 파일 열기·저장은 'Bcount 임포지션 프로그램'(윈도우)에서 합니다.\n\n지금 프로그램을 내려받을까요? (취소하면 예시 파일로 계속 봅니다)")){window.top.location.href=DOWNLOAD_URL;return true}return false}
 document.getElementById("dl-btn").addEventListener("click",function(){if(DOWNLOAD_URL)window.top.location.href=DOWNLOAD_URL;else alert("프로그램 파일이 준비되면 이 버튼으로 바로 내려받습니다.")});
 (function(){
