@@ -74,6 +74,10 @@ input[type=number]{width:56px;text-align:right}
 .sheet{position:relative;background:#fff;box-shadow:0 8px 30px rgba(0,0,0,.25)}
 .slot{position:absolute;background:#eef2ff;border:1px solid #93c5fd;display:grid;place-items:center;font-weight:700;color:#1d4ed8;overflow:hidden}
 .slot.bk{background:#fef3c7;border-color:#f59e0b;color:#b45309}
+.slot .thumb{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;background:#fff}
+.slot.has-thumb{background:#fff}
+.slot.has-thumb>span{display:none}
+.slot.has-thumb>small{z-index:1;background:rgba(255,255,255,.85);border-radius:2px;padding:0 3px;color:#1d4ed8;font-weight:700}
 .slot.blank{background:#f3f4f6;border-color:#d1d5db;color:#9ca3af;font-weight:400}
 .slot.rot span{transform:rotate(180deg)}
 .slot small{position:absolute;left:3px;top:2px;font-size:9px;font-weight:400;color:#6b7280}
@@ -450,6 +454,7 @@ function render(){
     var d=document.createElement("div");d.className="slot"+(pg?"":" blank")+(pg<0?" bk":"")+(deg?" r"+deg:"");
     d.style.cssText="left:"+(bx0*k)+"px;top:"+(by0*k)+"px;width:"+(bw*k)+"px;height:"+(bh*k)+"px;font-size:"+Math.max(11,Math.min(useW,useH)*k*0.28)+"px";
     d.innerHTML=(pg?"<span>"+(pg<0?"뒷"+(-pg):pg)+(g.rotPage?" ⟳":"")+"</span>":"<span>빈</span>")+"<small>"+(c+1)+"-"+(r+1)+(deg?" ·"+deg+"°":"")+"</small>";
+    if(LOCAL&&pg&&LOCAL.thumb){var im=document.createElement("img");im.className="thumb";im.alt="";im.src=LOCAL.thumb(pg<0?"back":"front",Math.abs(pg),Math.min(1200,Math.max(48,Math.round(bw*k*(window.devicePixelRatio||1)))),deg);d.classList.add("has-thumb");d.insertBefore(im,d.firstChild)}
     el.appendChild(d);
     if($("marks").checked&&list){var bl=bs*k,L=3*k,gapm=bl+1*k;/* 재단선 3mm, 블리드 바깥 1mm 에서 시작 */[[x*k,y*k],[(x+useW)*k,y*k],[x*k,(y+useH)*k],[(x+useW)*k,(y+useH)*k]].forEach(function(pt,q){
       var h=document.createElement("i"),v=document.createElement("i");h.className="mark";v.className="mark";
