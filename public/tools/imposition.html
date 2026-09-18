@@ -271,6 +271,15 @@ input[type=number]{width:56px;text-align:right}
         <div><div class="sidelbl" id="lbl-f">앞면</div><div class="sheet" id="sheet"></div></div>
         <div id="wrap2"><div class="sidelbl">뒷면</div><div class="sheet" id="sheet2"></div></div>
       </div>
+      <div class="tabs" id="pager-bottom" style="justify-content:center">
+        <button class="btn sm" id="first-b" title="처음">«</button>
+        <button class="btn sm" id="prev-b" title="이전">‹</button>
+        <b id="sheet-no-b" style="font-size:13px">판</b>
+        <input type="number" autocomplete="off" id="sheet-go-b" value="1" min="1" step="1" style="width:56px;min-height:28px;padding:2px 4px;font-size:13px;text-align:center">
+        <b id="sheet-total-b" style="font-size:13px">/ 1</b>
+        <button class="btn sm" id="next-b" title="다음">›</button>
+        <button class="btn sm" id="last-b" title="끝">»</button>
+      </div>
       <div class="foot">
         <span class="info"><span>기본 파일명: <b id="outname">원고_중철.pdf</b> <span style="color:var(--g400)">— 저장 창에서 바꿀 수 있음</span></span></span>
         <span class="sp"></span>
@@ -390,14 +399,19 @@ function slotDeg(g,c,r){var base=S.side==="b"?backBaseDeg():0;if(S.type==="cutst
 /* ---- 페이징 (미리보기 판 이동) ---- */
 function pager(label,total){
   ["first","prev","next","last","sheet-go","sheet-total"].forEach(function(id){$(id).hidden=false});
+  $("pager-bottom").hidden=false;
   if(S.sheet>=total)S.sheet=Math.max(0,total-1);if(S.sheet<0)S.sheet=0;
-  $("sheet-no").textContent=label;$("sheet-total").textContent="/ "+total;
-  var go=$("sheet-go");if(document.activeElement!==go)go.value=total?S.sheet+1:0;go.max=Math.max(1,total);go.disabled=!total;
-  $("first").disabled=$("prev").disabled=S.sheet<=0;$("next").disabled=$("last").disabled=S.sheet>=total-1;
+  $("sheet-no").textContent=label;$("sheet-total").textContent="/ "+total;$("sheet-no-b").textContent=label;$("sheet-total-b").textContent="/ "+total;
+  [$("sheet-go"),$("sheet-go-b")].forEach(function(go){if(document.activeElement!==go)go.value=total?S.sheet+1:0;go.max=Math.max(1,total);go.disabled=!total});
+  $("first").disabled=$("prev").disabled=$("first-b").disabled=$("prev-b").disabled=S.sheet<=0;
+  $("next").disabled=$("last").disabled=$("next-b").disabled=$("last-b").disabled=S.sheet>=total-1;
   S.total=total;
 }
-function goSheet(v){var t=S.total||0;var i=(parseInt(v,10)||1)-1;if(i<0)i=0;if(i>t-1)i=t-1;S.sheet=i;render();$("sheet-go").value=t?i+1:0}
+function goSheet(v){var t=S.total||0;var i=(parseInt(v,10)||1)-1;if(i<0)i=0;if(i>t-1)i=t-1;S.sheet=i;render();$("sheet-go").value=t?i+1:0;$("sheet-go-b").value=t?i+1:0}
 $("first").addEventListener("click",function(){S.sheet=0;render()});$("last").addEventListener("click",function(){S.sheet=(S.total||1)-1;render()});
+$("first-b").addEventListener("click",function(){S.sheet=0;render()});$("last-b").addEventListener("click",function(){S.sheet=(S.total||1)-1;render()});
+$("prev-b").addEventListener("click",function(){S.sheet--;render()});$("next-b").addEventListener("click",function(){S.sheet++;render()});
+$("sheet-go-b").addEventListener("change",function(){goSheet(this.value)});$("sheet-go-b").addEventListener("keydown",function(e){if(e.key==="Enter"){goSheet(this.value);this.blur()}});
 $("sheet-go").addEventListener("change",function(){goSheet(this.value)});$("sheet-go").addEventListener("keydown",function(e){if(e.key==="Enter"){goSheet(this.value);this.blur()}});
 /* ---- 그리기 ---- */
 function render(){
@@ -518,7 +532,7 @@ function renderTool(){
     if(!skip)for(var c=1;c<k;c++){var ln=document.createElement("i");ln.className="cut";if(dir==="v")ln.style.cssText="left:"+(c*100/k)+"%;top:0;bottom:0;width:2px";else ln.style.cssText="top:"+(c*100/k)+"%;left:0;right:0;height:2px";el.appendChild(ln)}
     return;
   }
-  ["first","prev","next","last","sheet-go","sheet-total"].forEach(function(id){$(id).hidden=true});
+  ["first","prev","next","last","sheet-go","sheet-total"].forEach(function(id){$(id).hidden=true});$("pager-bottom").hidden=true;
   if(S.type==="oddeven"){
     var rev=$("even-rev").checked,padOn=$("oe-pad").checked,N=n+((padOn&&n%2)?1:0),odd=[],even=[];
     for(var p=1;p<=N;p++)(p%2?odd:even).push(p>n?0:p);if(rev)even.reverse();
