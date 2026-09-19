@@ -1014,14 +1014,14 @@ export default function WritePage() {
       {/* 작업내용1 확대보기 모달 */}
       {showDetailExpand && (
         <div className="fixed inset-0 bg-black/50 z-[1000] flex items-center justify-center p-4" onClick={e => { if (e.target === e.currentTarget) setShowDetailExpand(false); }}>
-          <div className="bg-white rounded-lg p-6 w-full max-w-4xl max-h-[90vh] flex flex-col shadow-xl">
+          <div className="bg-white rounded-lg p-6 w-[96vw] max-w-[1600px] h-[94vh] flex flex-col shadow-xl">
             <div className="flex justify-between items-center mb-3 pb-2 border-b-2 border-gray-200">
-              <h4 className="text-base font-bold text-gray-800">작업내용1 확대보기</h4>
+              <h4 className="text-xl font-bold text-gray-800">작업내용1 확대보기</h4>
               <button onClick={() => setShowDetailExpand(false)} className="text-gray-500 hover:text-gray-800 text-xl leading-none">✕</button>
             </div>
-            <textarea value={formData.detail_spec} onChange={e => handleChange("detail_spec", e.target.value.replace(/\\/g, "₩"))} placeholder="세부사양 및 후가공, 고객 상담 메모 등을 입력해주세요 (\ 키 입력 시 ₩로 자동 변환)" className="flex-1 w-full px-3 py-2 border border-gray-300 rounded text-base resize-none" style={{minHeight:"60vh"}} autoFocus />
+            <textarea value={formData.detail_spec} onChange={e => handleChange("detail_spec", e.target.value.replace(/\\/g, "₩"))} placeholder="세부사양 및 후가공, 고객 상담 메모 등을 입력해주세요 (\ 키 입력 시 ₩로 자동 변환)" className="flex-1 w-full px-5 py-4 border border-gray-300 rounded resize-none leading-relaxed" style={{fontSize:"22px",minHeight:0}} autoFocus />
             <div className="flex justify-end gap-2 mt-3">
-              <button onClick={() => setShowDetailExpand(false)} className="px-5 py-2 bg-blue-600 text-white rounded text-sm">확인</button>
+              <button onClick={() => setShowDetailExpand(false)} className="px-8 py-3 bg-blue-600 text-white rounded text-base font-bold">확인</button>
             </div>
           </div>
         </div>
