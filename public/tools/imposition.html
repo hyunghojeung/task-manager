@@ -429,7 +429,7 @@ function render(){
   $("row-sides").hidden=tool||S.type!=="cutstack"||$("duplex").value==="single";
   var two=!tool&&twoFiles();$("sides-opts").hidden=!two;$("bk-box").hidden=!two;
   if(tool){renderTool();return}
-  $("row-scale").style.display="";var bk=S.type==="booklet";$("row-rot").hidden=S.type==="cutstack"||bk;
+  $("row-scale").style.display="";var bk=S.type==="booklet";$("row-rot").hidden=true;/* 회전 항목은 당분간 감춤 (기능은 그대로, 필요하면 S.type==="cutstack"||bk 로 되돌림) */
   document.querySelectorAll(".bkonly").forEach(function(e){e.hidden=!bk});$("row-arr").hidden=bk;
   var single=$("duplex").querySelector('[value="single"]');single.hidden=bk;if(bk&&$("duplex").value==="single")$("duplex").value="long";
   $("lbl-gap").textContent=bk?"등 간격":"사이간격";$("gap-lx").textContent=bk?"":"가로";$("gap-ly").textContent=bk?"세트 간격":"세로";$("gapy-wrap").hidden=bk;
