@@ -265,7 +265,7 @@ input[type=number]:focus,input[type=text]:focus,select:focus{outline:1px solid #
           <button id="slot-reset" hidden></button><button id="back-180" hidden></button>
           <input type="checkbox" id="rot-back" hidden><input type="checkbox" id="rot-page" hidden>
         </div></div>
-        <div class="row" id="row-scale"><label>배율</label><div class="in"><select id="scale"><option value="none" selected>원본 크기 그대로 (기본)</option><option value="fit">칸에 맞게 축소/확대</option><option value="pct">배율 직접 입력</option></select><span id="scale-pct-wrap" hidden><input type="number" autocomplete="off" id="scale-pct" value="100" min="1" max="1000" step="1"> %</span></div></div>
+        <div class="row" id="row-scale"><label>배율</label><div class="in"><select id="scale"><option value="none" selected>원본 크기 그대로 (기본)</option><option value="fit">인쇄 크기에 맞게 축소/확대</option><option value="pct">배율 직접 입력</option></select><span id="scale-pct-wrap" hidden><input type="number" autocomplete="off" id="scale-pct" value="100" min="1" max="1000" step="1"> %</span></div></div>
         <select id="align" hidden><option value="center" selected>center</option></select>
         <input type="number" autocomplete="off" id="margin" value="0" hidden>
         <div class="row"><label>전체 위치이동</label><div class="in" style="flex-direction:column;align-items:flex-start;gap:4px">
@@ -334,7 +334,7 @@ document.getElementById("dl-btn").addEventListener("click",function(){if(DOWNLOA
 var $=function(i){return document.getElementById(i)};
 var S={type:"repeat",file:null,pages:0,srcW:210,srcH:297,side:"f",sheet:0,slotRot:{f:{},b:{}},back:null};
 function twoFiles(){return (S.type==="cutstack"||S.type==="repeat")&&$("duplex").value!=="single"&&$("sides").value==="two"}
-function openBack(name,pages,w,h,mb){S.back={name:name,pages:pages};$("bk-name").textContent=name;$("bk-sub").textContent=pages+"페이지 · "+w+"×"+h+" mm · "+mb+" MB";$("bk-info").hidden=false;$("bk-drop").hidden=true;S.sheet=0;render()}
+function openBack(name,pages,w,h,mb){S.back={name:name,pages:pages,w:w,h:h};$("bk-name").textContent=name;$("bk-sub").textContent=pages+"페이지 · "+w+"×"+h+" mm · "+mb+" MB";$("bk-info").hidden=false;$("bk-drop").hidden=true;S.sheet=0;render()}
 $("bk-drop").addEventListener("click",function(){if(LOCAL){LOCAL.pick("back");return}if(webOpenNotice())return;openBack("졸업작품_도록_뒷면공통.pdf",1,210,297,3)});
 $("bk-change").addEventListener("click",function(){if(LOCAL){LOCAL.pick("back");return}if(webOpenNotice())return;openBack("졸업작품_도록_뒷면공통.pdf",1,210,297,3)});
 $("bk-x").addEventListener("click",function(){S.back=null;$("bk-info").hidden=true;$("bk-drop").hidden=false;render()});
@@ -482,16 +482,17 @@ function render(){
   var availW=g.W-2*g.m-(g.cols-1)*g.gap,availH=g.H-2*g.m-(g.rows-1)*g.gapy;
   var cellW=availW/g.cols,cellH=availH/g.rows;     // 축소/확대 모드에서 한 자리에 허용되는 크기
   var mode=$("scale").value,fit=mode==="fit";$("scale-pct-wrap").hidden=mode!=="pct";
-  var sc=fit?Math.min(cellW/needW,cellH/needH):mode==="pct"?Math.max(0.01,(parseFloat($("scale-pct").value)||100)/100):1;var useW=pw*sc,useH=ph*sc,bs=b*sc;
+  var srcW=S.srcW||pw,srcH=S.srcH||ph;
+  var sc=fit?Math.min(pw/srcW,ph/srcH):mode==="pct"?Math.max(0.01,(parseFloat($("scale-pct").value)||100)/100):1;var useW=pw,useH=ph,bs=b;
   // 박스들을 간격만큼만 띄워 붙인 묶음의 크기 → 판 가운데 또는 여백부터
   var blockW=g.cols*useW+(g.cols-1)*g.gap,blockH=g.rows*useH+(g.rows-1)*g.gapy;
   var alignC=$("align").value!=="margin";
   var startX=(alignC?(g.W-blockW)/2:g.m)+g.offx,startY=(alignC?(g.H-blockH)/2:g.m)+g.offy;
-  var over=!fit&&(blockW+2*g.m>g.W+0.01||blockH+2*g.m>g.H+0.01);
+  var over=(blockW+2*g.m>g.W+0.01||blockH+2*g.m>g.H+0.01);
   var needBk=two&&!(S.back&&S.back.pages);
   $("warn").hidden=!over&&!!S.pages&&!needBk;
   $("warn").textContent=!S.pages?(LOCAL?"원본 PDF를 먼저 열어주세요.":"원본 PDF를 먼저 열어주세요. (미리보기에서는 위 상자를 클릭하면 예시 파일이 열립니다)"):needBk?(LOCAL?"뒷면 PDF를 열어주세요. (왼쪽 '뒷면 PDF 열기')":"뒷면 PDF를 열어주세요. (왼쪽 '뒷면 PDF 열기' — 미리보기에서는 누르면 1페이지 예시 파일이 열립니다)"):over?"배치 묶음("+blockW.toFixed(1)+"×"+blockH.toFixed(1)+")이 종이("+g.W+"×"+g.H+")보다 큽니다. 판을 키우거나 배치를 줄이거나 크기를 '칸에 맞게 축소/확대' 또는 배율을 낮춰 주세요.":"";
-  $("stats").innerHTML=S.pages?(two&&S.back?"앞면 <b>"+S.pages+"p</b> + 뒷면 <b>"+S.back.pages+"p</b>"+((S.back.pages===1||S.pages===1)&&$("bk-dup").checked?" (1p 쪽 반복)":""):"원본 <b>"+S.pages+"p</b>")+" · 판 <b>"+total+"장</b>"+(duplex?" (양면 "+(total*2)+"면)":"")+(bk?" · 책자 <b>"+(Math.ceil(S.pages/4)*4)+"p</b>"+(Math.ceil(S.pages/4)*4>S.pages?" (빈 "+(Math.ceil(S.pages/4)*4-S.pages)+"p)":"")+(num("creep")>0?" · 밀림 보정 최대 "+(num("creep")*(total-1)).toFixed(1)+"mm":""):"")+" · 인쇄 <b>"+useW.toFixed(1)+"×"+useH.toFixed(1)+"</b> mm · 묶음 <b>"+blockW.toFixed(1)+"×"+blockH.toFixed(1)+"</b>"+(sc<0.999?" · 축소 "+(sc*100).toFixed(0)+"%":sc>1.001?" · 확대 "+(sc*100).toFixed(0)+"%":""):"";
+  $("stats").innerHTML=S.pages?(two&&S.back?"앞면 <b>"+S.pages+"p</b> + 뒷면 <b>"+S.back.pages+"p</b>"+((S.back.pages===1||S.pages===1)&&$("bk-dup").checked?" (1p 쪽 반복)":""):"원본 <b>"+S.pages+"p</b>")+" · 판 <b>"+total+"장</b>"+(duplex?" (양면 "+(total*2)+"면)":"")+(bk?" · 책자 <b>"+(Math.ceil(S.pages/4)*4)+"p</b>"+(Math.ceil(S.pages/4)*4>S.pages?" (빈 "+(Math.ceil(S.pages/4)*4-S.pages)+"p)":"")+(num("creep")>0?" · 밀림 보정 최대 "+(num("creep")*(total-1)).toFixed(1)+"mm":""):"")+" · 인쇄 <b>"+useW.toFixed(1)+"×"+useH.toFixed(1)+"</b> mm · 묶음 <b>"+blockW.toFixed(1)+"×"+blockH.toFixed(1)+"</b>"+(sc<0.999?" · 내용 축소 "+(sc*100).toFixed(1)+"%":sc>1.001?" · 내용 확대 "+(sc*100).toFixed(1)+"%":""):"";
 
   // 판 그리기 (화면 비율) — 단면이면 앞면 한 장, 양면이면 앞면·뒷면 나란히
   var box=document.querySelector(".sheetwrap"),nS=duplex?2:1;
@@ -521,9 +522,13 @@ function render(){
     var im=d.querySelector("img.thumb");
     if(LOCAL&&pg&&LOCAL.thumb){
       /* 페이지 번호·회전·크기 계단이 바뀔 때만 src 를 바꾼다 — 간격·위치 변경은 자리만 옮긴다 */
-      var src=LOCAL.thumb(pg<0?"back":"front",Math.abs(pg),Math.round(bw*k*(window.devicePixelRatio||1)),deg);
+      var pW=(pg<0&&S.back&&S.back.w)?S.back.w:srcW,pH=(pg<0&&S.back&&S.back.h)?S.back.h:srcH;
+      var pSc=fit?Math.min(pw/pW,ph/pH):sc;                      /* 이 페이지의 내용 배율 */
+      var iw=(q90?pH:pW)*pSc*k,ih=(q90?pW:pH)*pSc*k;              /* 그림의 화면 크기 (회전 반영) */
+      var src=LOCAL.thumb(pg<0?"back":"front",Math.abs(pg),Math.round(iw*(window.devicePixelRatio||1)),deg);
       if(!im){im=document.createElement("img");im.className="thumb";im.alt="";d.insertBefore(im,d.firstChild)}
       if(im.getAttribute("src")!==src)im.setAttribute("src",src);
+      im.style.cssText="position:absolute;left:"+((bw*k-iw)/2)+"px;top:"+((bh*k-ih)/2)+"px;width:"+iw+"px;height:"+ih+"px;inset:auto;object-fit:fill";
       d.classList.add("has-thumb");
     }else if(im){im.remove()}
     if($("marks").checked&&list){var bl=bs*k,L=3*k,gapm=bl+1*k;/* 재단선 3mm, 블리드 바깥 1mm 에서 시작 */[[x*k,y*k],[(x+useW)*k,y*k],[x*k,(y+useH)*k],[(x+useW)*k,(y+useH)*k]].forEach(function(pt,q){
