@@ -245,7 +245,7 @@ input[type=number]:focus,input[type=text]:focus,select:focus{outline:1px solid #
         <div class="row bkonly" hidden><label>빈 페이지</label><div class="in"><select id="pad-pos"><option value="end">4의 배수로 모자라면 맨 끝에 추가</option><option value="last">뒤표지(마지막 페이지) 앞에 추가</option></select></div></div>
         <div class="row bkonly" hidden><label>밀림 보정</label><div class="in"><input type="number" autocomplete="off" id="creep" value="0" min="0" step="0.1" style="width:64px"> mm/판 <span class="unit" style="font-size:11px;color:var(--g500)">안쪽 판일수록 등 쪽으로 이동 (위치만, 축소 없음)</span></div></div>
         <div class="row bkonly" hidden><label>접는 선</label><div class="in"><label class="chk"><input type="checkbox" id="center" checked> 미리보기에 가운데 접는 선 표시</label></div></div>
-        <div class="row" id="row-fill1p" hidden><label>화면채우기</label><div class="in"><label class="chk"><input type="checkbox" id="fill-1p" checked> 1p 전체 채우기</label></div></div>
+        <div class="row" id="row-fill1p" hidden><label>화면채우기</label><div class="in"><label class="chk"><input type="checkbox" id="fill-1p" checked> 1p 전체 채우기 (양면이면 1p 앞·2p 뒤)</label></div></div>
         <div class="row"><label>종이 크기</label><div class="in"><input type="number" autocomplete="off" id="sw" value="320" min="50" max="2000"> × <input type="number" autocomplete="off" id="sh" value="450" min="50" max="2000"> <button class="btn sm" id="rot">↻ 가로/세로</button></div></div>
         <div class="row"><label>내 종이 크기</label><div class="in" style="flex-direction:column;align-items:stretch">
           <div style="display:flex;gap:4px"><select id="sheet-sel" style="flex:1;min-width:0"><option value="">저장한 크기에서 고르기</option></select><button class="btn sm" id="sheet-del" title="고른 크기 삭제">삭제</button></div>
@@ -384,7 +384,8 @@ function plan(){
   var g=geom(),n=S.pages,slots=g.cols*g.rows,duplex=$("duplex").value!=="single",out=[];
   if(!n)return out;
   if(twoFiles())return planTwo(g,slots,n);
-  if(n===1&&$("fill-1p").checked&&(S.type==="cutstack"||S.type==="repeat")){var f1=[];for(var q1=0;q1<slots;q1++)f1.push(1);return [{front:f1,back:duplex?f1.map(function(){return 0}):null}]}
+  /* 화면채우기(컷앤스택): 단면이면 1p 파일, 양면이면 1~2p 파일(1p 앞·2p 뒤)을 모든 칸에 */
+  if(S.type==="cutstack"&&$("fill-1p").checked&&(n===1||(duplex&&n===2))){var f1=[],b1=[];for(var q1=0;q1<slots;q1++){f1.push(1);b1.push(n===2?2:0)}return [{front:f1,back:duplex?b1:null}]}
   if(S.type==="booklet"){
     var N=Math.ceil(n/4)*4,sheets=N/4,right=$("bind").value==="right",padEnd=$("pad-pos").value!=="last",sets=num("sets",1)|0||1;
     // 빈 페이지: 맨 끝 또는 뒤표지 앞 / 오른쪽 철이면 펼침면 좌우 바꿈 / 2세트면 같은 펼침면을 위아래로
@@ -461,7 +462,7 @@ function render(){
   $("card-sheet").hidden=tool;$("card-split").hidden=S.type!=="split";$("card-oddeven").hidden=S.type!=="oddeven";$("card-merge").hidden=S.type!=="merge";$("card-dup").hidden=S.type!=="dup";$("card-rotate").hidden=S.type!=="rotate";
   $("row-sides").hidden=tool||!(S.type==="cutstack"||S.type==="repeat")||$("duplex").value==="single";
   /* 화면채우기: N업 반복은 원래 모든 칸이 같은 페이지라 필요 없음 → 순차·컷앤스택에서만 표시 */
-  $("row-fill1p").hidden=tool||!(S.type==="cutstack"||(S.type==="repeat"&&$("nup-mode").value==="seq"));
+  $("row-fill1p").hidden=tool||S.type!=="cutstack";
   var two=!tool&&twoFiles();$("sides-opts").hidden=!two;$("bk-box").hidden=!two;
   if(tool){renderTool();return}
   $("row-scale").style.display="";var bk=S.type==="booklet";$("row-rot").hidden=S.type==="cutstack"||bk;$("rot-back-span").hidden=$("duplex").value==="single";
