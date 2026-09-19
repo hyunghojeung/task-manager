@@ -383,7 +383,7 @@ export default function WritePage() {
           }
         }
         alert(editId ? "수정되었습니다." : "저장되었습니다.");
-        router.push("/dashboard");
+        router.push(listUrl());
       } else {
         const d = await res.json();
         alert(d.error || "저장 실패");
@@ -392,10 +392,16 @@ export default function WritePage() {
     finally { setSaving(false); }
   }
 
+  // 작업리스트로 돌아갈 때 이 작업의 구분 탭이 열리게
+  function listUrl() {
+    const cat = categoryList.find(c => c.id === formData.category_id);
+    return cat ? `/dashboard?cat=${encodeURIComponent(cat.name)}` : "/dashboard";
+  }
+
   async function handleDelete() {
     if (!editId || !confirm("정말 삭제할까요?")) return;
     await fetch(`/api/orders/${editId}`, { method: "DELETE" });
-    router.push("/dashboard");
+    router.push(listUrl());
   }
 
   async function handleMoveToEstimate() {
@@ -960,7 +966,7 @@ export default function WritePage() {
       {/* 하단 버튼 */}
       <div className="flex gap-2 py-3 print:hidden">
         <button onClick={handleSave} disabled={saving} className="px-6 py-2 bg-blue-600 text-white rounded text-sm font-medium disabled:opacity-50">{saving ? "저장중..." : "저장"}</button>
-        <button onClick={() => router.push("/dashboard")} className="px-6 py-2 bg-white text-gray-600 border border-gray-300 rounded text-sm">리스트</button>
+        <button onClick={() => router.push(listUrl())} className="px-6 py-2 bg-white text-gray-600 border border-gray-300 rounded text-sm">리스트</button>
         <button onClick={() => window.print()} className="px-6 py-2 bg-gray-700 text-white rounded text-sm">프린트</button>
         {editId && <button onClick={handleCopy} className="px-6 py-2 bg-amber-500 text-white rounded text-sm">복사</button>}
         {editId && <a href={`/print/statement?id=${editId}`} target="_blank" className="px-6 py-2 bg-indigo-600 text-white rounded text-sm">거래명세서</a>}

@@ -27,7 +27,10 @@ export default function DashboardPage() {
     fetch(`/api/categories?_=${Date.now()}`).then(r => r.json()).then(d => {
       if (Array.isArray(d)) {
         setCategoryList(d);
-        const def = d.find((c: {is_default?: boolean}) => c.is_default) || d[0];
+        // 작업등록/수정 뒤에는 그 작업의 구분 탭으로 돌아온다 (?cat=이름). 없으면 기본 카테고리
+        const wanted = new URLSearchParams(window.location.search).get("cat");
+        const hit = wanted ? d.find((c: {name: string}) => c.name === wanted) : null;
+        const def = hit || d.find((c: {is_default?: boolean}) => c.is_default) || d[0];
         setCategory(def ? def.name : "전체");
       } else setCategory("전체");
     }).catch(() => setCategory("전체"));
