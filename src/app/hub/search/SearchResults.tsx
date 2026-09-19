@@ -65,7 +65,7 @@ export default function SearchResults({ q }: { q: string }) {
   if (!term) {
     return (
       <p className="text-xs text-gray-400 px-1 py-2">
-        검색어를 치면 일정 · 개인메모 · 갤러리에서 한 번에 찾습니다.
+        검색어를 치면 일정 · 메모 · 갤러리에서 한 번에 찾습니다.
         <br />#태그로 치면 태그만 찾습니다.
       </p>
     );
@@ -108,7 +108,7 @@ export default function SearchResults({ q }: { q: string }) {
 
       {/* 개인메모 */}
       <section>
-        {head("개인메모", `${memos.length}건`, `/hub/memo?q=${encodeURIComponent(q.trim())}`)}
+        {head("메모", `${memos.length}건`, `/hub/memo?q=${encodeURIComponent(q.trim())}`)}
         {memos.length === 0 ? empty("맞는 메모가 없습니다") : (
           <div className="flex flex-col gap-2">
             {memos.map((m) => (

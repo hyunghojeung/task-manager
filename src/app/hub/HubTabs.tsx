@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 const TABS = [
   { href: "/hub", label: "일정" },
   { href: "/hub/gallery", label: "갤러리" },
-  { href: "/hub/memo", label: "개인메모" },
+  { href: "/hub/memo", label: "메모" },
 ];
 
 export default function HubTabs() {
