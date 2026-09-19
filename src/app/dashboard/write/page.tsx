@@ -1014,7 +1014,7 @@ export default function WritePage() {
       {/* 작업내용1 확대보기 모달 */}
       {showDetailExpand && (
         <div className="fixed inset-0 bg-black/50 z-[1000] flex items-center justify-center p-4" onClick={e => { if (e.target === e.currentTarget) setShowDetailExpand(false); }}>
-          <div className="bg-white rounded-lg p-6 w-[96vw] max-w-[1600px] h-[94vh] flex flex-col shadow-xl">
+          <div className="bg-white rounded-lg p-6 w-[67vw] max-w-[1120px] h-[66vh] flex flex-col shadow-xl">
             <div className="flex justify-between items-center mb-3 pb-2 border-b-2 border-gray-200">
               <h4 className="text-xl font-bold text-gray-800">작업내용1 확대보기</h4>
               <button onClick={() => setShowDetailExpand(false)} className="text-gray-500 hover:text-gray-800 text-xl leading-none">✕</button>
