@@ -1019,7 +1019,7 @@ export default function WritePage() {
               <h4 className="text-xl font-bold text-gray-800">작업내용1 확대보기</h4>
               <button onClick={() => setShowDetailExpand(false)} className="text-gray-500 hover:text-gray-800 text-xl leading-none">✕</button>
             </div>
-            <textarea value={formData.detail_spec} onChange={e => handleChange("detail_spec", e.target.value.replace(/\\/g, "₩"))} placeholder="세부사양 및 후가공, 고객 상담 메모 등을 입력해주세요 (\ 키 입력 시 ₩로 자동 변환)" className="flex-1 w-full px-5 py-4 border border-gray-300 rounded resize-none leading-relaxed" style={{fontSize:"22px",minHeight:0}} autoFocus />
+            <textarea value={formData.detail_spec} onChange={e => handleChange("detail_spec", e.target.value.replace(/\\/g, "₩"))} placeholder="세부사양 및 후가공, 고객 상담 메모 등을 입력해주세요 (\ 키 입력 시 ₩로 자동 변환)" wrap="off" className="flex-1 w-full px-5 py-4 border border-gray-300 rounded resize-none leading-relaxed overflow-auto" style={{fontSize:"22px",minHeight:0,whiteSpace:"pre",fontFamily:"'D2Coding', 'NanumGothicCoding', 'Nanum Gothic Coding', Consolas, 'Malgun Gothic', monospace"}} autoFocus />
             <div className="flex justify-end gap-2 mt-3">
               <button onClick={() => setShowDetailExpand(false)} className="px-8 py-3 bg-blue-600 text-white rounded text-base font-bold">확인</button>
             </div>
