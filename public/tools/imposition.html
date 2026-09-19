@@ -286,7 +286,7 @@ input[type=number]:focus,input[type=text]:focus,select:focus{outline:1px solid #
       <div class="card">
         <h3>4. 프리셋 <span class="r">이 설정을 저장해 두고 다음에 불러오기</span></h3>
         <div style="display:flex;gap:4px;margin-bottom:6px"><input type="text" id="p-name" placeholder="예: 명함 SRA3 10업" style="flex:1;min-width:0"><button class="btn sm dark" id="p-save">저장</button></div>
-        <div class="presets" id="p-list"></div>
+        <div id="p-list" style="display:flex;gap:4px"><select id="p-sel" style="flex:1;min-width:0"></select><button class="btn sm" id="p-load">불러오기</button><button class="btn sm" id="p-del" style="color:var(--red)">삭제</button></div>
       </div>
     </div>
 
@@ -669,9 +669,12 @@ function loadPresets(){if(LOCAL)return LOCAL.presets;try{return JSON.parse(local
 function seed(){return [{name:"명함 SRA3 10업 (90×50)",when:"09.12",cfg:{type:"repeat",sw:"320",sh:"450",cols:"2",rows:"5",pw:"90",ph:"50",margin:"12",gap:"4",bleed:"2",marks:true,center:false,duplex:"long",scale:"fit"}},{name:"A5 중철 SRA3",when:"09.03",cfg:{type:"booklet",sw:"320",sh:"450",cols:"2",rows:"1",pw:"148",ph:"210",margin:"10",gap:"0",bleed:"3",marks:true,center:true,duplex:"long",scale:"fit"}},{name:"A4 내지 컷앤스택 2업",when:"08.28",cfg:{type:"cutstack",sw:"320",sh:"450",cols:"1",rows:"2",pw:"210",ph:"297",margin:"8",gap:"6",bleed:"3",marks:true,center:false,duplex:"long",scale:"fit"}}]}
 function savePresets(p){if(LOCAL){LOCAL.presets=p;LOCAL.post("/api/presets",p);return}try{localStorage.setItem("impo-presets",JSON.stringify(p))}catch(e){}}
 var TYPE_TAG={repeat:"N업",cutstack:"컷앤스택",booklet:"중철",split:"자르기",oddeven:"홀짝나누기",merge:"홀짝합치기",dup:"복제",rotate:"회전"};
-function renderPresets(){var p=loadPresets();$("p-list").innerHTML=p.length?p.map(function(x,i){var tag=TYPE_TAG[(x.cfg||{}).type]||"";return '<div class="preset"><b title="'+x.name+'">'+(tag?'<span class="ptag">['+tag+']</span> ':"")+x.name+'</b><small>'+x.when+'</small><button class="btn sm" data-load="'+i+'">불러오기</button><button class="btn sm" data-del="'+i+'" style="color:var(--red)">삭제</button></div>'}).join(""):'<div style="font-size:12px;color:var(--g400);text-align:center;padding:8px">저장된 프리셋이 없습니다</div>';
-  $("p-list").querySelectorAll("[data-load]").forEach(function(b){b.addEventListener("click",function(){var x=loadPresets()[+b.getAttribute("data-load")];apply(x.cfg);$("p-name").value=x.name;toast("'"+x.name+"' 불러왔습니다")})});
-  $("p-list").querySelectorAll("[data-del]").forEach(function(b){b.addEventListener("click",function(){var p=loadPresets();var x=p[+b.getAttribute("data-del")];if(!confirm("'"+x.name+"' 프리셋을 지울까요?"))return;p.splice(+b.getAttribute("data-del"),1);savePresets(p);renderPresets()})});}
+function renderPresets(){var p=loadPresets(),sel=$("p-sel"),cur=sel.value;
+  sel.innerHTML=p.length?'<option value="">저장한 프리셋에서 고르기 ('+p.length+')</option>'+p.map(function(x,i){var tag=TYPE_TAG[(x.cfg||{}).type]||"";return '<option value="'+i+'">'+(tag?"["+tag+"] ":"")+x.name+" — "+x.when+"</option>"}).join(""):'<option value="">저장된 프리셋이 없습니다</option>';
+  if(cur&&p[+cur])sel.value=cur;$("p-load").disabled=$("p-del").disabled=!p.length;}
+$("p-sel").addEventListener("change",function(){var x=loadPresets()[+this.value];if(!x||this.value==="")return;apply(x.cfg);$("p-name").value=x.name;toast("'"+x.name+"' 불러왔습니다")});
+$("p-load").addEventListener("click",function(){var v=$("p-sel").value,x=loadPresets()[+v];if(v===""||!x){alert("불러올 프리셋을 고르세요.");return}apply(x.cfg);$("p-name").value=x.name;toast("'"+x.name+"' 불러왔습니다")});
+$("p-del").addEventListener("click",function(){var v=$("p-sel").value,p=loadPresets(),x=p[+v];if(v===""||!x){alert("지울 프리셋을 고르세요.");return}if(!confirm("'"+x.name+"' 프리셋을 지울까요?"))return;p.splice(+v,1);savePresets(p);$("p-sel").value="";renderPresets()});
 $("p-save").addEventListener("click",function(){var name=$("p-name").value.trim();if(!name){alert("프리셋 이름을 적어주세요.");$("p-name").focus();return}var p=loadPresets();var d=new Date(),when=(d.getMonth()+1)+"."+String(d.getDate()).padStart(2,"0");var i=p.findIndex(function(x){return x.name===name});if(i>=0){if(!confirm("같은 이름이 있습니다. 덮어쓸까요?"))return;p[i]={name:name,when:when,cfg:snapshot()}}else p.unshift({name:name,when:when,cfg:snapshot()});savePresets(p);renderPresets();toast("저장했습니다")});
 
 /* ---- 저장 시뮬레이션 ---- */
