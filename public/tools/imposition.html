@@ -233,7 +233,7 @@ input[type=number]:focus,input[type=text]:focus,select:focus{outline:1px solid #
       <div class="card" id="card-sheet">
         <h3>3. 종이 <span class="r">단위 mm</span></h3>
         <div class="row" id="row-nup" hidden><label>N업 방식</label><div class="in"><select id="nup-mode"><option value="repeat">반복 (1,1,1…)</option><option value="seq">순차 (1,2,3…)</option></select></div></div>
-        <div class="row"><label>양면인쇄</label><div class="in"><select id="duplex"><option value="long">긴쪽넘김</option><option value="short">짧은쪽넘김</option><option value="single">단면</option></select></div></div>
+        <div class="row"><label>양면인쇄</label><div class="in"><select id="duplex"><option value="single" selected>단면인쇄</option><option value="long">긴쪽넘김</option><option value="short">짧은쪽넘김</option></select></div></div>
         <div class="row" id="row-sides" hidden><label>앞,뒷면파일</label><div class="in" style="flex-direction:column;align-items:flex-start;gap:4px">
           <select id="sides"><option value="one">한개 파일로 앞뒷면 배치</option><option value="two">앞·뒷면 별도 파일 사용</option></select>
           <div id="sides-opts" hidden style="display:flex;flex-direction:column;gap:2px">
