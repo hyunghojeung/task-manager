@@ -257,10 +257,10 @@ input[type=number]:focus,input[type=text]:focus,select:focus{outline:1px solid #
         <div class="row"><label>돔보 거리</label><div class="in"><input type="number" autocomplete="off" id="bleed" value="3" min="0" step="1"></div></div>
         <div class="row"><label>재단선</label><div class="in"><label class="chk"><input type="checkbox" id="marks" checked> 재단선 표시 (모서리, 3mm)</label></div></div>
         <div class="row" id="row-rot"><label>회전</label><div class="in" style="flex-direction:column;align-items:stretch">
-          <table class="rottbl" id="rottbl"></table>
+          <table class="rottbl" id="rottbl" hidden></table>
           <div style="margin-top:4px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;font-size:12px">
-            <span>앞면 모두 <select id="all-f" style="min-height:26px;padding:1px 4px;font-size:12px"><option>0</option><option>90</option><option>180</option><option>270</option></select>° <button class="btn sm" id="apply-f">적용</button></span>
-            <span>뒷면 모두 <select id="all-b" style="min-height:26px;padding:1px 4px;font-size:12px"><option>0</option><option>90</option><option selected>180</option><option>270</option></select>° <button class="btn sm" id="apply-b">적용</button></span>
+            <span>앞면 회전 <select id="all-f"><option>0</option><option>90</option><option>180</option><option>270</option></select>°<button class="btn sm" id="apply-f" hidden>적용</button></span>
+            <span id="rot-back-span">뒷면 회전 <select id="all-b"><option>0</option><option>90</option><option>180</option><option>270</option></select>°<button class="btn sm" id="apply-b" hidden>적용</button></span>
           </div>
           <button id="slot-reset" hidden></button><button id="back-180" hidden></button>
           <input type="checkbox" id="rot-back" hidden><input type="checkbox" id="rot-page" hidden>
@@ -432,6 +432,7 @@ function renderSlotGrid(g){
 $("rottbl").addEventListener("change",function(e){var sel=e.target;if(!sel||sel.tagName!=="SELECT")return;var side=sel.getAttribute("data-side"),i=+sel.getAttribute("data-i");S.slotRot[side]=S.slotRot[side]||{};S.slotRot[side][i]=+sel.value;render()});
 function setAll(side,deg){var g=geom();S.slotRot[side]={};for(var i=0;i<g.cols*g.rows;i++)S.slotRot[side][i]=deg;render()}
 $("apply-f").addEventListener("click",function(){setAll("f",+$("all-f").value)});
+$("all-f").addEventListener("change",function(){setAll("f",+$("all-f").value)});$("all-b").addEventListener("change",function(){setAll("b",+$("all-b").value)});
 $("apply-b").addEventListener("click",function(){setAll("b",+$("all-b").value)});
 function slotDeg(g,c,r){var base=S.side==="b"?backBaseDeg():0;if(S.type==="cutstack"||S.type==="booklet")return base;var i=r*g.cols+c;return (base+((S.slotRot[S.side]||{})[i]||0))%360}
 
@@ -462,7 +463,7 @@ function render(){
   $("row-fill1p").hidden=tool||!(S.type==="cutstack"||S.type==="repeat");
   var two=!tool&&twoFiles();$("sides-opts").hidden=!two;$("bk-box").hidden=!two;
   if(tool){renderTool();return}
-  $("row-scale").style.display="";var bk=S.type==="booklet";$("row-rot").hidden=true;/* 회전 항목은 당분간 감춤 (기능은 그대로, 필요하면 S.type==="cutstack"||bk 로 되돌림) */
+  $("row-scale").style.display="";var bk=S.type==="booklet";$("row-rot").hidden=S.type==="cutstack"||bk;$("rot-back-span").hidden=$("duplex").value==="single";
   document.querySelectorAll(".bkonly").forEach(function(e){e.hidden=!bk});$("row-arr").hidden=bk;
   var single=$("duplex").querySelector('[value="single"]');single.hidden=bk;if(bk&&$("duplex").value==="single")$("duplex").value="long";
   $("lbl-gap").textContent=bk?"등 간격":"사이간격";$("gap-lx").textContent=bk?"":"가로";$("gap-ly").textContent=bk?"세트 간격":"세로";$("gapy-wrap").hidden=bk;
