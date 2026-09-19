@@ -330,7 +330,10 @@ $("sheet-del").addEventListener("click",function(){var a=loadSizes(),i=+$("sheet
 renderSizes();
 $("rot").addEventListener("click",function(){var a=$("sw").value;$("sw").value=$("sh").value;$("sh").value=a;render()});
 $("autofit").addEventListener("click",function(){var g=geom();var pw=num("pw",S.srcW)+2*num("bleed"),ph=num("ph",S.srcH)+2*num("bleed");if(g.rotPage){var t0=pw;pw=ph;ph=t0}var c=Math.max(1,Math.floor((g.W-2*g.m+g.gap)/(pw+g.gap))),r=Math.max(1,Math.floor((g.H-2*g.m+g.gapy)/(ph+g.gapy)));$("cols").value=c;$("rows").value=r;render()});
-["sw","sh","cols","rows","pw","ph","margin","gap","gapy","offx","offy","offx2","offy2","off-same","bleed","marks","center","duplex","scale","scale-pct","align","nup-mode","sides","bk-dup","bk-pad","pad-pos","creep"].forEach(function(id){$(id).addEventListener("input",function(){if(id==="sw"||id==="sh")$("sheet-sel").value="";S.sheet=0;render()});$(id).addEventListener("change",render)});
+["sw","sh","cols","rows","pw","ph","margin","gap","gapy","offx","offy","offx2","offy2","off-same","bleed","marks","center","duplex","scale","scale-pct","align","nup-mode","sides","bk-dup","bk-pad","pad-pos","creep"].forEach(function(id){$(id).addEventListener("input",function(){if(id==="sw"||id==="sh")$("sheet-sel").value="";S.sheet=0;scheduleRender()});$(id).addEventListener("change",render)});
+/* 연속 입력은 한 프레임에 한 번만 그린다 (T1) */
+var _rt=null,_raf=0;
+function scheduleRender(){if(_rt)clearTimeout(_rt);_rt=setTimeout(function(){_rt=null;if(document.hidden){render();return}if(_raf)cancelAnimationFrame(_raf);_raf=requestAnimationFrame(function(){_raf=0;render()})},30)}
 function num(id,def){var v=parseFloat($(id).value);return isNaN(v)?(def||0):v}
 function geom(){var bk=S.type==="booklet";return {W:num("sw",320),H:num("sh",450),cols:bk?2:Math.max(1,num("cols",1)|0),rows:bk?(num("sets",1)|0||1):Math.max(1,num("rows",1)|0),m:num("margin"),gap:num("gap"),gapy:num("gapy"),offx:(S.side==="b"&&!$("off-same").checked)?num("offx2"):num("offx"),offy:(S.side==="b"&&!$("off-same").checked)?num("offy2"):num("offy"),bleed:num("bleed"),rotBack:$("rot-back").checked,rotPage:$("rot-page").checked}}
 
@@ -381,16 +384,20 @@ function fixBlank(n){return function(sh){var f=function(p){return p>n?0:p};retur
 
 /* ---- 칸별 회전 격자 ---- */
 function slotName(g,c,r){if(g.rows===1&&g.cols===2)return c===0?"왼쪽 페이지":"오른쪽 페이지";if(g.rows===1)return (c+1)+"번째 페이지";if(g.cols===1&&g.rows===2)return r===0?"위 페이지":"아래 페이지";return (c+1)+"열 "+(r+1)+"행"}
+var _gridKey="";
 function renderSlotGrid(g){
   var duplex=$("duplex").value!=="single",el=$("rottbl"),h="<tr><th></th>";
+  var key=g.cols+"x"+g.rows+(duplex?"d":"s")+S.type;
+  if(key===_gridKey){el.querySelectorAll("select").forEach(function(sel){var v=(S.slotRot[sel.getAttribute("data-side")]||{})[+sel.getAttribute("data-i")]||0;if(+sel.value!==v)sel.value=v});return}
+  _gridKey=key;
   var opt=function(side,i){var d=(S.slotRot[side]||{})[i]||0;return '<select data-side="'+side+'" data-i="'+i+'">'+[0,90,180,270].map(function(x){return '<option value="'+x+'"'+(x===d?" selected":"")+'>'+x+'°</option>'}).join("")+'</select>'};
   for(var r=0;r<g.rows;r++)for(var c=0;c<g.cols;c++)h+="<th>"+slotName(g,c,r).replace(" 페이지","")+"</th>";
   h+="</tr>";
   var line=function(side,label){var t="<tr><td>"+label+"</td>";for(var r=0;r<g.rows;r++)for(var c=0;c<g.cols;c++)t+="<td>"+opt(side,r*g.cols+c)+"</td>";return t+"</tr>"};
   h+=line("f","앞면");if(duplex)h+=line("b","뒷면");
   el.innerHTML=h;
-  el.querySelectorAll("select").forEach(function(sel){sel.addEventListener("change",function(){var side=sel.getAttribute("data-side"),i=+sel.getAttribute("data-i");S.slotRot[side]=S.slotRot[side]||{};S.slotRot[side][i]=+sel.value;render()})});
 }
+$("rottbl").addEventListener("change",function(e){var sel=e.target;if(!sel||sel.tagName!=="SELECT")return;var side=sel.getAttribute("data-side"),i=+sel.getAttribute("data-i");S.slotRot[side]=S.slotRot[side]||{};S.slotRot[side][i]=+sel.value;render()});
 function setAll(side,deg){var g=geom();S.slotRot[side]={};for(var i=0;i<g.cols*g.rows;i++)S.slotRot[side][i]=deg;render()}
 $("apply-f").addEventListener("click",function(){setAll("f",+$("all-f").value)});
 $("apply-b").addEventListener("click",function(){setAll("b",+$("all-b").value)});
@@ -460,7 +467,10 @@ function render(){
   (duplex?["f","b"]:["f"]).forEach(function(side){
   S.side=side;g=geom();
   startX=(alignC?(g.W-blockW)/2:g.m)+g.offx;startY=(alignC?(g.H-blockH)/2:g.m)+g.offy;
-  var el=side==="f"?$("sheet"):$("sheet2");el.style.width=(g.W*k)+"px";el.style.height=(g.H*k)+"px";el.innerHTML="";el.style.background="#fff";el.style.boxShadow="0 8px 30px rgba(0,0,0,.25)";
+  var el=side==="f"?$("sheet"):$("sheet2");el.style.width=(g.W*k)+"px";el.style.height=(g.H*k)+"px";el.style.background="#fff";el.style.boxShadow="0 8px 30px rgba(0,0,0,.25)";
+  /* 슬롯(<div class=slot>)과 그 안의 <img> 는 그대로 두고 재단선·치수선만 지운다 (T3) */
+  el.querySelectorAll(".mark,.dim").forEach(function(x){x.remove()});
+  var nSlots=g.rows*g.cols;el.querySelectorAll(".slot").forEach(function(x){if(+x.getAttribute("data-i")>=nSlots)x.remove()});
   var sh=P[S.sheet];var list=sh?(side==="f"?sh.front:sh.back):null;
   for(var r=0;r<g.rows;r++)for(var c=0;c<g.cols;c++){
     var i=r*g.cols+c,pg=list?list[i]:0;
@@ -468,11 +478,20 @@ function render(){
     if(S.type==="booklet"){var cr=num("creep")*(total-1-S.sheet);x+=(c===0?cr:-cr)}
     var deg=slotDeg(g,c,r)%360,q90=deg===90||deg===270;
     var bw=q90?useH:useW,bh=q90?useW:useH,bx0=x+(useW-bw)/2,by0=y+(useH-bh)/2;
-    var d=document.createElement("div");d.className="slot"+(pg?"":" blank")+(pg<0?" bk":"")+(deg?" r"+deg:"");
+    var d=el.querySelector('.slot[data-i="'+i+'"]');
+    if(!d){d=document.createElement("div");d.setAttribute("data-i",i);el.appendChild(d)}
+    d.className="slot"+(pg?"":" blank")+(pg<0?" bk":"")+(deg?" r"+deg:"");
     d.style.cssText="left:"+(bx0*k)+"px;top:"+(by0*k)+"px;width:"+(bw*k)+"px;height:"+(bh*k)+"px;font-size:"+Math.max(11,Math.min(useW,useH)*k*0.28)+"px";
-    d.innerHTML=(pg?"<span>"+(pg<0?"뒷"+(-pg):pg)+(g.rotPage?" ⟳":"")+"</span>":"<span>빈</span>")+"<small>"+(c+1)+"-"+(r+1)+(deg?" ·"+deg+"°":"")+"</small>";
-    if(LOCAL&&pg&&LOCAL.thumb){var im=document.createElement("img");im.className="thumb";im.alt="";im.src=LOCAL.thumb(pg<0?"back":"front",Math.abs(pg),Math.min(1200,Math.max(48,Math.round(bw*k*(window.devicePixelRatio||1)))),deg);d.classList.add("has-thumb");d.insertBefore(im,d.firstChild)}
-    el.appendChild(d);
+    var lab=(pg?"<span>"+(pg<0?"뒷"+(-pg):pg)+(g.rotPage?" ⟳":"")+"</span>":"<span>빈</span>")+"<small>"+(c+1)+"-"+(r+1)+(deg?" ·"+deg+"°":"")+"</small>";
+    if(d.getAttribute("data-lab")!==lab){d.setAttribute("data-lab",lab);[].slice.call(d.children).forEach(function(x){if(x.tagName!=="IMG")x.remove()});d.insertAdjacentHTML("beforeend",lab)}
+    var im=d.querySelector("img.thumb");
+    if(LOCAL&&pg&&LOCAL.thumb){
+      /* 페이지 번호·회전·크기 계단이 바뀔 때만 src 를 바꾼다 — 간격·위치 변경은 자리만 옮긴다 */
+      var src=LOCAL.thumb(pg<0?"back":"front",Math.abs(pg),Math.round(bw*k*(window.devicePixelRatio||1)),deg);
+      if(!im){im=document.createElement("img");im.className="thumb";im.alt="";d.insertBefore(im,d.firstChild)}
+      if(im.getAttribute("src")!==src)im.setAttribute("src",src);
+      d.classList.add("has-thumb");
+    }else if(im){im.remove()}
     if($("marks").checked&&list){var bl=bs*k,L=3*k,gapm=bl+1*k;/* 재단선 3mm, 블리드 바깥 1mm 에서 시작 */[[x*k,y*k],[(x+useW)*k,y*k],[x*k,(y+useH)*k],[(x+useW)*k,(y+useH)*k]].forEach(function(pt,q){
       var h=document.createElement("i"),v=document.createElement("i");h.className="mark";v.className="mark";
       var sx=q%2===0?-1:1,sy=q<2?-1:1;
@@ -506,7 +525,7 @@ function render(){
   });
   S.side="f";
 }
-["cut-dir","cut-n","cut-order","cut-ov","cut-range","even-rev","oe-pad","m-rev","m-pad","m-dup","dup-page","dup-n","rot-target","rot-range","rot-deg"].forEach(function(id){$(id).addEventListener("input",render);$(id).addEventListener("change",render)});
+["cut-dir","cut-n","cut-order","cut-ov","cut-range","even-rev","oe-pad","m-rev","m-pad","m-dup","dup-page","dup-n","rot-target","rot-range","rot-deg"].forEach(function(id){$(id).addEventListener("input",scheduleRender);$(id).addEventListener("change",render)});
 S.fileB=null;S.pagesB=0;
 $("m-drop").addEventListener("click",function(){if(LOCAL){LOCAL.pick("mergeB");return}if(webOpenNotice())return;S.fileB="뒷면_공통.pdf";S.pagesB=1;$("m-b").textContent=S.fileB+" · 1p  ";$("m-b").hidden=false;$("m-drop").textContent="찾아보기...";render()});
 function pgBox(a,cls){return a.slice(0,48).map(function(x){return "<span class='"+(x?cls||"":"blank")+"'>"+(x||"빈")+"</span>"}).join("")+(a.length>48?"<span class='blank'>…</span>":"")}
@@ -570,7 +589,7 @@ function renderTool(){
 }
 $("prev").addEventListener("click",function(){S.sheet--;render()});$("next").addEventListener("click",function(){S.sheet++;render()});
 $("side-f").addEventListener("click",function(){S.side="f";render()});$("side-b").addEventListener("click",function(){S.side="b";render()});
-window.addEventListener("resize",render);
+var _rz=null;window.addEventListener("resize",function(){if(_rz)clearTimeout(_rz);_rz=setTimeout(function(){_rz=null;render()},150)});
 
 /* ---- 프리셋 (미리보기: 브라우저 저장) ---- */
 var FIELDS=["sw","sh","cols","rows","pw","ph","margin","gap","gapy","offx","offy","offx2","offy2","off-same","align","nup-mode","bleed","marks","center","duplex","scale","scale-pct","sides","bk-dup","bk-pad","pad-pos","creep","rot-back","rot-page","cut-dir","cut-n","cut-order","cut-ov","cut-range","even-rev","oe-pad","m-rev","m-pad","m-dup","dup-page","dup-n","rot-target","rot-range","rot-deg"];
