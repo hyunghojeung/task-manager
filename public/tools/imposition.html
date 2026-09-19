@@ -259,11 +259,11 @@ input[type=number]:focus,input[type=text]:focus,select:focus{outline:1px solid #
         <div class="row"><label>돔보 거리</label><div class="in"><input type="number" autocomplete="off" id="bleed" value="3" min="0" step="1"></div></div>
         <div class="row"><label>재단선</label><div class="in"><label class="chk"><input type="checkbox" id="marks" checked> 재단선 표시 (모서리, 3mm)</label></div></div>
         <div class="row" id="row-rot"><label>회전</label><div class="in" style="flex-direction:column;align-items:stretch">
-          <label class="chk" style="margin-bottom:4px"><input type="checkbox" id="onetouch"> 원터치 재단 — 미리보기에서 칸을 누르면 그 칸만 180° 회전</label>
           <table class="rottbl" id="rottbl" hidden></table>
           <div style="margin-top:4px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;font-size:12px">
             <span>앞면 회전 <select id="all-f"><option>0</option><option>90</option><option>180</option><option>270</option></select>°<button class="btn sm" id="apply-f" hidden>적용</button></span>
             <span id="rot-back-span">뒷면 회전 <select id="all-b"><option>0</option><option>90</option><option>180</option><option>270</option></select>°<button class="btn sm" id="apply-b" hidden>적용</button></span>
+            <label class="chk"><input type="checkbox" id="onetouch"> 원터치 재단</label>
           </div>
           <button id="slot-reset" hidden></button><button id="back-180" hidden></button>
           <input type="checkbox" id="rot-back" hidden><input type="checkbox" id="rot-page" hidden>
@@ -360,7 +360,13 @@ $("fill-1p").addEventListener("change",function(){if(!this.checked)return;var n=
   var d=e.target.closest(".slot");if(!d||d.classList.contains("blank"))return;
   var i=+d.getAttribute("data-i"),side=pair[1];S.slotRot[side]=S.slotRot[side]||{};
   S.slotRot[side][i]=(((S.slotRot[side][i]||0)+180)%360);render()})});
-$("onetouch").addEventListener("change",function(){document.body.classList.toggle("onetouch",this.checked)});
+function applyOneTouch(){var g=geom(),on=$("onetouch").checked,left=Math.floor(g.cols/2),dup=$("duplex").value!=="single";
+  S.slotRot.f=S.slotRot.f||{};S.slotRot.b=S.slotRot.b||{};
+  for(var r=0;r<g.rows;r++)for(var c=0;c<g.cols;c++){var i=r*g.cols+c;
+    var fLeft=c<left,bLeft=(mirrorAxis()==="cols")?(c>=g.cols-left):fLeft;
+    S.slotRot.f[i]=(on&&fLeft)?180:0;if(dup)S.slotRot.b[i]=(on&&bLeft)?180:0}
+  render()}
+$("onetouch").addEventListener("change",function(){document.body.classList.toggle("onetouch",this.checked);applyOneTouch()});
 /* 옵션 초기 상태 — 시작 직후 한 번 기록해 두고, 조판 종류를 바꿀 때 되돌린다 */
 var INIT=null;
 function captureInit(){INIT=[];[].forEach.call(document.querySelectorAll(".side input,.side select"),function(e){INIT.push([e,e.type==="checkbox"?e.checked:e.value])})}
@@ -455,7 +461,7 @@ function renderSlotGrid(g){
 $("rottbl").addEventListener("change",function(e){var sel=e.target;if(!sel||sel.tagName!=="SELECT")return;var side=sel.getAttribute("data-side"),i=+sel.getAttribute("data-i");S.slotRot[side]=S.slotRot[side]||{};S.slotRot[side][i]=+sel.value;render()});
 function setAll(side,deg){var g=geom();S.slotRot[side]={};for(var i=0;i<g.cols*g.rows;i++)S.slotRot[side][i]=deg;render()}
 $("apply-f").addEventListener("click",function(){setAll("f",+$("all-f").value)});
-$("all-f").addEventListener("change",function(){setAll("f",+$("all-f").value)});$("all-b").addEventListener("change",function(){setAll("b",+$("all-b").value)});
+$("all-f").addEventListener("change",function(){$("onetouch").checked=false;document.body.classList.remove("onetouch");setAll("f",+$("all-f").value)});$("all-b").addEventListener("change",function(){$("onetouch").checked=false;document.body.classList.remove("onetouch");setAll("b",+$("all-b").value)});
 $("apply-b").addEventListener("click",function(){setAll("b",+$("all-b").value)});
 function slotDeg(g,c,r){var base=S.side==="b"?backBaseDeg():0;if(S.type==="cutstack"||S.type==="booklet")return base;var i=r*g.cols+c;return (base+((S.slotRot[S.side]||{})[i]||0))%360}
 
@@ -488,6 +494,7 @@ function render(){
   var two=!tool&&twoFiles();$("sides-opts").hidden=!two;$("bk-box").hidden=!two;
   if(tool){renderTool();return}
   $("row-scale").style.display="";var bk=S.type==="booklet";$("row-rot").hidden=S.type==="cutstack"||bk;$("rot-back-span").hidden=$("duplex").value==="single";
+  if($("onetouch").checked&&S.type==="repeat"){var g0=geom(),okey=g0.cols+"x"+g0.rows+$("duplex").value+mirrorAxis();if(S._otKey!==okey){S._otKey=okey;var g2=g0,left2=Math.floor(g2.cols/2),dup2=$("duplex").value!=="single";S.slotRot.f={};S.slotRot.b={};for(var r2=0;r2<g2.rows;r2++)for(var c2=0;c2<g2.cols;c2++){var i2=r2*g2.cols+c2;S.slotRot.f[i2]=c2<left2?180:0;if(dup2)S.slotRot.b[i2]=((mirrorAxis()==="cols")?(c2>=g2.cols-left2):(c2<left2))?180:0}}}else S._otKey="";
   document.querySelectorAll(".bkonly").forEach(function(e){e.hidden=!bk});$("row-arr").hidden=bk;
   var single=$("duplex").querySelector('[value="single"]');single.hidden=bk;if(bk&&$("duplex").value==="single")$("duplex").value="long";
   $("lbl-gap").textContent=bk?"등 간격":"사이간격";$("gap-lx").textContent=bk?"":"가로";$("gap-ly").textContent=bk?"세트 간격":"세로";$("gapy-wrap").hidden=bk;
