@@ -610,7 +610,7 @@ export default function WritePage() {
           <tr>
             <td className="text-[#3b4b5b] font-bold text-xs py-2 px-2 border border-gray-200 align-top">
               작업내용1
-              <button type="button" onClick={() => setShowDetailExpand(true)} className="block mt-1 text-[10px] text-blue-600 hover:underline print:hidden">🔍 확대보기</button>
+              <button type="button" onClick={() => setShowDetailExpand(true)} title="크게 보면서 입력" className="mt-2 w-full px-2 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm font-bold shadow print:hidden">🔍 확대보기</button>
             </td>
             <td colSpan={3} className="py-1.5 px-2 border border-gray-200">
               <textarea placeholder="세부사양 및 후가공, 고객 상담 메모 등을 입력해주세요 (\ 키 입력 시 ₩로 자동 변환)" value={formData.detail_spec} onChange={e => handleChange("detail_spec", e.target.value.replace(/\\/g, "₩"))} className="w-full px-2 py-2 border border-gray-300 rounded text-sm min-h-[156px] resize-y" />
