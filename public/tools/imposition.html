@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Bcount 임포지션</title>
+<title>B-imposition</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap">
 <style>
 :root{--slate:#3b4b5b;--slate800:#1e293b;--ink:#111827;--g700:#374151;--g600:#4b5563;--g500:#6b7280;--g400:#9ca3af;--g300:#d1d5db;--g200:#e5e7eb;--g100:#f3f4f6;--g50:#f9fafb;--blue:#2563eb;--amber:#f59e0b;--red:#dc2626;--green:#059669}
@@ -155,7 +155,7 @@ input[type=number]:focus,input[type=text]:focus,select:focus{outline:1px solid #
 
 
 <div class="app">
-  <div class="bar"><b>Bcount 임포지션</b><span class="v">v1.0.0</span><button class="winbtn" id="dl-btn" type="button" style="margin-left:18px;font-weight:700;padding:5px 16px">Bcount 임포지션 프로그램 다운로드</button><span class="st"><i></i>PC에서 실행 중 · 파일은 외부로 나가지 않습니다 · <u>새 버전 확인</u></span></div>
+  <div class="bar"><b>B-imposition</b><span class="v">v1.0.0</span><button class="winbtn" id="dl-btn" type="button" style="margin-left:18px;font-weight:700;padding:5px 16px">B-imposition 프로그램 다운로드</button><span class="st"><i></i>PC에서 실행 중 · 파일은 외부로 나가지 않습니다 · <u>새 버전 확인</u></span></div>
   <div class="main">
     <!-- ===== 왼쪽: 설정 ===== -->
     <div class="side">
@@ -330,8 +330,8 @@ input[type=number]:focus,input[type=text]:focus,select:focus{outline:1px solid #
 var DOWNLOAD_URL="/api/program-releases/imposition/download";
 var LOCAL=window.BCOUNT_LOCAL||null;if(LOCAL)document.getElementById("dl-btn").hidden=true;
 if(!LOCAL){var dn=document.getElementById("drop-note");if(dn)dn.innerHTML="<b>미리보기 화면</b> — 실제 파일은 위 '프로그램 다운로드'로 받은 프로그램에서 엽니다";}
-if(!LOCAL){try{fetch("/api/program-releases",{credentials:"same-origin"}).then(function(r){return r.ok?r.json():null}).then(function(d){var r=d&&d.data&&d.data.filter(function(x){return x.key==="imposition"})[0];if(!r||!r.version)return;var vb=document.querySelector(".bar .v");if(vb)vb.textContent="v"+r.version;var b=document.getElementById("dl-btn");if(b)b.textContent="Bcount 임포지션 프로그램 다운로드 (v"+r.version+(r.updated_at?" · "+String(r.updated_at).slice(0,10):"")+")"}).catch(function(){})}catch(e){}}
-function webOpenNotice(){if(confirm("이 화면은 미리보기라서 PC의 PDF를 직접 열 수 없습니다.\n실제 파일 열기·저장은 'Bcount 임포지션 프로그램'(윈도우)에서 합니다.\n\n지금 프로그램(zip)을 내려받을까요? 받은 뒤 압축을 풀고 폴더 안의 BcountImposition.exe 를 실행하세요. (취소하면 예시 파일로 계속 봅니다)")){window.top.location.href=DOWNLOAD_URL;return true}return false}
+if(!LOCAL){try{fetch("/api/program-releases",{credentials:"same-origin"}).then(function(r){return r.ok?r.json():null}).then(function(d){var r=d&&d.data&&d.data.filter(function(x){return x.key==="imposition"})[0];if(!r||!r.version)return;var vb=document.querySelector(".bar .v");if(vb)vb.textContent="v"+r.version;var b=document.getElementById("dl-btn");if(b)b.textContent="B-imposition 프로그램 다운로드 (v"+r.version+(r.updated_at?" · "+String(r.updated_at).slice(0,10):"")+")"}).catch(function(){})}catch(e){}}
+function webOpenNotice(){if(confirm("이 화면은 미리보기라서 PC의 PDF를 직접 열 수 없습니다.\n실제 파일 열기·저장은 'B-imposition 프로그램'(윈도우)에서 합니다.\n\n지금 프로그램(zip)을 내려받을까요? 받은 뒤 압축을 풀고 폴더 안의 BcountImposition.exe 를 실행하세요. (취소하면 예시 파일로 계속 봅니다)")){window.top.location.href=DOWNLOAD_URL;return true}return false}
 document.getElementById("dl-btn").addEventListener("click",function(){if(DOWNLOAD_URL){if(confirm("프로그램(zip)을 내려받습니다.\n받은 뒤 압축을 풀고 폴더 안의 BcountImposition.exe 를 실행하세요.\n(폴더째 두고 쓰세요 — 다른 파일을 지우면 안 됩니다)"))window.top.location.href=DOWNLOAD_URL;return}else alert("프로그램 파일이 준비되면 이 버튼으로 바로 내려받습니다.")});
 (function(){
 var $=function(i){return document.getElementById(i)};

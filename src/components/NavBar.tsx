@@ -8,7 +8,7 @@ export default function NavBar({ role, hubEnabled, features }: { role?: string; 
   const pathname = usePathname();
 
   const links: Array<{ href: string; label: string; color: string; text?: string; external?: boolean }> = [
-    ...(f.imposition ? [{ href: "/dashboard/imposition", label: "Bcount 임포지션", color: "bg-slate-700 hover:bg-slate-800" }] : []),
+    ...(f.imposition ? [{ href: "/dashboard/imposition", label: "B-imposition", color: "bg-slate-700 hover:bg-slate-800" }] : []),
     // 업무관리: 최고관리자가 업체에 켜 주고, 관리자가 사용자별로 켜 준 사람에게만 보인다
     ...(f.hub && hubEnabled
       ? [{ href: "/hub", label: "업무관리", color: "bg-[#FEE500] hover:bg-[#f2da00]", text: "text-[#191919] font-bold" }]

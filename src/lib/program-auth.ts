@@ -1,7 +1,7 @@
 import { createHash, randomBytes } from "crypto";
 import { getSupabase } from "@/lib/supabase-admin";
 
-// 로컬 프로그램(Bcount 임포지션)의 사용자 확인.
+// 로컬 프로그램(B-imposition)의 사용자 확인.
 // 프로그램은 처음 한 번 업체ID·아이디·비밀번호로 로그인해 토큰을 받고, 이후 실행할 때마다 토큰으로 확인한다.
 // 토큰은 해시로만 저장한다. Bcount 회원이 아니게 되면(사용자 삭제, 업체 비활성) 즉시 못 쓴다.
 

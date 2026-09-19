@@ -6,7 +6,7 @@ import { getSupabase } from "@/lib/supabase-admin";
 import { getApiSession, unauthorized } from "@/lib/api-helpers";
 import { saveRelease } from "@/lib/program-release";
 
-// 프로그램 배포 (Bcount 임포지션 exe 등)
+// 프로그램 배포 (B-imposition exe 등)
 // 파일은 Storage 비공개 버킷 'downloads' 에 두고, 내려받을 때 서명 URL을 발급한다 (로그인한 사용자만).
 
 function fallbackInfo(): { version: string; date?: string; file?: string; size_bytes?: number; notes?: string } | null {
