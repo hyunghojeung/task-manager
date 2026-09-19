@@ -619,8 +619,8 @@ export default function WritePage() {
         </tbody></table>
       </div>
 
-      {/* 세부내역 */}
-      <div className="bg-white border border-gray-300 rounded p-4 mb-3">
+      {/* 세부내역 (작업내용2) — 사용 빈도가 낮아 숨김. 추후 삭제 예정. 데이터·저장 로직은 그대로 */}
+      <div className="bg-white border border-gray-300 rounded p-4 mb-3" hidden>
         <div className="flex items-center justify-between mb-3 pb-2 border-b-2 border-[#3b4b5b]">
           <p className="font-bold text-sm text-gray-800">작업내용2</p>
           <div className="flex items-center gap-3 print:hidden">
