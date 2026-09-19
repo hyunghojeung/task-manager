@@ -460,7 +460,8 @@ function render(){
   var tool=S.type==="split"||S.type==="oddeven"||S.type==="merge"||S.type==="dup"||S.type==="rotate";
   $("card-sheet").hidden=tool;$("card-split").hidden=S.type!=="split";$("card-oddeven").hidden=S.type!=="oddeven";$("card-merge").hidden=S.type!=="merge";$("card-dup").hidden=S.type!=="dup";$("card-rotate").hidden=S.type!=="rotate";
   $("row-sides").hidden=tool||!(S.type==="cutstack"||S.type==="repeat")||$("duplex").value==="single";
-  $("row-fill1p").hidden=tool||!(S.type==="cutstack"||S.type==="repeat");
+  /* 화면채우기: N업 반복은 원래 모든 칸이 같은 페이지라 필요 없음 → 순차·컷앤스택에서만 표시 */
+  $("row-fill1p").hidden=tool||!(S.type==="cutstack"||(S.type==="repeat"&&$("nup-mode").value==="seq"));
   var two=!tool&&twoFiles();$("sides-opts").hidden=!two;$("bk-box").hidden=!two;
   if(tool){renderTool();return}
   $("row-scale").style.display="";var bk=S.type==="booklet";$("row-rot").hidden=S.type==="cutstack"||bk;$("rot-back-span").hidden=$("duplex").value==="single";
