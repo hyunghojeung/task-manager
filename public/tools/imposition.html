@@ -201,7 +201,7 @@ input[type=number]{width:56px;text-align:right}
 
       <div class="card" id="card-sheet">
         <h3>3. 종이 <span class="r">단위 mm</span></h3>
-        <div class="row" id="row-nup" hidden><label>N업 방식</label><div class="in"><select id="nup-mode"><option value="repeat">같은 페이지 반복 (명함·스티커)</option><option value="seq">페이지 순서대로 배열 (1,2,3…)</option></select></div></div>
+        <div class="row" id="row-nup" hidden><label>N업 방식</label><div class="in"><select id="nup-mode"><option value="repeat">반복 (1,1,1…)</option><option value="seq">순차 (1,2,3…)</option></select></div></div>
         <div class="row"><label>양면인쇄</label><div class="in"><select id="duplex"><option value="long">긴쪽넘김</option><option value="short">짧은쪽넘김</option><option value="single">단면</option></select></div></div>
         <select id="bind" hidden><option value="left" selected>left</option></select><select id="sets" hidden><option value="1" selected>1</option></select>
         <div class="row bkonly" hidden><label>빈 페이지</label><div class="in"><select id="pad-pos"><option value="end">4의 배수로 모자라면 맨 끝에 추가</option><option value="last">뒤표지(마지막 페이지) 앞에 추가</option></select></div></div>
@@ -220,9 +220,9 @@ input[type=number]{width:56px;text-align:right}
           <div style="display:flex;gap:4px;margin-top:4px"><input type="text" id="sheet-name" placeholder="이름 (예: SRA3, 4×6전지)" style="flex:1;min-width:0"><button class="btn sm dark" id="sheet-save">지금 크기 저장</button></div>
         </div></div>
         <div class="row"><label>인쇄 크기</label><div class="in"><input type="number" autocomplete="off" id="pw" value="210"> × <input type="number" autocomplete="off" id="ph" value="297"></div></div>
-        <div class="row" id="row-arr"><label>배열</label><div class="in"><input type="number" autocomplete="off" id="cols" value="1" min="1" max="12"> 열 × <input type="number" autocomplete="off" id="rows" value="1" min="1" max="12"> 행<button id="autofit" hidden></button></div></div>
+        <div class="row" id="row-arr"><label>배치</label><div class="in"><input type="number" autocomplete="off" id="cols" value="1" min="1" max="12"> 열 × <input type="number" autocomplete="off" id="rows" value="1" min="1" max="12"> 행<button id="autofit" hidden></button></div></div>
         <div class="row" id="row-gap"><label id="lbl-gap">사이간격</label><div class="in"><span id="gap-lx">가로</span> <input type="number" autocomplete="off" id="gap" value="0" min="0" step="1"> <span id="gapy-wrap"><span id="gap-ly">세로</span> <input type="number" autocomplete="off" id="gapy" value="0" min="0" step="1"></span></div></div>
-        <div class="row"><label>블리드</label><div class="in"><input type="number" autocomplete="off" id="bleed" value="3" min="0" step="1"></div></div>
+        <div class="row"><label>돔보 거리</label><div class="in"><input type="number" autocomplete="off" id="bleed" value="3" min="0" step="1"></div></div>
         <div class="row"><label>재단선</label><div class="in"><label class="chk"><input type="checkbox" id="marks" checked> 재단선 표시 (모서리, 3mm)</label></div></div>
         <div class="row" id="row-rot"><label>회전</label><div class="in" style="flex-direction:column;align-items:stretch">
           <table class="rottbl" id="rottbl"></table>
@@ -456,7 +456,7 @@ function render(){
   var over=!fit&&(blockW+2*g.m>g.W+0.01||blockH+2*g.m>g.H+0.01);
   var needBk=two&&!(S.back&&S.back.pages);
   $("warn").hidden=!over&&!!S.pages&&!needBk;
-  $("warn").textContent=!S.pages?(LOCAL?"원본 PDF를 먼저 열어주세요.":"원본 PDF를 먼저 열어주세요. (미리보기에서는 위 상자를 클릭하면 예시 파일이 열립니다)"):needBk?(LOCAL?"뒷면 PDF를 열어주세요. (왼쪽 '뒷면 PDF 열기')":"뒷면 PDF를 열어주세요. (왼쪽 '뒷면 PDF 열기' — 미리보기에서는 누르면 1페이지 예시 파일이 열립니다)"):over?"배치 묶음("+blockW.toFixed(1)+"×"+blockH.toFixed(1)+")이 종이("+g.W+"×"+g.H+")보다 큽니다. 판을 키우거나 배열을 줄이거나 크기를 '칸에 맞게 축소/확대' 또는 배율을 낮춰 주세요.":"";
+  $("warn").textContent=!S.pages?(LOCAL?"원본 PDF를 먼저 열어주세요.":"원본 PDF를 먼저 열어주세요. (미리보기에서는 위 상자를 클릭하면 예시 파일이 열립니다)"):needBk?(LOCAL?"뒷면 PDF를 열어주세요. (왼쪽 '뒷면 PDF 열기')":"뒷면 PDF를 열어주세요. (왼쪽 '뒷면 PDF 열기' — 미리보기에서는 누르면 1페이지 예시 파일이 열립니다)"):over?"배치 묶음("+blockW.toFixed(1)+"×"+blockH.toFixed(1)+")이 종이("+g.W+"×"+g.H+")보다 큽니다. 판을 키우거나 배치를 줄이거나 크기를 '칸에 맞게 축소/확대' 또는 배율을 낮춰 주세요.":"";
   $("stats").innerHTML=S.pages?(two&&S.back?"앞면 <b>"+S.pages+"p</b> + 뒷면 <b>"+S.back.pages+"p</b>"+((S.back.pages===1||S.pages===1)&&$("bk-dup").checked?" (1p 쪽 반복)":""):"원본 <b>"+S.pages+"p</b>")+" · 판 <b>"+total+"장</b>"+(duplex?" (양면 "+(total*2)+"면)":"")+(bk?" · 책자 <b>"+(Math.ceil(S.pages/4)*4)+"p</b>"+(Math.ceil(S.pages/4)*4>S.pages?" (빈 "+(Math.ceil(S.pages/4)*4-S.pages)+"p)":"")+(num("creep")>0?" · 밀림 보정 최대 "+(num("creep")*(total-1)).toFixed(1)+"mm":""):"")+" · 인쇄 <b>"+useW.toFixed(1)+"×"+useH.toFixed(1)+"</b> mm · 묶음 <b>"+blockW.toFixed(1)+"×"+blockH.toFixed(1)+"</b>"+(sc<0.999?" · 축소 "+(sc*100).toFixed(0)+"%":sc>1.001?" · 확대 "+(sc*100).toFixed(0)+"%":""):"";
 
   // 판 그리기 (화면 비율) — 단면이면 앞면 한 장, 양면이면 앞면·뒷면 나란히
