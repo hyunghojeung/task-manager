@@ -366,7 +366,7 @@ function applyOneTouch(){var g=geom(),on=$("onetouch").checked,left=Math.floor(g
     var fLeft=c<left,bLeft=(mirrorAxis()==="cols")?(c>=g.cols-left):fLeft;
     S.slotRot.f[i]=(on&&fLeft)?180:0;if(dup)S.slotRot.b[i]=(on&&bLeft)?180:0}
   render()}
-$("onetouch").addEventListener("change",function(){document.body.classList.toggle("onetouch",this.checked);applyOneTouch()});
+$("onetouch").addEventListener("change",function(){if(this.checked){var g=geom();if(!(g.cols===2&&g.rows===1)){alert("원터치 재단은 배치가 2열 × 1행일 때만 쓸 수 있습니다.");this.checked=false;return}}document.body.classList.toggle("onetouch",this.checked);applyOneTouch()});
 /* 옵션 초기 상태 — 시작 직후 한 번 기록해 두고, 조판 종류를 바꿀 때 되돌린다 */
 var INIT=null;
 function captureInit(){INIT=[];[].forEach.call(document.querySelectorAll(".side input,.side select"),function(e){INIT.push([e,e.type==="checkbox"?e.checked:e.value])})}
