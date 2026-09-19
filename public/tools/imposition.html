@@ -349,6 +349,8 @@ function openFile(name,pages,w,h,mb){S.file=name;S.pages=pages;S.srcW=w;S.srcH=h
 $("f-x").addEventListener("click",function(){S.file=null;S.pages=0;$("f-info").hidden=true;$("drop").hidden=false;$("f-meta").textContent="";syncFileLabels();render()});
 
 /* ---- 조판 종류 ---- */
+/* 1page로 채우기: 적용되지 않는 파일에서 켜면 알려 주고 되돌린다 */
+$("fill-1p").addEventListener("change",function(){if(!this.checked)return;var n=S.pages,dup=$("duplex").value!=="single";if(!n){alert("원본 PDF를 먼저 열어주세요.");this.checked=false;return}if(!(n===1||(dup&&n===2))){alert("1page로 채우기는 1페이지 파일(양면인쇄면 1~2페이지 파일)에서만 쓸 수 있습니다.\n지금 파일은 "+n+"페이지라 적용되지 않습니다.");this.checked=false;render()}});
 /* 옵션 초기 상태 — 시작 직후 한 번 기록해 두고, 조판 종류를 바꿀 때 되돌린다 */
 var INIT=null;
 function captureInit(){INIT=[];[].forEach.call(document.querySelectorAll(".side input,.side select"),function(e){INIT.push([e,e.type==="checkbox"?e.checked:e.value])})}
