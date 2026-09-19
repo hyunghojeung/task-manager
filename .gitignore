@@ -41,3 +41,6 @@ yarn-error.log*
 next-env.d.ts
 .env.local
 .claude/launch.json
+
+# 프로그램 배포 파일은 Supabase Storage 로 올린다 (git 에 넣지 않음)
+public/downloads/
