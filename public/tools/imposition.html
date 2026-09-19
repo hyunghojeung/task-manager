@@ -349,7 +349,17 @@ function openFile(name,pages,w,h,mb){S.file=name;S.pages=pages;S.srcW=w;S.srcH=h
 $("f-x").addEventListener("click",function(){S.file=null;S.pages=0;$("f-info").hidden=true;$("drop").hidden=false;$("f-meta").textContent="";syncFileLabels();render()});
 
 /* ---- 조판 종류 ---- */
-$("types").addEventListener("click",function(e){var b=e.target.closest("button");if(!b)return;S.type=b.getAttribute("data-t");[].forEach.call($("types").children,function(x){x.classList.toggle("on",x===b)});if(S.type==="booklet"){$("cols").value=2;$("rows").value=1}S.sheet=0;render()});
+/* 옵션 초기 상태 — 시작 직후 한 번 기록해 두고, 조판 종류를 바꿀 때 되돌린다 */
+var INIT=null;
+function captureInit(){INIT=[];[].forEach.call(document.querySelectorAll(".side input,.side select"),function(e){INIT.push([e,e.type==="checkbox"?e.checked:e.value])})}
+function resetOptions(){
+  if(INIT)INIT.forEach(function(x){if(x[0].type==="checkbox")x[0].checked=x[1];else x[0].value=x[1]});
+  S.slotRot={f:{},b:{}};S.sheet=0;
+  if(S.back){S.back=null;$("bk-info").hidden=true;$("bk-drop").hidden=false}
+  if(S.fileB){S.fileB=null;S.pagesB=0;S.fileBPath=null;$("m-b").hidden=true;$("m-drop").textContent="찾아보기..."}
+  if(S.file){$("pw").value=S.srcW;$("ph").value=S.srcH}
+}
+$("types").addEventListener("click",function(e){var b=e.target.closest("button");if(!b)return;var t=b.getAttribute("data-t");if(t===S.type)return;S.type=t;[].forEach.call($("types").children,function(x){x.classList.toggle("on",x===b)});resetOptions();if(S.type==="booklet"){$("cols").value=2;$("rows").value=1}render()});
 
 /* ---- 판 ---- */
 function loadSizes(){if(LOCAL)return LOCAL.sizes;try{return JSON.parse(localStorage.getItem("impo-sizes")||"[]")}catch(e){return []}}
@@ -649,7 +659,7 @@ $("btn-save").addEventListener("click",function(){if(!S.pages){alert("원본 PDF
 $("btn-open").addEventListener("click",function(){toast("저장 폴더를 엽니다 (실제 프로그램)")});
 function toast(m){var t=document.createElement("div");t.textContent=m;t.style.cssText="position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#1e293b;color:#fff;padding:9px 16px;border-radius:6px;font-size:13px;z-index:9;box-shadow:0 8px 24px rgba(0,0,0,.25)";document.body.appendChild(t);setTimeout(function(){t.remove()},2200)}
 
-renderPresets();if(LOCAL){LOCAL.bind({S:S,openFile:openFile,openBack:openBack,snapshot:snapshot,apply:apply,render:render,toast:toast});$("scale").value="none";LOCAL.ready();render()}else{openFile("2026_졸업작품_도록_최종.pdf",96,210,297,486);$("scale").value="none";render()}
+renderPresets();if(LOCAL){LOCAL.bind({S:S,openFile:openFile,openBack:openBack,snapshot:snapshot,apply:apply,render:render,toast:toast});$("scale").value="none";LOCAL.ready();captureInit();render()}else{openFile("2026_졸업작품_도록_최종.pdf",96,210,297,486);$("scale").value="none";captureInit();render()}
 })();
 </script>
 
