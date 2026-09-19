@@ -116,6 +116,37 @@ input[type=number]{width:56px;text-align:right}
 .dl .box{border:1px solid var(--g200);border-radius:6px;padding:14px;display:flex;gap:14px;align-items:center;flex-wrap:wrap}
 .dl .box .t{flex:1;min-width:200px}
 .dl ol{margin:0;padding-left:18px;color:var(--g600);font-size:12px}
+
+/* ===== 윈도우 프로그램 느낌 ===== */
+body{background:#f0f0f0;font-family:"Segoe UI","Malgun Gothic",system-ui,sans-serif;font-size:12px;padding:0}
+.app{margin:0;border:0;border-radius:0;min-height:100vh}
+.bar{background:#f3f3f3;color:#000;border-bottom:1px solid #d9d9d9;padding:6px 12px;gap:10px}
+.bar b{font-size:13px;font-weight:600}.bar .v{background:#e4e4e4;color:#444;border-radius:2px}.bar .st{color:#555}.bar .st i{background:#1a9c3e}
+.main{grid-template-columns:352px 1fr}
+.side{background:#f0f0f0;border-right:1px solid #d9d9d9;padding:10px;gap:10px}
+.stage{background:#fff;padding:10px}
+.card{border:1px solid #cfcfcf;border-radius:0;background:#f7f7f7;padding:8px 10px}
+.card h3{border-left:0;padding-left:0;font-size:12px;color:#000;font-weight:600;margin-bottom:6px}
+.card h3 .r{color:#666}
+.types button,.types .tool{border-radius:0;background:linear-gradient(#fefefe,#e6e6e6);border:1px solid #adadad;color:#000;min-height:30px;padding:4px 2px;font-size:12px;font-weight:400}
+.types button:hover{background:#e5f1fb;border-color:#0078d7}
+.types button.on,.types .tool.on{background:#cce4f7;border-color:#005499;color:#000;font-weight:600}
+.row{margin:3px 0}.row label{color:#000}
+input[type=number],input[type=text],select{border:1px solid #7a7a7a;border-radius:0;min-height:24px;padding:2px 5px;font-size:12px;background:#fff}
+input[type=number]:focus,input[type=text]:focus,select:focus{outline:1px solid #0078d7;border-color:#0078d7}
+.btn{border-radius:0;background:linear-gradient(#fefefe,#e6e6e6);border:1px solid #adadad;color:#000;min-height:26px;padding:3px 10px;font-size:12px}
+.btn:hover{background:#e5f1fb;border-color:#0078d7}
+.btn.dark,.btn.pri{background:linear-gradient(#fefefe,#e6e6e6);color:#000;border-color:#adadad;font-weight:400}
+.btn.sm{min-height:24px;padding:2px 8px;font-size:11px}
+.preset,.drop,.warn,.note{border-radius:0}
+.drop{border:1px dashed #9a9a9a;background:#fff;color:#444}
+.sheetwrap{border-radius:0;background:#cfcfcf}
+.tabs{gap:4px}
+.prog{border-radius:0;height:14px;border:1px solid #bcbcbc;background:#e6e6e6;flex:none;width:100%;margin-top:6px}.prog i{background:#06b025;transition:width .2s}
+#card-save{background:#f0f0f0;border-color:#cfcfcf}
+#card-save .info{font-size:11px;color:#444}
+.presets .preset{background:#fff}
+::-webkit-scrollbar{width:14px;height:14px}::-webkit-scrollbar-track{background:#f0f0f0}::-webkit-scrollbar-thumb{background:#cdcdcd;border:3px solid #f0f0f0}::-webkit-scrollbar-thumb:hover{background:#a6a6a6}
 </style>
 </head>
 <body>
@@ -242,6 +273,12 @@ input[type=number]{width:56px;text-align:right}
         </div></div>
       </div>
 
+      <div class="card" id="card-save">
+        <div class="info"><span>기본 파일명: <b id="outname">원고_중철.pdf</b></span></div>
+        <div class="prog" id="prog" hidden><i></i></div>
+        <button id="btn-open" hidden></button>
+        <button class="winbtn big primary" id="btn-save" style="width:100%;margin-top:6px">PDF 저장하기</button>
+      </div>
       <div class="card">
         <h3>4. 프리셋 <span class="r">이 설정을 저장해 두고 다음에 불러오기</span></h3>
         <div style="display:flex;gap:4px;margin-bottom:6px"><input type="text" id="p-name" placeholder="예: 명함 SRA3 10업" style="flex:1;min-width:0"><button class="btn sm dark" id="p-save">저장</button></div>
@@ -279,13 +316,6 @@ input[type=number]{width:56px;text-align:right}
         <b id="sheet-total-b" style="font-size:13px">/ 1</b>
         <button class="btn sm" id="next-b" title="다음">›</button>
         <button class="btn sm" id="last-b" title="끝">»</button>
-      </div>
-      <div class="foot">
-        <span class="info"><span>기본 파일명: <b id="outname">원고_중철.pdf</b> <span style="color:var(--g400)">— 저장 창에서 바꿀 수 있음</span></span></span>
-        <span class="sp"></span>
-        <div class="prog" id="prog" hidden><i></i></div>
-        <button id="btn-open" hidden></button>
-        <button class="winbtn big primary" id="btn-save">PDF 저장하기</button>
       </div>
     </div>
   </div>
