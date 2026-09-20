@@ -538,7 +538,7 @@ function render(){
   startX=(alignC?(g.W-blockW)/2:g.m)+g.offx;startY=(alignC?(g.H-blockH)/2:g.m)+g.offy;
   var el=side==="f"?$("sheet"):$("sheet2");el.style.width=(g.W*k)+"px";el.style.height=(g.H*k)+"px";el.style.background="#fff";el.style.boxShadow="0 8px 30px rgba(0,0,0,.25)";
   /* 슬롯(<div class=slot>)과 그 안의 <img> 는 그대로 두고 재단선·치수선만 지운다 (T3) */
-  el.querySelectorAll(".mark,.dim").forEach(function(x){x.remove()});
+  [].slice.call(el.children).forEach(function(x){if(!x.classList.contains("slot"))x.remove()});/* 재단선·치수선·도구 화면 잔재 제거 (슬롯만 재사용) */
   var nSlots=g.rows*g.cols;el.querySelectorAll(".slot").forEach(function(x){if(+x.getAttribute("data-i")>=nSlots)x.remove()});
   var sh=P[S.sheet];var list=sh?(side==="f"?sh.front:sh.back):null;
   for(var r=0;r<g.rows;r++)for(var c=0;c<g.cols;c++){
