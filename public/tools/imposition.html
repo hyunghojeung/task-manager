@@ -389,7 +389,7 @@ $("sheet-del").addEventListener("click",function(){var a=loadSizes(),i=+$("sheet
 renderSizes();
 $("rot").addEventListener("click",function(){var a=$("sw").value;$("sw").value=$("sh").value;$("sh").value=a;render()});
 $("autofit").addEventListener("click",function(){var g=geom();var pw=num("pw",S.srcW)+2*num("bleed"),ph=num("ph",S.srcH)+2*num("bleed");if(g.rotPage){var t0=pw;pw=ph;ph=t0}var c=Math.max(1,Math.floor((g.W-2*g.m+g.gap)/(pw+g.gap))),r=Math.max(1,Math.floor((g.H-2*g.m+g.gapy)/(ph+g.gapy)));$("cols").value=c;$("rows").value=r;render()});
-["sw","sh","cols","rows","pw","ph","margin","gap","gapy","offx","offy","offx2","offy2","off-same","bleed","marks","center","duplex","scale","scale-pct","align","nup-mode","sides","bk-dup","bk-pad","pad-pos","creep","fill-1p"].forEach(function(id){$(id).addEventListener("input",function(){if(id==="sw"||id==="sh")$("sheet-sel").value="";S.sheet=0;scheduleRender()});$(id).addEventListener("change",render)});
+["sw","sh","cols","rows","pw","ph","margin","gap","gapy","offx","offy","offx2","offy2","off-same","bleed","marks","center","duplex","scale","scale-pct","align","nup-mode","sides","bk-dup","bk-pad","pad-pos","creep","fill-1p"].forEach(function(id){$(id).addEventListener("input",function(){if(id==="sw"||id==="sh")$("sheet-sel").value="";scheduleRender()});/* 보고 있던 판은 유지 — 판 수가 줄면 pager() 가 마지막 판으로 맞춘다 */$(id).addEventListener("change",render)});
 /* 연속 입력은 한 프레임에 한 번만 그린다 (T1) */
 var _rt=null,_raf=0;
 function scheduleRender(){if(_rt)clearTimeout(_rt);_rt=setTimeout(function(){_rt=null;if(document.hidden){render();return}if(_raf)cancelAnimationFrame(_raf);_raf=requestAnimationFrame(function(){_raf=0;render()})},30)}
