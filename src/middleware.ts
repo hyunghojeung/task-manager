@@ -4,8 +4,14 @@ export function middleware(request: NextRequest) {
   const session = request.cookies.get("session");
   const { pathname } = request.nextUrl;
 
+  // 새 도메인(bimposition.com) — 판매용 화면이 준비될 때까지 "준비 중" 페이지만 보여준다 (API 는 그대로)
+  const host = request.headers.get("host") || "";
+  if (/(^|\.)bimposition\.com$/i.test(host.replace(/:\d+$/, "")) && !pathname.startsWith("/api/") && pathname !== "/b") {
+    return NextResponse.rewrite(new URL("/b", request.url));
+  }
+
   // 공개 페이지 & API
-  const publicPaths = ["/", "/signup", "/super-admin", "/api/auth/login", "/api/auth/logout"];
+  const publicPaths = ["/", "/b", "/signup", "/super-admin", "/api/auth/login", "/api/auth/logout"];
   if (publicPaths.some((p) => pathname === p) || pathname.startsWith("/api/signup")) {
     return NextResponse.next();
   }
