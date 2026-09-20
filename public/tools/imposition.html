@@ -269,7 +269,7 @@ input[type=number]:focus,input[type=text]:focus,select:focus{outline:1px solid #
           <button id="slot-reset" hidden></button><button id="back-180" hidden></button>
           <input type="checkbox" id="rot-back" hidden><input type="checkbox" id="rot-page" hidden>
         </div></div>
-        <div class="row" id="row-scale"><label>배율</label><div class="in"><select id="scale"><option value="none" selected>원본 크기 그대로 (기본)</option><option value="fit">인쇄 크기에 맞게 축소/확대</option><option value="pct">배율 직접 입력</option></select><span id="scale-pct-wrap" hidden><input type="number" autocomplete="off" id="scale-pct" value="100" min="1" max="1000" step="1"> %</span></div></div>
+        <div class="row" id="row-scale"><label>배율</label><div class="in"><select id="scale"><option value="none" selected>원본 크기 그대로 (기본)</option><option value="fit">인쇄 크기에 맞게 축소/확대</option><option value="paper">용지 크기에 맞게 (가로 1cm 작게)</option><option value="pct">배율 직접 입력</option></select><span id="scale-pct-wrap" hidden><input type="number" autocomplete="off" id="scale-pct" value="100" min="1" max="1000" step="1"> %</span></div></div>
         <select id="align" hidden><option value="center" selected>center</option></select>
         <input type="number" autocomplete="off" id="margin" value="0" hidden>
         <div class="row"><label>전체 위치이동</label><div class="in" style="flex-direction:column;align-items:flex-start;gap:4px">
@@ -516,6 +516,8 @@ function render(){
   var mode=$("scale").value,fit=mode==="fit";$("scale-pct-wrap").hidden=mode!=="pct";
   var srcW=S.srcW||pw,srcH=S.srcH||ph;
   var sc=fit?Math.min(pw/srcW,ph/srcH):mode==="pct"?Math.max(0.01,(parseFloat($("scale-pct").value)||100)/100):1;var useW=pw,useH=ph,bs=b;
+  /* 용지 크기에 맞게: 묶음 전체를 같은 비율로 (가로 −10mm, 세로도 넘지 않게). 간격도 같이 줄인다 */
+  var sf=1;if(mode==="paper"){var bw0=g.cols*pw+(g.cols-1)*g.gap,bh0=g.rows*ph+(g.rows-1)*g.gapy;sf=Math.min(bw0>0?(g.W-10)/bw0:1,bh0>0?(g.H-10)/bh0:1);if(!(sf>0))sf=1;useW=pw*sf;useH=ph*sf;bs=b*sf;sc=sf;g.gap*=sf;g.gapy*=sf}
   // 박스들을 간격만큼만 띄워 붙인 묶음의 크기 → 판 가운데 또는 여백부터
   var blockW=g.cols*useW+(g.cols-1)*g.gap,blockH=g.rows*useH+(g.rows-1)*g.gapy;
   var alignC=$("align").value!=="margin";
@@ -532,7 +534,7 @@ function render(){
   var k=Math.min(maxW/g.W,maxH/g.H);
   $("wrap2").hidden=!duplex;$("lbl-f").hidden=!duplex;
   (duplex?["f","b"]:["f"]).forEach(function(side){
-  S.side=side;g=geom();
+  S.side=side;g=geom();if(mode==="paper"){g.gap*=sf;g.gapy*=sf}
   startX=(alignC?(g.W-blockW)/2:g.m)+g.offx;startY=(alignC?(g.H-blockH)/2:g.m)+g.offy;
   var el=side==="f"?$("sheet"):$("sheet2");el.style.width=(g.W*k)+"px";el.style.height=(g.H*k)+"px";el.style.background="#fff";el.style.boxShadow="0 8px 30px rgba(0,0,0,.25)";
   /* 슬롯(<div class=slot>)과 그 안의 <img> 는 그대로 두고 재단선·치수선만 지운다 (T3) */
