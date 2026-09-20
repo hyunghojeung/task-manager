@@ -200,8 +200,9 @@ input[type=number]:focus,input[type=text]:focus,select:focus{outline:1px solid #
         <h3>3. 홀·짝 나누기</h3>
         <div class="row"><label>나눌 파일</label><div class="in"><span class="tfile"></span><button class="winbtn tpick" type="button">찾아보기...</button></div></div>
         <div class="row"><label>결과</label><div class="in"><span style="font-size:12px">파일 2개: <b>_홀수.pdf</b> / <b>_짝수.pdf</b></span></div></div>
+        <div class="row"><label>홀수 순서</label><div class="in"><label class="chk"><input type="checkbox" id="odd-rev"> 역순</label></div></div>
         <div class="row"><label>짝수 순서</label><div class="in"><label class="chk"><input type="checkbox" id="even-rev" checked> 역순 (양면 뒷면 출력용)</label></div></div>
-        <div class="row"><label>맞춤</label><div class="in"><label class="chk"><input type="checkbox" id="oe-pad" checked> 페이지 수가 홀수면 끝에 빈 페이지 추가</label></div></div>
+        <div class="row" hidden><label>맞춤</label><div class="in"><label class="chk"><input type="checkbox" id="oe-pad" checked> 페이지 수가 홀수면 끝에 빈 페이지 추가</label></div></div>
         <div style="font-size:11px;color:var(--g500);margin-top:4px">앞면(홀수)을 먼저 출력하고 용지를 뒤집어 뒷면(짝수)을 출력하는 방식에 맞춥니다.</div>
       </div>
 
@@ -595,7 +596,7 @@ function render(){
   });
   S.side="f";
 }
-["cut-dir","cut-n","cut-order","cut-ov","cut-range","even-rev","oe-pad","m-rev","m-pad","m-dup","dup-page","dup-n","rot-target","rot-range","rot-deg"].forEach(function(id){$(id).addEventListener("input",scheduleRender);$(id).addEventListener("change",render)});
+["cut-dir","cut-n","cut-order","cut-ov","cut-range","odd-rev","even-rev","oe-pad","m-rev","m-pad","m-dup","dup-page","dup-n","rot-target","rot-range","rot-deg"].forEach(function(id){$(id).addEventListener("input",scheduleRender);$(id).addEventListener("change",render)});
 S.fileB=null;S.pagesB=0;
 $("m-drop").addEventListener("click",function(){if(LOCAL){LOCAL.pick("mergeB");return}if(webOpenNotice())return;S.fileB="뒷면_공통.pdf";S.pagesB=1;$("m-b").textContent=S.fileB+" · 1p  ";$("m-b").hidden=false;$("m-drop").textContent="찾아보기...";render()});
 function pgBox(a,cls){return a.slice(0,48).map(function(x){return "<span class='"+(x?cls||"":"blank")+"'>"+(x||"빈")+"</span>"}).join("")+(a.length>48?"<span class='blank'>…</span>":"")}
@@ -623,10 +624,10 @@ function renderTool(){
   }
   ["first","prev","next","last","sheet-go","sheet-total"].forEach(function(id){$(id).hidden=true});$("pager-bottom").hidden=true;
   if(S.type==="oddeven"){
-    var rev=$("even-rev").checked,padOn=$("oe-pad").checked,N=n+((padOn&&n%2)?1:0),odd=[],even=[];
-    for(var p=1;p<=N;p++)(p%2?odd:even).push(p>n?0:p);if(rev)even.reverse();
+    var rev=$("even-rev").checked,orev=$("odd-rev").checked,padOn=$("oe-pad").checked,N=n+((padOn&&n%2)?1:0),odd=[],even=[];
+    for(var p=1;p<=N;p++)(p%2?odd:even).push(p>n?0:p);if(rev)even.reverse();if(orev)odd.reverse();
     $("sheet-no").textContent="홀수 "+odd.length+"p · 짝수 "+even.length+"p";
-    $("stats").innerHTML=n?"원본 <b>"+n+"p</b> → 파일 2개"+(rev?" · 짝수는 역순":""):"";$("outname").textContent=base+"_홀수.pdf + "+base+"_짝수.pdf";
+    $("stats").innerHTML=n?"원본 <b>"+n+"p</b> → 파일 2개"+(orev?" · 홀수는 역순":"")+(rev?" · 짝수는 역순":""):"";$("outname").textContent=base+"_홀수.pdf + "+base+"_짝수.pdf";
     el.innerHTML="<div class='stacks'><div class='stack'><h4>"+base+"_홀수.pdf <small style='font-weight:400;color:var(--g500)'>앞면 · "+odd.length+"p</small></h4><div class='pg'>"+pgBox(odd)+"</div></div><div class='stack'><h4>"+base+"_짝수.pdf <small style='font-weight:400;color:var(--g500)'>뒷면 · "+even.length+"p"+(rev?" · 역순":"")+"</small></h4><div class='pg'>"+pgBox(even)+"</div></div></div>";
     return;
   }
@@ -662,7 +663,7 @@ $("side-f").addEventListener("click",function(){S.side="f";render()});$("side-b"
 var _rz=null;window.addEventListener("resize",function(){if(_rz)clearTimeout(_rz);_rz=setTimeout(function(){_rz=null;render()},150)});
 
 /* ---- 프리셋 (미리보기: 브라우저 저장) ---- */
-var FIELDS=["sw","sh","cols","rows","pw","ph","margin","gap","gapy","offx","offy","offx2","offy2","off-same","align","nup-mode","bleed","marks","center","duplex","scale","scale-pct","sides","bk-dup","bk-pad","pad-pos","creep","fill-1p","rot-back","rot-page","cut-dir","cut-n","cut-order","cut-ov","cut-range","even-rev","oe-pad","m-rev","m-pad","m-dup","dup-page","dup-n","rot-target","rot-range","rot-deg"];
+var FIELDS=["sw","sh","cols","rows","pw","ph","margin","gap","gapy","offx","offy","offx2","offy2","off-same","align","nup-mode","bleed","marks","center","duplex","scale","scale-pct","sides","bk-dup","bk-pad","pad-pos","creep","fill-1p","rot-back","rot-page","cut-dir","cut-n","cut-order","cut-ov","cut-range","odd-rev","even-rev","oe-pad","m-rev","m-pad","m-dup","dup-page","dup-n","rot-target","rot-range","rot-deg"];
 function snapshot(){var o={type:S.type,slotRot:S.slotRot};FIELDS.forEach(function(id){var e=$(id);o[id]=e.type==="checkbox"?e.checked:e.value});return o}
 function apply(o){S.type=o.type;S.slotRot=(o.slotRot&&o.slotRot.f)?o.slotRot:{f:{},b:{}};[].forEach.call($("types").children,function(x){x.classList.toggle("on",x.getAttribute("data-t")===o.type)});FIELDS.forEach(function(id){var e=$(id);if(o[id]===undefined)return;if(e.type==="checkbox")e.checked=!!o[id];else e.value=o[id]});$("sheet-sel").value="";S.sheet=0;render()}
 function loadPresets(){if(LOCAL)return LOCAL.presets;try{return JSON.parse(localStorage.getItem("impo-presets")||"null")||seed()}catch(e){return seed()}}
