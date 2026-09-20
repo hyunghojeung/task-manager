@@ -256,7 +256,7 @@ input[type=number]:focus,input[type=text]:focus,select:focus{outline:1px solid #
         </div></div>
         <div class="row"><label>인쇄 크기</label><div class="in"><input type="number" autocomplete="off" id="pw" value="210"> × <input type="number" autocomplete="off" id="ph" value="297"></div></div>
         <div class="row" id="row-arr"><label>배치</label><div class="in"><input type="number" autocomplete="off" id="cols" value="1" min="1" max="12"> 열 × <input type="number" autocomplete="off" id="rows" value="1" min="1" max="12"> 행<button id="autofit" hidden></button></div></div>
-        <div class="row" id="row-gap"><label id="lbl-gap">사이간격</label><div class="in"><span id="gap-lx">가로</span> <input type="number" autocomplete="off" id="gap" value="0" min="0" step="1"> <span id="gapy-wrap"><span id="gap-ly">세로</span> <input type="number" autocomplete="off" id="gapy" value="0" min="0" step="1"></span></div></div>
+        <div class="row" id="row-gap"><label id="lbl-gap">배치간격</label><div class="in"><span id="gap-lx">가로</span> <input type="number" autocomplete="off" id="gap" value="0" min="0" step="1"> <span id="gapy-wrap"><span id="gap-ly">세로</span> <input type="number" autocomplete="off" id="gapy" value="0" min="0" step="1"></span></div></div>
         <div class="row"><label>돔보 거리</label><div class="in"><input type="number" autocomplete="off" id="bleed" value="3" min="0" step="1"></div></div>
         <div class="row"><label>재단선</label><div class="in"><label class="chk"><input type="checkbox" id="marks" checked> 재단선 표시 (모서리, 3mm)</label></div></div>
         <div class="row" id="row-rot"><label>회전</label><div class="in" style="flex-direction:column;align-items:stretch">
@@ -498,7 +498,7 @@ function render(){
   if($("onetouch").checked&&S.type==="repeat"){var g0=geom(),okey=g0.cols+"x"+g0.rows+$("duplex").value+mirrorAxis();if(S._otKey!==okey){S._otKey=okey;var g2=g0,left2=Math.floor(g2.cols/2),dup2=$("duplex").value!=="single";S.slotRot.f={};S.slotRot.b={};for(var r2=0;r2<g2.rows;r2++)for(var c2=0;c2<g2.cols;c2++){var i2=r2*g2.cols+c2;S.slotRot.f[i2]=c2<left2?180:0;if(dup2)S.slotRot.b[i2]=((mirrorAxis()==="cols")?(c2>=g2.cols-left2):(c2<left2))?180:0}}}else S._otKey="";
   document.querySelectorAll(".bkonly").forEach(function(e){e.hidden=!bk});$("row-arr").hidden=bk;
   var single=$("duplex").querySelector('[value="single"]');single.hidden=bk;if(bk&&$("duplex").value==="single")$("duplex").value="long";
-  $("lbl-gap").textContent=bk?"등 간격":"사이간격";$("gap-lx").textContent=bk?"":"가로";$("gap-ly").textContent=bk?"세트 간격":"세로";$("gapy-wrap").hidden=bk;
+  $("lbl-gap").textContent=bk?"등 간격":"배치간격";$("gap-lx").textContent=bk?"":"가로";$("gap-ly").textContent=bk?"세트 간격":"세로";$("gapy-wrap").hidden=bk;
   $("row-nup").hidden=S.type!=="repeat";
   var g=geom(),P=plan(),total=P.length,duplex=$("duplex").value!=="single";
   renderSlotGrid(g);
