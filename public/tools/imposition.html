@@ -201,7 +201,7 @@ input[type=number]:focus,input[type=text]:focus,select:focus{outline:1px solid #
         <div class="row"><label>나눌 파일</label><div class="in"><span class="tfile"></span><button class="winbtn tpick" type="button">찾아보기...</button></div></div>
         <div class="row"><label>결과</label><div class="in"><span style="font-size:12px">파일 2개: <b>_홀수.pdf</b> / <b>_짝수.pdf</b></span></div></div>
         <div class="row"><label>홀수 순서</label><div class="in"><label class="chk"><input type="checkbox" id="odd-rev"> 역순</label></div></div>
-        <div class="row"><label>짝수 순서</label><div class="in"><label class="chk"><input type="checkbox" id="even-rev" checked> 역순 (양면 뒷면 출력용)</label></div></div>
+        <div class="row"><label>짝수 순서</label><div class="in"><label class="chk"><input type="checkbox" id="even-rev"> 역순 (양면 뒷면 출력용)</label></div></div>
         <div class="row" hidden><label>맞춤</label><div class="in"><label class="chk"><input type="checkbox" id="oe-pad" checked> 페이지 수가 홀수면 끝에 빈 페이지 추가</label></div></div>
         <div style="font-size:11px;color:var(--g500);margin-top:4px">앞면(홀수)을 먼저 출력하고 용지를 뒤집어 뒷면(짝수)을 출력하는 방식에 맞춥니다.</div>
       </div>
@@ -240,14 +240,14 @@ input[type=number]:focus,input[type=text]:focus,select:focus{outline:1px solid #
         <div class="row" id="row-sides" hidden><label>앞,뒷면파일</label><div class="in" style="flex-direction:column;align-items:flex-start;gap:4px">
           <select id="sides"><option value="one">한개 파일로 앞뒷면 배치</option><option value="two">앞·뒷면 별도 파일 사용</option></select>
           <div id="sides-opts" hidden style="display:flex;flex-direction:column;gap:2px">
-            <label class="chk"><input type="checkbox" id="bk-dup" checked> 한 쪽이 1페이지면 상대 페이지 수만큼 반복</label>
-            <label class="chk"><input type="checkbox" id="bk-pad" checked> 두 파일 길이가 다르면 짧은 쪽에 빈 페이지</label>
+            <label class="chk"><input type="checkbox" id="bk-dup"> 한 쪽이 1페이지면 상대 페이지 수만큼 반복</label>
+            <label class="chk"><input type="checkbox" id="bk-pad"> 두 파일 길이가 다르면 짧은 쪽에 빈 페이지</label>
           </div>
         </div></div>
         <select id="bind" hidden><option value="left" selected>left</option></select><select id="sets" hidden><option value="1" selected>1</option></select>
         <div class="row bkonly" hidden><label>빈 페이지</label><div class="in"><select id="pad-pos"><option value="end">4의 배수로 모자라면 맨 끝에 추가</option><option value="last">뒤표지(마지막 페이지) 앞에 추가</option></select></div></div>
         <div class="row bkonly" hidden><label>밀림 보정</label><div class="in"><input type="number" autocomplete="off" id="creep" value="0" min="0" step="0.1" style="width:64px"> mm/판 <span class="unit" style="font-size:11px;color:var(--g500)">안쪽 판일수록 등 쪽으로 이동 (위치만, 축소 없음)</span></div></div>
-        <div class="row bkonly" hidden><label>접는 선</label><div class="in"><label class="chk"><input type="checkbox" id="center" checked> 미리보기에 가운데 접는 선 표시</label></div></div>
+        <div class="row bkonly" hidden><label>접는 선</label><div class="in"><label class="chk"><input type="checkbox" id="center"> 미리보기에 가운데 접는 선 표시</label></div></div>
         <div class="row" id="row-fill1p" hidden><label>화면채우기</label><div class="in"><label class="chk"><input type="checkbox" id="fill-1p"> 1page로 채우기</label></div></div>
         <div class="row"><label>종이 크기</label><div class="in"><input type="number" autocomplete="off" id="sw" value="320" min="50" max="2000"> × <input type="number" autocomplete="off" id="sh" value="450" min="50" max="2000"> <button class="btn sm" id="rot">↻ 가로/세로</button></div></div>
         <div class="row"><label></label><div class="in" style="flex-direction:column;align-items:stretch">
@@ -258,7 +258,7 @@ input[type=number]:focus,input[type=text]:focus,select:focus{outline:1px solid #
         <div class="row" id="row-arr"><label>배치</label><div class="in"><input type="number" autocomplete="off" id="cols" value="1" min="1" max="12"> 열 × <input type="number" autocomplete="off" id="rows" value="1" min="1" max="12"> 행<button id="autofit" hidden></button></div></div>
         <div class="row" id="row-gap"><label id="lbl-gap">배치간격</label><div class="in"><span id="gap-lx">가로</span> <input type="number" autocomplete="off" id="gap" value="0" min="0" step="1"> <span id="gapy-wrap"><span id="gap-ly">세로</span> <input type="number" autocomplete="off" id="gapy" value="0" min="0" step="1"></span></div></div>
         <div class="row"><label>돔보 거리</label><div class="in"><input type="number" autocomplete="off" id="bleed" value="3" min="0" step="1"></div></div>
-        <div class="row"><label>재단선</label><div class="in"><label class="chk"><input type="checkbox" id="marks" checked> 재단선 표시 (모서리, 3mm)</label></div></div>
+        <div class="row"><label>재단선</label><div class="in"><label class="chk"><input type="checkbox" id="marks"> 재단선 표시 (모서리, 3mm)</label></div></div>
         <div class="row" id="row-rot"><label>회전</label><div class="in" style="flex-direction:column;align-items:stretch">
           <table class="rottbl" id="rottbl" hidden></table>
           <div style="margin-top:4px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;font-size:12px">
