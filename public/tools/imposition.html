@@ -85,6 +85,7 @@ body.onetouch .slot:not(.blank){cursor:pointer}body.onetouch .slot:not(.blank):h
 .slot small{position:absolute;left:3px;top:2px;font-size:9px;font-weight:400;color:#6b7280}
 .mark{position:absolute;background:#111;opacity:.7}
 .bleedbox{position:absolute;border:1px dashed #f59e0b;background:rgba(245,158,11,.06);pointer-events:none}
+.trimbox{position:absolute;box-sizing:border-box;border:1px dashed rgba(220,38,38,.55);background:rgba(220,38,38,.05);pointer-events:none;z-index:1}
 .rottbl{border-collapse:collapse;font-size:12px;margin-top:4px;width:100%}
 .rottbl th{font-weight:600;color:var(--g500);text-align:left;padding:2px 4px;font-size:11px}
 .rottbl td{padding:2px 4px}
@@ -255,6 +256,7 @@ input[type=number]:focus,input[type=text]:focus,select:focus{outline:1px solid #
           <div style="display:flex;gap:4px;margin-top:4px"><input type="text" id="sheet-name" placeholder="이름 (예: SRA3, 4×6전지)" style="flex:1;min-width:0"><button class="btn sm dark" id="sheet-save">종이 크기 저장</button></div>
         </div></div>
         <div class="row"><label>재단 크기</label><div class="in"><input type="number" autocomplete="off" id="pw" value="210"> × <input type="number" autocomplete="off" id="ph" value="297"></div></div>
+        <div class="row"><label></label><div class="in"><label class="chk"><input type="checkbox" id="trim-preview"> 재단 미리보기</label></div></div>
         <div class="row" id="row-arr"><label>배치</label><div class="in"><input type="number" autocomplete="off" id="cols" value="1" min="1" max="12"> 열 × <input type="number" autocomplete="off" id="rows" value="1" min="1" max="12"> 행<button id="autofit" hidden></button></div></div>
         <div class="row" id="row-gap"><label id="lbl-gap">배치간격</label><div class="in"><span id="gap-lx">가로</span> <input type="number" autocomplete="off" id="gap" value="0" min="0" step="1"> <span id="gapy-wrap"><span id="gap-ly">세로</span> <input type="number" autocomplete="off" id="gapy" value="0" min="0" step="1"></span></div></div>
         <div class="row"><label>돔보 거리</label><div class="in"><input type="number" autocomplete="off" id="bleed" value="3" min="0" step="1"></div></div>
@@ -339,7 +341,7 @@ var $=function(i){return document.getElementById(i)};
 var S={type:"repeat",file:null,pages:0,srcW:210,srcH:297,side:"f",sheet:0,slotRot:{f:{},b:{}},back:null};
 function twoFiles(){return (S.type==="cutstack"||S.type==="repeat")&&$("duplex").value!=="single"&&$("sides").value==="two"}
 function sizeLine(pages,w,h,mb,trim){var t=(trim&&trim.w)?" (파일 재단 박스 "+trim.w+"×"+trim.h+")":"";return pages+"페이지 · "+w+"×"+h+" mm"+t+" · "+mb+" MB"}
-function openBack(name,pages,w,h,mb,trim){S.back={name:name,pages:pages,w:w,h:h,full:null};$("bk-name").textContent=name;$("bk-sub").textContent=sizeLine(pages,w,h,mb,trim);$("bk-info").hidden=false;$("bk-drop").hidden=true;S.sheet=0;render()}
+function openBack(name,pages,w,h,mb,trim){S.back={name:name,pages:pages,w:w,h:h,full:null,trim:(trim&&trim.w)?trim:null};$("bk-name").textContent=name;$("bk-sub").textContent=sizeLine(pages,w,h,mb,trim);$("bk-info").hidden=false;$("bk-drop").hidden=true;S.sheet=0;render()}
 $("bk-drop").addEventListener("click",function(){if(LOCAL){LOCAL.pick("back");return}if(webOpenNotice())return;openBack("졸업작품_도록_뒷면공통.pdf",1,210,297,3)});
 $("bk-change").addEventListener("click",function(){if(LOCAL){LOCAL.pick("back");return}if(webOpenNotice())return;openBack("졸업작품_도록_뒷면공통.pdf",1,210,297,3)});
 $("bk-x").addEventListener("click",function(){S.back=null;$("bk-info").hidden=true;$("bk-drop").hidden=false;render()});
@@ -350,7 +352,7 @@ $("drop").addEventListener("click",function(){if(LOCAL){LOCAL.pick("front");retu
 $("f-change").addEventListener("click",function(){if(LOCAL){LOCAL.pick("front");return}if(webOpenNotice())return;openFile("행사_리플렛_최종.pdf",12,210,297,38)});
 document.querySelectorAll(".tpick").forEach(function(b){b.addEventListener("click",function(){if(LOCAL){LOCAL.pick("front");return}if(webOpenNotice())return;openFile(S.file?"행사_리플렛_최종.pdf":"2026_졸업작품_도록_최종.pdf",S.file?12:96,210,297,S.file?38:486)})});
 function syncFileLabels(){document.querySelectorAll(".tfile").forEach(function(e){e.textContent=S.file?S.file+" · "+S.pages+"p":""})}
-function openFile(name,pages,w,h,mb,trim){S.file=name;S.pages=pages;S.srcW=w;S.srcH=h;S.full=null;S.mb=mb;$("f-name").textContent=name;$("f-sub").textContent=sizeLine(pages,w,h,mb,trim);$("f-info").hidden=false;$("drop").hidden=true;$("f-meta").textContent=pages+"p";$("pw").value=w;$("ph").value=h;S.sheet=0;syncFileLabels();render()}
+function openFile(name,pages,w,h,mb,trim){S.file=name;S.pages=pages;S.srcW=w;S.srcH=h;S.full=null;S.trim=(trim&&trim.w)?trim:null;S.mb=mb;$("f-name").textContent=name;$("f-sub").textContent=sizeLine(pages,w,h,mb,trim);$("f-info").hidden=false;$("drop").hidden=true;$("f-meta").textContent=pages+"p";$("pw").value=w;$("ph").value=h;S.sheet=0;syncFileLabels();render()}
 $("f-x").addEventListener("click",function(){S.file=null;S.pages=0;$("f-info").hidden=true;$("drop").hidden=false;$("f-meta").textContent="";syncFileLabels();render()});
 
 /* ---- 조판 종류 ---- */
@@ -391,7 +393,7 @@ $("sheet-del").addEventListener("click",function(){var a=loadSizes(),i=+$("sheet
 renderSizes();
 $("rot").addEventListener("click",function(){var a=$("sw").value;$("sw").value=$("sh").value;$("sh").value=a;render()});
 $("autofit").addEventListener("click",function(){var g=geom();var pw=num("pw",S.srcW)+2*num("bleed"),ph=num("ph",S.srcH)+2*num("bleed");if(g.rotPage){var t0=pw;pw=ph;ph=t0}var c=Math.max(1,Math.floor((g.W-2*g.m+g.gap)/(pw+g.gap))),r=Math.max(1,Math.floor((g.H-2*g.m+g.gapy)/(ph+g.gapy)));$("cols").value=c;$("rows").value=r;render()});
-["sw","sh","cols","rows","pw","ph","margin","gap","gapy","offx","offy","offx2","offy2","off-same","bleed","marks","center","duplex","scale","scale-pct","align","nup-mode","sides","bk-dup","bk-pad","pad-pos","creep","fill-1p"].forEach(function(id){$(id).addEventListener("input",function(){if(id==="sw"||id==="sh")$("sheet-sel").value="";scheduleRender()});/* 보고 있던 판은 유지 — 판 수가 줄면 pager() 가 마지막 판으로 맞춘다 */$(id).addEventListener("change",render)});
+["sw","sh","cols","rows","pw","ph","trim-preview","margin","gap","gapy","offx","offy","offx2","offy2","off-same","bleed","marks","center","duplex","scale","scale-pct","align","nup-mode","sides","bk-dup","bk-pad","pad-pos","creep","fill-1p"].forEach(function(id){$(id).addEventListener("input",function(){if(id==="sw"||id==="sh")$("sheet-sel").value="";scheduleRender()});/* 보고 있던 판은 유지 — 판 수가 줄면 pager() 가 마지막 판으로 맞춘다 */$(id).addEventListener("change",render)});
 /* 연속 입력은 한 프레임에 한 번만 그린다 (T1) */
 var _rt=null,_raf=0;
 function scheduleRender(){if(_rt)clearTimeout(_rt);_rt=setTimeout(function(){_rt=null;if(document.hidden){render();return}if(_raf)cancelAnimationFrame(_raf);_raf=requestAnimationFrame(function(){_raf=0;render()})},30)}
@@ -572,7 +574,16 @@ function render(){
       var bpx=b*k,cl=Math.max(0,tx*pSc*k-bpx),ct=Math.max(0,ty*pSc*k-bpx),cr=Math.max(0,iw-((tx+tw)*pSc*k+bpx)),cb=Math.max(0,ih-((ty+th)*pSc*k+bpx));
       im.style.cssText="position:absolute;inset:auto;left:"+lx+"px;top:"+ly+"px;width:"+iw+"px;height:"+ih+"px;object-fit:fill;clip-path:inset("+ct+"px "+cr+"px "+cb+"px "+cl+"px)";
       d.classList.add("has-thumb");
-    }else if(im){im.remove()}
+      var tr=(pg<0&&S.back)?S.back.trim:S.trim,tb=d.querySelector(".trimbox");
+      if($("trim-preview").checked&&tr){
+        var ux=tr.x||0,uy=tr.y||0,uw=tr.w,uh=tr.h;                                   /* 페이지 안 재단 박스 (회전 전) */
+        var rx=deg===90?fu.h-(uy+uh):deg===180?fu.w-(ux+uw):deg===270?uy:ux;         /* 회전 후 위치 */
+        var ry=deg===90?ux:deg===180?fu.h-(uy+uh):deg===270?fu.w-(ux+uw):uy;
+        var rw=q90?uh:uw,rh=q90?uw:uh;
+        if(!tb){tb=document.createElement("div");tb.className="trimbox";d.appendChild(tb)}
+        tb.style.cssText="left:"+(lx+rx*pSc*k)+"px;top:"+(ly+ry*pSc*k)+"px;width:"+(rw*pSc*k)+"px;height:"+(rh*pSc*k)+"px";
+      }else if(tb){tb.remove()}
+    }else if(im){im.remove();var tb0=d.querySelector(".trimbox");if(tb0)tb0.remove()}
     if($("marks").checked&&list){var bl=bs*k,L=3*k,gapm=bl+1*k;/* 재단선 3mm, 블리드 바깥 1mm 에서 시작 */[[x*k,y*k],[(x+useW)*k,y*k],[x*k,(y+useH)*k],[(x+useW)*k,(y+useH)*k]].forEach(function(pt,q){
       var h=document.createElement("i"),v=document.createElement("i");h.className="mark";v.className="mark";
       var sx=q%2===0?-1:1,sy=q<2?-1:1;
@@ -673,7 +684,7 @@ $("side-f").addEventListener("click",function(){S.side="f";render()});$("side-b"
 var _rz=null;window.addEventListener("resize",function(){if(_rz)clearTimeout(_rz);_rz=setTimeout(function(){_rz=null;render()},150)});
 
 /* ---- 프리셋 (미리보기: 브라우저 저장) ---- */
-var FIELDS=["sw","sh","cols","rows","pw","ph","margin","gap","gapy","offx","offy","offx2","offy2","off-same","align","nup-mode","bleed","marks","center","duplex","scale","scale-pct","sides","bk-dup","bk-pad","pad-pos","creep","fill-1p","rot-back","rot-page","cut-dir","cut-n","cut-order","cut-ov","cut-range","odd-rev","even-rev","oe-pad","m-rev","m-pad","m-dup","dup-page","dup-n","rot-target","rot-range","rot-deg"];
+var FIELDS=["sw","sh","cols","rows","pw","ph","trim-preview","margin","gap","gapy","offx","offy","offx2","offy2","off-same","align","nup-mode","bleed","marks","center","duplex","scale","scale-pct","sides","bk-dup","bk-pad","pad-pos","creep","fill-1p","rot-back","rot-page","cut-dir","cut-n","cut-order","cut-ov","cut-range","odd-rev","even-rev","oe-pad","m-rev","m-pad","m-dup","dup-page","dup-n","rot-target","rot-range","rot-deg"];
 function snapshot(){var o={type:S.type,slotRot:S.slotRot};FIELDS.forEach(function(id){var e=$(id);o[id]=e.type==="checkbox"?e.checked:e.value});return o}
 function apply(o){S.type=o.type;S.slotRot=(o.slotRot&&o.slotRot.f)?o.slotRot:{f:{},b:{}};[].forEach.call($("types").children,function(x){x.classList.toggle("on",x.getAttribute("data-t")===o.type)});FIELDS.forEach(function(id){var e=$(id);if(o[id]===undefined)return;if(e.type==="checkbox")e.checked=!!o[id];else e.value=o[id]});$("sheet-sel").value="";S.sheet=0;render()}
 function loadPresets(){if(LOCAL)return LOCAL.presets;try{return JSON.parse(localStorage.getItem("impo-presets")||"null")||seed()}catch(e){return seed()}}
