@@ -122,7 +122,13 @@ body.onetouch .slot:not(.blank){cursor:pointer}body.onetouch .slot:not(.blank):h
 
 /* ===== 윈도우 프로그램 느낌 ===== */
 body{background:#f0f0f0;font-family:"Segoe UI","Malgun Gothic",system-ui,sans-serif;font-size:12px;padding:0}
-.app{margin:0;border:0;border-radius:0;min-height:100vh}
+.app{margin:0;border:0;border-radius:0;min-height:0;height:100vh;height:100dvh}
+/* 한 화면에 다 보이게: 창 자체는 스크롤하지 않고, 왼쪽 옵션과 미리보기 영역이 각각 안에서 스크롤 */
+html,body{height:100%;overflow:hidden}
+.main{min-height:0;height:100%}
+.side{min-height:0}
+.stage{min-height:0;overflow:hidden}
+.sheetwrap{min-height:0}
 .bar{background:#f3f3f3;color:#000;border-bottom:1px solid #d9d9d9;padding:6px 12px;gap:10px}
 .bar b{font-size:13px;font-weight:600}.bar .v{background:#e4e4e4;color:#444;border-radius:2px}.bar .st{color:#555}.bar .st i{background:#1a9c3e}
 .main{grid-template-columns:352px 1fr}
