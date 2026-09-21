@@ -26,7 +26,7 @@ body{margin:0;background:#e5e7eb;color:var(--ink);font-family:"Noto Sans KR","Ma
 .card h3 .r{margin-left:auto;font-weight:400;color:var(--g500);font-size:11px}
 .drop{border:2px dashed var(--g300);border-radius:6px;padding:14px;text-align:center;color:var(--g500);font-size:12px;cursor:pointer;background:#fff}
 .drop:hover{border-color:var(--blue);color:var(--blue)}
-.file{display:flex;justify-content:space-between;gap:8px;font-size:12px;padding:6px 0}
+.file{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:12px;padding:2px 0}.file>div:first-child{min-width:0}.file b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .file b{font-size:13px}
 .file .m{color:var(--g500)}
 .types{display:grid;grid-template-columns:repeat(3,1fr);gap:4px}
@@ -168,7 +168,7 @@ input[type=number]:focus,input[type=text]:focus,select:focus{outline:1px solid #
     <div class="side">
       <div class="card">
         <h3>1. 원본 PDF <span class="r" id="f-meta"></span></h3>
-        <div class="drop" id="drop"><button class="winbtn big" type="button" style="pointer-events:none;margin-bottom:6px">PDF 파일 열기...</button><br><span id="drop-note" style="font-size:11px">수백 MB 파일도 그대로 (원본은 건드리지 않음)</span></div>
+        <div class="drop" id="drop" style="padding:8px"><button class="winbtn big" type="button" style="pointer-events:none">PDF 파일 열기...</button><span id="drop-note" style="font-size:11px;display:none"></span></div>
         <div class="file" id="f-info" hidden><div><b id="f-name"></b><div class="m" id="f-sub"></div></div><div style="display:flex;gap:4px"><button class="winbtn" id="f-change">찾아보기...</button><button class="btn sm" id="f-x">✕</button></div></div>
         <div id="bk-box" hidden style="margin-top:8px;border-top:1px dashed var(--g300);padding-top:8px">
           <div style="font-size:12px;font-weight:700;margin-bottom:4px">뒷면 PDF <span style="font-weight:400;color:var(--g500)">(위 파일이 앞면)</span></div>
@@ -190,7 +190,7 @@ input[type=number]:focus,input[type=text]:focus,select:focus{outline:1px solid #
           <button data-t="rotate" class="tool">페이지 회전</button>
           <button data-t="reorder" class="tool">페이지 정렬</button>
         </div>
-        <div id="type-help" style="font-size:11px;color:var(--g500);margin-top:6px"></div>
+        <div id="type-help" style="font-size:11px;color:var(--g500);margin-top:6px" hidden></div>
       </div>
 
       <div class="card" id="card-split" hidden>
@@ -347,7 +347,7 @@ input[type=number]:focus,input[type=text]:focus,select:focus{outline:1px solid #
 /* 프로그램 실행 파일 경로 — 파일이 올라오면 여기에 넣는다 */
 var DOWNLOAD_URL="/api/program-releases/imposition/download";
 var LOCAL=window.BCOUNT_LOCAL||null;if(LOCAL)document.getElementById("dl-btn").hidden=true;
-if(!LOCAL){var dn=document.getElementById("drop-note");if(dn)dn.innerHTML="<b>미리보기 화면</b> — 실제 파일은 위 '프로그램 다운로드'로 받은 프로그램에서 엽니다";}
+if(!LOCAL){var dn=document.getElementById("drop-note");if(dn){dn.style.display="block";dn.style.marginTop="4px";dn.innerHTML="<b>미리보기 화면</b> — 실제 파일은 위 '프로그램 다운로드'로 받은 프로그램에서 엽니다"}}
 if(!LOCAL){try{fetch("/api/program-releases",{credentials:"same-origin"}).then(function(r){return r.ok?r.json():null}).then(function(d){var r=d&&d.data&&d.data.filter(function(x){return x.key==="imposition"})[0];if(!r||!r.version)return;var vb=document.querySelector(".bar .v");if(vb)vb.textContent="v"+r.version;var b=document.getElementById("dl-btn");if(b)b.textContent="B-imposition 프로그램 다운로드 (v"+r.version+(r.updated_at?" · "+String(r.updated_at).slice(0,10):"")+")"}).catch(function(){})}catch(e){}}
 function webOpenNotice(){if(confirm("이 화면은 미리보기라서 PC의 PDF를 직접 열 수 없습니다.\n실제 파일 열기·저장은 'B-imposition 프로그램'(윈도우)에서 합니다.\n\n지금 프로그램(zip)을 내려받을까요? 받은 뒤 압축을 풀고 폴더 안의 BcountImposition.exe 를 실행하세요. (취소하면 예시 파일로 계속 봅니다)")){window.top.location.href=DOWNLOAD_URL;return true}return false}
 document.getElementById("dl-btn").addEventListener("click",function(){if(DOWNLOAD_URL){if(confirm("프로그램(zip)을 내려받습니다.\n받은 뒤 압축을 풀고 폴더 안의 BcountImposition.exe 를 실행하세요.\n(폴더째 두고 쓰세요 — 다른 파일을 지우면 안 됩니다)"))window.top.location.href=DOWNLOAD_URL;return}else alert("프로그램 파일이 준비되면 이 버튼으로 바로 내려받습니다.")});
@@ -355,7 +355,7 @@ document.getElementById("dl-btn").addEventListener("click",function(){if(DOWNLOA
 var $=function(i){return document.getElementById(i)};
 var S={type:"repeat",file:null,pages:0,srcW:210,srcH:297,side:"f",sheet:0,slotRot:{f:{},b:{}},back:null};
 function twoFiles(){return (S.type==="cutstack"||S.type==="repeat")&&$("duplex").value!=="single"&&$("sides").value==="two"}
-function sizeLine(pages,w,h,mb,trim){var t=(trim&&trim.w)?" (파일 재단 박스 "+trim.w+"×"+trim.h+")":"";return pages+"페이지 · "+w+"×"+h+" mm"+t+" · "+mb+" MB"}
+function sizeLine(pages,w,h,mb,trim){var t=(trim&&trim.w)?" · 재단 "+trim.w+"×"+trim.h:"";return pages+"p · "+w+"×"+h+" mm"+t}
 function openBack(name,pages,w,h,mb,trim){S.back={name:name,pages:pages,w:w,h:h,full:null,trim:(trim&&trim.w)?trim:null};$("bk-name").textContent=name;$("bk-sub").textContent=sizeLine(pages,w,h,mb,trim);$("bk-info").hidden=false;$("bk-drop").hidden=true;S.sheet=0;render()}
 $("bk-drop").addEventListener("click",function(){if(LOCAL){LOCAL.pick("back");return}if(webOpenNotice())return;openBack("졸업작품_도록_뒷면공통.pdf",1,210,297,3)});
 $("bk-change").addEventListener("click",function(){if(LOCAL){LOCAL.pick("back");return}if(webOpenNotice())return;openBack("졸업작품_도록_뒷면공통.pdf",1,210,297,3)});
