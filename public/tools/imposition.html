@@ -697,7 +697,13 @@ function renderTool(){
       var tf=(xi?"scaleX(-1) ":"")+(yi?"scaleY(-1)":"");
       var inner=src9?"<img src='"+src9+"' style='position:absolute;left:"+ix+"px;top:"+iy+"px;width:"+pxW+"px;height:"+pxH+"px;transform:"+(tf||"none")+"'>":"";
       tiles+="<div style='position:absolute;left:"+L+"px;top:"+T+"px;width:"+W+"px;height:"+H+"px;overflow:hidden;"+(xi||yi?"background:#e5e7eb;":"background:#fff;")+"'>"+inner+"</div>"})});
-    el.innerHTML="<div style='position:relative;width:"+(mW*mk)+"px;height:"+(mH*mk)+"px;background:#fff;box-shadow:0 8px 30px rgba(0,0,0,.25)'>"+tiles+"<div style='position:absolute;left:"+pb+"px;top:"+pb+"px;width:"+pxW+"px;height:"+pxH+"px;border:1px dashed rgba(220,38,38,.7);pointer-events:none'></div></div>";
+    /* 치수선: 바깥 = 블리드 포함 크기, 안쪽 = 재단(원본) 크기 */
+    var fmtM=function(v){return (Math.round(v*10)/10).toString()};
+    var dims="<div class='dim' style='left:0;right:0;top:-14px;height:10px'><i style='left:0;right:0;top:5px;height:1px'></i><i style='left:0;top:0;width:1px;height:10px'></i><i style='right:0;top:0;width:1px;height:10px'></i><b style='left:50%;top:-6px'>"+fmtM(mW)+"</b></div>"+
+      "<div class='dim' style='top:0;bottom:0;left:-16px;width:10px'><i style='top:0;bottom:0;left:5px;width:1px'></i><i style='top:0;left:0;height:1px;width:10px'></i><i style='bottom:0;left:0;height:1px;width:10px'></i><b style='top:50%;left:-18px;transform:translate(-50%,-50%) rotate(-90deg)'>"+fmtM(mH)+"</b></div>"+
+      "<div class='dim box' style='left:"+pb+"px;top:"+(pb-14)+"px;width:"+pxW+"px;height:10px'><i style='left:0;right:0;top:5px;height:1px'></i><i style='left:0;top:0;width:1px;height:10px'></i><i style='right:0;top:0;width:1px;height:10px'></i><b style='left:50%;top:-1px'>"+fmtM(S.srcW)+"</b></div>"+
+      "<div class='dim box' style='top:"+pb+"px;left:"+(pb-16)+"px;height:"+pxH+"px;width:10px'><i style='top:0;bottom:0;left:5px;width:1px'></i><i style='top:0;left:0;height:1px;width:10px'></i><i style='bottom:0;left:0;height:1px;width:10px'></i><b style='top:50%;left:-4px;transform:translate(-50%,-50%) rotate(-90deg)'>"+fmtM(S.srcH)+"</b></div>";
+    el.innerHTML="<div style='position:relative;margin:40px 0 0 40px;width:"+(mW*mk)+"px;height:"+(mH*mk)+"px;background:#fff;box-shadow:0 8px 30px rgba(0,0,0,.25)'>"+tiles+"<div style='position:absolute;left:"+pb+"px;top:"+pb+"px;width:"+pxW+"px;height:"+pxH+"px;border:1px dashed rgba(220,38,38,.7);pointer-events:none'></div>"+dims+"</div>";
     return;
   }
   if(S.type==="dup"){
