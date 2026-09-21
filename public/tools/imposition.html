@@ -85,6 +85,7 @@ body.onetouch .slot:not(.blank){cursor:pointer}body.onetouch .slot:not(.blank):h
 .slot small{position:absolute;left:3px;top:2px;font-size:9px;font-weight:400;color:#6b7280}
 .mark{position:absolute;background:#111;opacity:.7}
 .bleedbox{position:absolute;border:1px dashed #f59e0b;background:rgba(245,158,11,.06);pointer-events:none}
+#card-file.off{opacity:.45;pointer-events:none}
 .trimbox{position:absolute;box-sizing:border-box;border:1px dashed rgba(220,38,38,.55);background:rgba(220,38,38,.05);pointer-events:none;z-index:1}
 .rottbl{border-collapse:collapse;font-size:12px;margin-top:4px;width:100%}
 .rottbl th{font-weight:600;color:var(--g500);text-align:left;padding:2px 4px;font-size:11px}
@@ -166,7 +167,7 @@ input[type=number]:focus,input[type=text]:focus,select:focus{outline:1px solid #
   <div class="main">
     <!-- ===== 왼쪽: 설정 ===== -->
     <div class="side">
-      <div class="card">
+      <div class="card" id="card-file">
         <h3>1. 원본 PDF <span class="r" id="f-meta"></span></h3>
         <div class="drop" id="drop" style="padding:8px"><button class="winbtn big" type="button" style="pointer-events:none">PDF 파일 열기...</button><span id="drop-note" style="font-size:11px;display:none"></span></div>
         <div class="file" id="f-info" hidden><div><b id="f-name"></b><div class="m" id="f-sub"></div></div><div style="display:flex;gap:4px"><button class="winbtn" id="f-change">찾아보기...</button><button class="btn sm" id="f-x">✕</button></div></div>
@@ -216,7 +217,7 @@ input[type=number]:focus,input[type=text]:focus,select:focus{outline:1px solid #
 
       <div class="card" id="card-merge" hidden>
         <h3>3. 홀·짝 합치기</h3>
-        <div class="row"><label>홀수 쪽</label><div class="in"><span class="tfile" id="m-a"></span><span style="color:#6b7280;font-size:11px">(1번 원본 PDF)</span></div></div>
+        <div class="row"><label>홀수 쪽</label><div class="in"><button class="winbtn" id="m-dropA" type="button">찾아보기...</button><span id="m-a" style="font-size:12px" hidden></span></div></div>
         <div class="row"><label>짝수 쪽</label><div class="in"><button class="winbtn" id="m-drop" type="button">찾아보기...</button><span id="m-b" style="font-size:12px" hidden></span></div></div>
         <div class="row" hidden><label>짝수 순서</label><div class="in"><label class="chk"><input type="checkbox" id="m-rev"> 짝수 파일이 역순이면 되돌리기</label></div></div>
         <div class="row" hidden><label>1페이지 파일</label><div class="in"><label class="chk"><input type="checkbox" id="m-dup" checked> 한 쪽이 1페이지면 상대 길이만큼 복제 (예: 뒷면 1p → 100p)</label></div></div>
@@ -394,6 +395,7 @@ function resetOptions(){
   S.slotRot={f:{},b:{}};S.sheet=0;
   if(S.back){S.back=null;$("bk-info").hidden=true;$("bk-drop").hidden=false}
   if(S.fileB){S.fileB=null;S.pagesB=0;S.fileBPath=null;$("m-b").hidden=true;$("m-drop").textContent="찾아보기..."}
+  if(S.fileA){S.fileA=null;S.pagesA=0;S.fileAPath=null;$("m-a").hidden=true}
   if(S.file){var ts=trimSize();$("pw").value=ts.w;$("ph").value=ts.h}
 }
 /* 중철은 파일의 재단 박스(있으면)를 기준으로 자리 잡고 책등에서 재단선·블리드를 잘라 붙인다. 그 외 종류는 페이지 전체 */
@@ -510,7 +512,7 @@ function render(){
   $("type-help").textContent=HELP[S.type];
 
   var tool=S.type==="split"||S.type==="oddeven"||S.type==="merge"||S.type==="dup"||S.type==="rotate"||S.type==="reorder";
-  $("card-sheet").hidden=tool;$("card-split").hidden=S.type!=="split";$("card-oddeven").hidden=S.type!=="oddeven";$("card-merge").hidden=S.type!=="merge";$("card-dup").hidden=S.type!=="dup";$("card-rotate").hidden=S.type!=="rotate";$("card-reorder").hidden=S.type!=="reorder";
+  $("card-file").classList.toggle("off",S.type==="merge");$("card-sheet").hidden=tool;$("card-split").hidden=S.type!=="split";$("card-oddeven").hidden=S.type!=="oddeven";$("card-merge").hidden=S.type!=="merge";$("card-dup").hidden=S.type!=="dup";$("card-rotate").hidden=S.type!=="rotate";$("card-reorder").hidden=S.type!=="reorder";
   $("row-sides").hidden=tool||!(S.type==="cutstack"||S.type==="repeat")||$("duplex").value==="single";
   /* 화면채우기: N업 반복은 원래 모든 칸이 같은 페이지라 필요 없음 → 순차·컷앤스택에서만 표시 */
   $("row-fill1p").hidden=tool||S.type!=="cutstack";
@@ -641,7 +643,8 @@ function render(){
   S.side="f";
 }
 ["cut-dir","cut-n","cut-order","cut-ov","cut-range","odd-rev","even-rev","oe-pad","m-rev","m-pad","m-dup","dup-page","dup-n","rot-target","rot-range","rot-deg","ord-mode"].forEach(function(id){$(id).addEventListener("input",scheduleRender);$(id).addEventListener("change",render)});
-S.fileB=null;S.pagesB=0;
+S.fileB=null;S.pagesB=0;S.fileA=null;S.pagesA=0;S.fileAPath=null;
+$("m-dropA").addEventListener("click",function(){if(LOCAL){LOCAL.pick("mergeA");return}if(webOpenNotice())return;S.fileA="앞면_홀수.pdf";S.pagesA=6;$("m-a").textContent=S.fileA+" · 6p  ";$("m-a").hidden=false;render()});
 $("m-drop").addEventListener("click",function(){if(LOCAL){LOCAL.pick("mergeB");return}if(webOpenNotice())return;S.fileB="뒷면_공통.pdf";S.pagesB=1;$("m-b").textContent=S.fileB+" · 1p  ";$("m-b").hidden=false;$("m-drop").textContent="찾아보기...";render()});
 function pgBox(a,cls){return a.slice(0,48).map(function(x){return "<span class='"+(x?cls||"":"blank")+"'>"+(x||"빈")+"</span>"}).join("")+(a.length>48?"<span class='blank'>…</span>":"")}
 function renderTool(){
@@ -697,9 +700,10 @@ function renderTool(){
     el.innerHTML="<div class='stacks one'><div class='stack'><h4>"+base+"_회전"+deg+".pdf <small style='font-weight:400;color:var(--g500)'>돌아간 페이지는 표시</small></h4><div class='pg'>"+cells.slice(0,72).map(function(c){return "<span"+(c.r?" style='transform:rotate("+deg+"deg);background:#fef3c7;border-color:#fcd34d;color:#92400e'":" class='blank'")+">"+c.p+"</span>"}).join("")+(n>72?"<span class='blank'>…</span>":"")+"</div></div></div>";
     return;
   }
-  // 홀·짝 합치기
+  // 홀·짝 합치기 — 홀수 쪽(A)·짝수 쪽(B) 모두 이 카드에서 연 파일
+  n=S.pagesA||0;base=(S.fileA?S.fileA.replace(/\.pdf$/i,""):"원고");$("warn").hidden=true;
   var nb=S.pagesB,mrev=$("m-rev").checked,mpad=$("m-pad").checked;
-  if(!nb){$("sheet-no").textContent="짝수 쪽 파일을 열어주세요";$("stats").innerHTML="";$("outname").textContent=base+"_합본.pdf";el.innerHTML="<div class='stacks one'><div class='stack' style='text-align:center;color:var(--g400);padding:30px'>왼쪽에서 짝수 페이지 PDF를 열면 합쳐진 순서가 여기 보입니다</div></div>";return}
+  if(!n||!nb){$("sheet-no").textContent=!n?"홀수 쪽 파일을 열어주세요":"짝수 쪽 파일을 열어주세요";$("stats").innerHTML="";$("outname").textContent=base+"_합본.pdf";el.innerHTML="<div class='stacks one'><div class='stack' style='text-align:center;color:var(--g400);padding:30px'>왼쪽에서 홀수 쪽·짝수 쪽 PDF를 열면 합쳐진 순서가 여기 보입니다</div></div>";return}
   var na=n,mdup=$("m-dup").checked,dupNote="",aOne=false,bOne=false;
   if(mdup&&nb===1&&na>1){nb=na;bOne=true;dupNote=" · 짝수 쪽 1p를 "+na+"p로 복제"}else if(mdup&&na===1&&nb>1){na=nb;aOne=true;dupNote=" · 홀수 쪽 1p를 "+nb+"p로 복제"}
   var L=mpad?Math.max(na,nb):Math.min(na,nb),outM=[];
