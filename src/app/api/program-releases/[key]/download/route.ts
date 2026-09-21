@@ -17,9 +17,12 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ key
     return NextResponse.json({ error: "이 업체는 임포지션 기능을 사용할 수 없습니다." }, { status: 403 });
   }
   const supabase = getSupabase();
-  const { data } = await supabase.from("program_releases").select("storage_path, file_name").eq("key", key).maybeSingle();
+  const { data } = await supabase.from("program_releases").select("storage_path, file_name, version").eq("key", key).maybeSingle();
   if (data?.storage_path) {
-    const { data: signed, error } = await supabase.storage.from(BUCKET).createSignedUrl(data.storage_path, 60 * 10, { download: data.file_name });
+    // 내려받는 파일명에 버전을 붙인다: BcountImposition_v1.3.36.zip
+    const ver = String(data.version || "").trim().replace(/[^\w.\-]+/g, "");
+    const dlName = ver ? data.file_name.replace(/(\.[A-Za-z0-9]+)$/, `_v${ver}$1`) : data.file_name;
+    const { data: signed, error } = await supabase.storage.from(BUCKET).createSignedUrl(data.storage_path, 60 * 10, { download: dlName });
     if (!error && signed?.signedUrl) return NextResponse.redirect(signed.signedUrl, 302);
   }
   // 프록시 뒤(Railway)에서는 request.url 이 내부 주소(localhost:8080)라 절대 URL을 만들면 안 된다 → 상대 경로로 보낸다
