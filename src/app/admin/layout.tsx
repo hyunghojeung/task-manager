@@ -3,6 +3,7 @@ import { getSession } from "@/lib/session";
 import { getSupabase } from "@/lib/supabase-admin";
 import Header from "@/components/Header";
 import NavBar from "@/components/NavBar";
+import { getCompanyFeatures } from "@/lib/features";
 
 export default async function AdminLayout({
   children,
@@ -43,7 +44,7 @@ export default async function AdminLayout({
         systemName={settingsData?.system_name}
         impersonated={session.impersonated}
       />
-      <NavBar role={session.user.role} hubEnabled={hubUser?.hub_enabled ?? false} />
+      <NavBar role={session.user.role} hubEnabled={hubUser?.hub_enabled ?? false} features={await getCompanyFeatures(session.company.id)} />
       <main className="p-4 md:p-6">{children}</main>
     </div>
   );

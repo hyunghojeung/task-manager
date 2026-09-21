@@ -47,7 +47,8 @@ export default async function HubLayout({
     .eq("id", session.user.id)
     .maybeSingle();
 
-  if (!hubUser?.hub_enabled || !(await getCompanyFeatures(session.company.id)).hub) {
+  const features = await getCompanyFeatures(session.company.id);
+  if (!hubUser?.hub_enabled || !features.hub) {
     redirect("/dashboard");
   }
 
@@ -69,7 +70,7 @@ export default async function HubLayout({
           systemName={settingsData?.system_name}
           impersonated={session.impersonated}
         />
-        <NavBar role={session.user.role} hubEnabled />
+        <NavBar role={session.user.role} hubEnabled features={features} />
       </div>
 
       {/* 폰: 독립된 앱처럼 보이게 한다 */}
