@@ -585,8 +585,10 @@ function render(){
       if(!im){im=document.createElement("img");im.className="thumb";im.alt="";d.insertBefore(im,d.firstChild)}
       if(im.getAttribute("src")!==src)im.setAttribute("src",src);
       var lx=(bw*k-tw*pSc*k)/2-tx*pSc*k,ly=(bh*k-th*pSc*k)/2-ty*pSc*k;   /* 재단 박스가 칸 가운데 오게 */
-      var bpx=b*k,bkL=(S.type==="booklet"&&c===1)?0:bpx,bkR=(S.type==="booklet"&&c===0)?0:bpx;   /* 중철 책등 쪽은 재단선에서 */
-      var cl=Math.max(0,tx*pSc*k-bkL),ct=Math.max(0,ty*pSc*k-bpx),cr=Math.max(0,iw-((tx+tw)*pSc*k+bkR)),cb=Math.max(0,ih-((ty+th)*pSc*k+bpx));
+      /* 중철: 바깥쪽은 자르지 않고 원본 페이지 전체를 그대로, 책등 쪽만 재단선에서 자른다. 그 외: 박스+돔보 거리 */
+      var bk2=S.type==="booklet",big=1e6,bpx=b*k,oL=bk2?big:bpx,oT=bk2?big:bpx,oR=bk2?big:bpx,oB=bk2?big:bpx;
+      if(bk2){if(c===0)oR=0;else oL=0}
+      var cl=Math.max(0,tx*pSc*k-oL),ct=Math.max(0,ty*pSc*k-oT),cr=Math.max(0,iw-((tx+tw)*pSc*k+oR)),cb=Math.max(0,ih-((ty+th)*pSc*k+oB));
       im.style.cssText="position:absolute;inset:auto;left:"+lx+"px;top:"+ly+"px;width:"+iw+"px;height:"+ih+"px;object-fit:fill;clip-path:inset("+ct+"px "+cr+"px "+cb+"px "+cl+"px)";
       d.classList.add("has-thumb");
       var tr=(pg<0&&S.back)?S.back.trim:S.trim,tb=d.querySelector(".trimbox");
