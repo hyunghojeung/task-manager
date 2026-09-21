@@ -361,7 +361,7 @@ $("drop").addEventListener("click",function(){if(LOCAL){LOCAL.pick("front");retu
 $("f-change").addEventListener("click",function(){if(LOCAL){LOCAL.pick("front");return}if(webOpenNotice())return;openFile("행사_리플렛_최종.pdf",12,210,297,38)});
 document.querySelectorAll(".tpick").forEach(function(b){b.addEventListener("click",function(){if(LOCAL){LOCAL.pick("front");return}if(webOpenNotice())return;openFile(S.file?"행사_리플렛_최종.pdf":"2026_졸업작품_도록_최종.pdf",S.file?12:96,210,297,S.file?38:486)})});
 function syncFileLabels(){document.querySelectorAll(".tfile").forEach(function(e){e.textContent=S.file?S.file+" · "+S.pages+"p":""})}
-function openFile(name,pages,w,h,mb,trim){S.file=name;S.pages=pages;S.srcW=w;S.srcH=h;S.full=null;S.trim=(trim&&trim.w)?trim:null;S.mb=mb;$("f-name").textContent=name;$("f-sub").textContent=sizeLine(pages,w,h,mb,trim);$("f-info").hidden=false;$("drop").hidden=true;$("f-meta").textContent=pages+"p";$("pw").value=w;$("ph").value=h;S.sheet=0;syncFileLabels();render()}
+function openFile(name,pages,w,h,mb,trim){S.file=name;S.pages=pages;S.srcW=w;S.srcH=h;S.full=null;S.trim=(trim&&trim.w)?trim:null;S.mb=mb;$("f-name").textContent=name;$("f-sub").textContent=sizeLine(pages,w,h,mb,trim);$("f-info").hidden=false;$("drop").hidden=true;$("f-meta").textContent=pages+"p";var ts=trimSize();$("pw").value=ts.w;$("ph").value=ts.h;S.sheet=0;syncFileLabels();render()}
 $("f-x").addEventListener("click",function(){S.file=null;S.pages=0;$("f-info").hidden=true;$("drop").hidden=false;$("f-meta").textContent="";syncFileLabels();render()});
 
 /* ---- 조판 종류 ---- */
@@ -388,8 +388,11 @@ function resetOptions(){
   S.slotRot={f:{},b:{}};S.sheet=0;
   if(S.back){S.back=null;$("bk-info").hidden=true;$("bk-drop").hidden=false}
   if(S.fileB){S.fileB=null;S.pagesB=0;S.fileBPath=null;$("m-b").hidden=true;$("m-drop").textContent="찾아보기..."}
-  if(S.file){$("pw").value=S.srcW;$("ph").value=S.srcH}
+  if(S.file){var ts=trimSize();$("pw").value=ts.w;$("ph").value=ts.h}
 }
+/* 중철은 파일의 재단 박스(있으면)를 기준으로 자리 잡고 책등에서 재단선·블리드를 잘라 붙인다. 그 외 종류는 페이지 전체 */
+function bkTrim(back){var tr=back?(S.back&&S.back.trim):S.trim;return (S.type==="booklet"&&tr&&tr.w>0)?tr:null}
+function trimSize(){var tr=bkTrim(false);return tr?{w:tr.w,h:tr.h}:{w:S.srcW,h:S.srcH}}
 $("types").addEventListener("click",function(e){var b=e.target.closest("button");if(!b)return;var t=b.getAttribute("data-t");if(t===S.type)return;S.type=t;[].forEach.call($("types").children,function(x){x.classList.toggle("on",x===b)});resetOptions();if(S.type==="booklet"){$("cols").value=2;$("rows").value=1}render()});
 
 /* ---- 판 ---- */
@@ -569,10 +572,11 @@ function render(){
     var im=d.querySelector("img.thumb");
     if(LOCAL&&pg&&LOCAL.thumb){
       /* 페이지 번호·회전·크기 계단이 바뀔 때만 src 를 바꾼다 — 간격·위치 변경은 자리만 옮긴다 */
-      var pW=(pg<0&&S.back&&S.back.w)?S.back.w:srcW,pH=(pg<0&&S.back&&S.back.h)?S.back.h:srcH;
+      var pgW=(pg<0&&S.back&&S.back.w)?S.back.w:srcW,pgH=(pg<0&&S.back&&S.back.h)?S.back.h:srcH;   /* 페이지 전체 */
+      var bt=bkTrim(pg<0),pW=bt?bt.w:pgW,pH=bt?bt.h:pgH;                                          /* 기준 크기: 중철은 재단 박스 */
       var pSc=fit?Math.min(pw/pW,ph/pH):sc;                      /* 이 페이지의 내용 배율 */
-      /* 페이지 전체(블리드 포함) 크기와 그 안의 재단 박스 위치 — 없으면 재단 박스 = 페이지 */
-      var fu=(pg<0&&S.back)?S.back.full:S.full;if(!fu||!(fu.w>0))fu={w:pW,h:pH,x:0,y:0};
+      /* 페이지 전체 크기와 그 안의 기준 박스 위치 — 중철이 아니면 기준 박스 = 페이지 */
+      var fu=bt?{w:pgW,h:pgH,x:bt.x||0,y:bt.y||0}:{w:pW,h:pH,x:0,y:0};
       var fW=q90?fu.h:fu.w,fH=q90?fu.w:fu.h,tw=q90?pH:pW,th=q90?pW:pH;
       var tx=deg===90?fu.h-(fu.y+pH):deg===180?fu.w-(fu.x+pW):deg===270?fu.y:fu.x;   /* 회전 후 재단 박스 위치 */
       var ty=deg===90?fu.x:deg===180?fu.h-(fu.y+pH):deg===270?fu.w-(fu.x+pW):fu.y;
@@ -581,7 +585,8 @@ function render(){
       if(!im){im=document.createElement("img");im.className="thumb";im.alt="";d.insertBefore(im,d.firstChild)}
       if(im.getAttribute("src")!==src)im.setAttribute("src",src);
       var lx=(bw*k-tw*pSc*k)/2-tx*pSc*k,ly=(bh*k-th*pSc*k)/2-ty*pSc*k;   /* 재단 박스가 칸 가운데 오게 */
-      var bpx=b*k,cl=Math.max(0,tx*pSc*k-bpx),ct=Math.max(0,ty*pSc*k-bpx),cr=Math.max(0,iw-((tx+tw)*pSc*k+bpx)),cb=Math.max(0,ih-((ty+th)*pSc*k+bpx));
+      var bpx=b*k,bkL=(S.type==="booklet"&&c===1)?0:bpx,bkR=(S.type==="booklet"&&c===0)?0:bpx;   /* 중철 책등 쪽은 재단선에서 */
+      var cl=Math.max(0,tx*pSc*k-bkL),ct=Math.max(0,ty*pSc*k-bpx),cr=Math.max(0,iw-((tx+tw)*pSc*k+bkR)),cb=Math.max(0,ih-((ty+th)*pSc*k+bpx));
       im.style.cssText="position:absolute;inset:auto;left:"+lx+"px;top:"+ly+"px;width:"+iw+"px;height:"+ih+"px;object-fit:fill;clip-path:inset("+ct+"px "+cr+"px "+cb+"px "+cl+"px)";
       d.classList.add("has-thumb");
       var tr=(pg<0&&S.back)?S.back.trim:S.trim,tb=d.querySelector(".trimbox");
