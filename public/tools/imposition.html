@@ -187,7 +187,8 @@ input[type=number]:focus,input[type=text]:focus,select:focus{outline:1px solid #
           <button data-t="split" class="tool">페이지 자르기</button>
           <button data-t="oddeven" class="tool">홀·짝 나누기</button>
           <button data-t="merge" class="tool">홀·짝 합치기</button>
-          <button data-t="dup" class="tool">페이지 복제</button>
+          <button data-t="dup" class="tool" hidden>페이지 복제</button>
+          <button data-t="mirror" class="tool">블리드 미러</button>
           <button data-t="rotate" class="tool">페이지 회전</button>
           <button data-t="reorder" class="tool">페이지 정렬</button>
         </div>
@@ -223,6 +224,12 @@ input[type=number]:focus,input[type=text]:focus,select:focus{outline:1px solid #
         <div class="row" hidden><label>1페이지 파일</label><div class="in"><label class="chk"><input type="checkbox" id="m-dup" checked> 한 쪽이 1페이지면 상대 길이만큼 복제 (예: 뒷면 1p → 100p)</label></div></div>
         <div class="row" hidden><label>맞춤</label><div class="in"><label class="chk"><input type="checkbox" id="m-pad" checked> 두 파일 길이가 다르면 짧은 쪽에 빈 페이지</label></div></div>
         <div style="font-size:11px;color:var(--g500);margin-top:4px">A1, B1, A2, B2 … 순으로 번갈아 한 파일로. 스캔한 앞면·뒷면을 한 권으로 만들 때.</div>
+      </div>
+
+      <div class="card" id="card-mirror" hidden>
+        <h3>3. 블리드 미러</h3>
+        <div class="row"><label>블리드</label><div class="in"><input type="number" autocomplete="off" id="mb-bleed" value="3" min="0.5" max="100" step="0.5"> mm (사방)</div></div>
+        <div style="font-size:11px;color:var(--g500);margin-top:4px">페이지 가장자리를 거울상으로 늘려 사방에 블리드를 만듭니다 — 원본 100%, 내용 변형 없음. 배경이 가장자리까지 찬 디자인용 (흰 여백은 흰 블리드가 됩니다).</div>
       </div>
 
       <div class="card" id="card-dup" hidden>
@@ -511,8 +518,8 @@ $("sheet-go").addEventListener("change",function(){goSheet(this.value)});$("shee
 function render(){
   $("type-help").textContent=HELP[S.type];
 
-  var tool=S.type==="split"||S.type==="oddeven"||S.type==="merge"||S.type==="dup"||S.type==="rotate"||S.type==="reorder";
-  $("card-file").classList.toggle("off",S.type==="merge");$("card-sheet").hidden=tool;$("card-split").hidden=S.type!=="split";$("card-oddeven").hidden=S.type!=="oddeven";$("card-merge").hidden=S.type!=="merge";$("card-dup").hidden=S.type!=="dup";$("card-rotate").hidden=S.type!=="rotate";$("card-reorder").hidden=S.type!=="reorder";
+  var tool=S.type==="split"||S.type==="oddeven"||S.type==="merge"||S.type==="dup"||S.type==="rotate"||S.type==="reorder"||S.type==="mirror";
+  $("card-file").classList.toggle("off",S.type==="merge");$("card-sheet").hidden=tool;$("card-split").hidden=S.type!=="split";$("card-oddeven").hidden=S.type!=="oddeven";$("card-merge").hidden=S.type!=="merge";$("card-dup").hidden=S.type!=="dup";$("card-rotate").hidden=S.type!=="rotate";$("card-reorder").hidden=S.type!=="reorder";$("card-mirror").hidden=S.type!=="mirror";
   $("row-sides").hidden=tool||!(S.type==="cutstack"||S.type==="repeat")||$("duplex").value==="single";
   /* 화면채우기: N업 반복은 원래 모든 칸이 같은 페이지라 필요 없음 → 순차·컷앤스택에서만 표시 */
   $("row-fill1p").hidden=tool||S.type!=="cutstack";
@@ -642,7 +649,7 @@ function render(){
   });
   S.side="f";
 }
-["cut-dir","cut-n","cut-order","cut-ov","cut-range","odd-rev","even-rev","oe-pad","m-rev","m-pad","m-dup","dup-page","dup-n","rot-target","rot-range","rot-deg","ord-mode"].forEach(function(id){$(id).addEventListener("input",scheduleRender);$(id).addEventListener("change",render)});
+["cut-dir","cut-n","cut-order","cut-ov","cut-range","odd-rev","even-rev","oe-pad","m-rev","m-pad","m-dup","dup-page","dup-n","rot-target","rot-range","rot-deg","ord-mode","mb-bleed"].forEach(function(id){$(id).addEventListener("input",scheduleRender);$(id).addEventListener("change",render)});
 S.fileB=null;S.pagesB=0;S.fileA=null;S.pagesA=0;S.fileAPath=null;
 $("m-dropA").addEventListener("click",function(){if(LOCAL){LOCAL.pick("mergeA");return}if(webOpenNotice())return;S.fileA="앞면_홀수.pdf";S.pagesA=6;$("m-a").textContent=S.fileA+" · 6p  ";$("m-a").hidden=false;render()});
 $("m-drop").addEventListener("click",function(){if(LOCAL){LOCAL.pick("mergeB");return}if(webOpenNotice())return;S.fileB="뒷면_공통.pdf";S.pagesB=1;$("m-b").textContent=S.fileB+" · 1p  ";$("m-b").hidden=false;$("m-drop").textContent="찾아보기...";render()});
@@ -676,6 +683,21 @@ function renderTool(){
     $("sheet-no").textContent="홀수 "+odd.length+"p · 짝수 "+even.length+"p";
     $("stats").innerHTML=n?"원본 <b>"+n+"p</b> → 파일 2개"+(orev?" · 홀수는 역순":"")+(rev?" · 짝수는 역순":""):"";$("outname").textContent=base+"_홀수.pdf + "+base+"_짝수.pdf";
     el.innerHTML="<div class='stacks'><div class='stack'><h4>"+base+"_홀수.pdf <small style='font-weight:400;color:var(--g500)'>앞면 · "+odd.length+"p</small></h4><div class='pg'>"+pgBox(odd)+"</div></div><div class='stack'><h4>"+base+"_짝수.pdf <small style='font-weight:400;color:var(--g500)'>뒷면 · "+even.length+"p"+(rev?" · 역순":"")+"</small></h4><div class='pg'>"+pgBox(even)+"</div></div></div>";
+    return;
+  }
+  if(S.type==="mirror"){
+    var mbB=Math.max(0,num("mb-bleed",3)),mW=S.srcW+2*mbB,mH=S.srcH+2*mbB;
+    $("sheet-no").textContent="결과 "+n+"p · "+mW.toFixed(1)+"×"+mH.toFixed(1)+" mm";$("stats").innerHTML=n?"원본 <b>"+S.srcW+"×"+S.srcH+"</b> → 사방 <b>"+mbB+"mm</b> 미러 블리드 → <b>"+mW.toFixed(1)+"×"+mH.toFixed(1)+"</b> mm · 내용 변형 없음":"";$("outname").textContent=base+"_블리드"+mbB+".pdf";
+    var boxEl=document.querySelector(".sheetwrap"),mk=Math.min((boxEl.clientWidth-80)/mW,Math.max(300,boxEl.clientHeight-80)/mH);
+    var pxW=S.srcW*mk,pxH=S.srcH*mk,pb=mbB*mk,src9=(LOCAL&&LOCAL.thumb&&n)?LOCAL.thumb("front",1,Math.round(pxW*(window.devicePixelRatio||1)),0):"";
+    var tiles="";[-1,0,1].forEach(function(xi){[-1,0,1].forEach(function(yi){
+      var L=xi<0?0:(xi===0?pb:pb+pxW),T=yi<0?0:(yi===0?pb:pb+pxH),W=xi===0?pxW:pb,H=yi===0?pxH:pb;
+      /* 조각 안에서 그림 위치: 가운데 조각은 (0,0), 반전 조각은 거울상이 되도록 뒤집고 밀어 놓는다 */
+      var ix=xi===0?0:(xi<0?-(pxW-pb):0),iy=yi===0?0:(yi<0?-(pxH-pb):0);
+      var tf=(xi?"scaleX(-1) ":"")+(yi?"scaleY(-1)":"");
+      var inner=src9?"<img src='"+src9+"' style='position:absolute;left:"+ix+"px;top:"+iy+"px;width:"+pxW+"px;height:"+pxH+"px;transform:"+(tf||"none")+"'>":"";
+      tiles+="<div style='position:absolute;left:"+L+"px;top:"+T+"px;width:"+W+"px;height:"+H+"px;overflow:hidden;"+(xi||yi?"background:#e5e7eb;":"background:#fff;")+"'>"+inner+"</div>"})});
+    el.innerHTML="<div style='position:relative;width:"+(mW*mk)+"px;height:"+(mH*mk)+"px;background:#fff;box-shadow:0 8px 30px rgba(0,0,0,.25)'>"+tiles+"<div style='position:absolute;left:"+pb+"px;top:"+pb+"px;width:"+pxW+"px;height:"+pxH+"px;border:1px dashed rgba(220,38,38,.7);pointer-events:none'></div></div>";
     return;
   }
   if(S.type==="dup"){
@@ -717,13 +739,13 @@ $("side-f").addEventListener("click",function(){S.side="f";render()});$("side-b"
 var _rz=null;window.addEventListener("resize",function(){if(_rz)clearTimeout(_rz);_rz=setTimeout(function(){_rz=null;render()},150)});
 
 /* ---- 프리셋 (미리보기: 브라우저 저장) ---- */
-var FIELDS=["sw","sh","cols","rows","pw","ph","trim-preview","order","margin","gap","gapy","offx","offy","offx2","offy2","off-same","align","nup-mode","bleed","marks","center","duplex","scale","scale-pct","sides","bk-dup","bk-pad","pad-pos","creep","fill-1p","rot-back","rot-page","cut-dir","cut-n","cut-order","cut-ov","cut-range","odd-rev","even-rev","oe-pad","m-rev","m-pad","m-dup","dup-page","dup-n","rot-target","rot-range","rot-deg","ord-mode"];
+var FIELDS=["sw","sh","cols","rows","pw","ph","trim-preview","order","margin","gap","gapy","offx","offy","offx2","offy2","off-same","align","nup-mode","bleed","marks","center","duplex","scale","scale-pct","sides","bk-dup","bk-pad","pad-pos","creep","fill-1p","rot-back","rot-page","cut-dir","cut-n","cut-order","cut-ov","cut-range","odd-rev","even-rev","oe-pad","m-rev","m-pad","m-dup","dup-page","dup-n","rot-target","rot-range","rot-deg","ord-mode","mb-bleed"];
 function snapshot(){var o={type:S.type,slotRot:S.slotRot};FIELDS.forEach(function(id){var e=$(id);o[id]=e.type==="checkbox"?e.checked:e.value});return o}
 function apply(o){S.type=o.type;S.slotRot=(o.slotRot&&o.slotRot.f)?o.slotRot:{f:{},b:{}};[].forEach.call($("types").children,function(x){x.classList.toggle("on",x.getAttribute("data-t")===o.type)});FIELDS.forEach(function(id){var e=$(id);if(o[id]===undefined)return;if(e.type==="checkbox")e.checked=!!o[id];else e.value=o[id]});$("sheet-sel").value="";S.sheet=0;render()}
 function loadPresets(){if(LOCAL)return LOCAL.presets;try{return JSON.parse(localStorage.getItem("impo-presets")||"null")||seed()}catch(e){return seed()}}
 function seed(){return [{name:"명함 SRA3 10업 (90×50)",when:"09.12",cfg:{type:"repeat",sw:"320",sh:"450",cols:"2",rows:"5",pw:"90",ph:"50",margin:"12",gap:"4",bleed:"2",marks:true,center:false,duplex:"long",scale:"fit"}},{name:"A5 중철 SRA3",when:"09.03",cfg:{type:"booklet",sw:"320",sh:"450",cols:"2",rows:"1",pw:"148",ph:"210",margin:"10",gap:"0",bleed:"3",marks:true,center:true,duplex:"long",scale:"fit"}},{name:"A4 내지 컷앤스택 2업",when:"08.28",cfg:{type:"cutstack",sw:"320",sh:"450",cols:"1",rows:"2",pw:"210",ph:"297",margin:"8",gap:"6",bleed:"3",marks:true,center:false,duplex:"long",scale:"fit"}}]}
 function savePresets(p){if(LOCAL){LOCAL.presets=p;LOCAL.post("/api/presets",p);return}try{localStorage.setItem("impo-presets",JSON.stringify(p))}catch(e){}}
-var TYPE_TAG={repeat:"N업",cutstack:"컷앤스택",booklet:"중철",split:"자르기",oddeven:"홀짝나누기",merge:"홀짝합치기",dup:"복제",rotate:"회전",reorder:"정렬"};
+var TYPE_TAG={repeat:"N업",cutstack:"컷앤스택",booklet:"중철",split:"자르기",oddeven:"홀짝나누기",merge:"홀짝합치기",dup:"복제",rotate:"회전",reorder:"정렬",mirror:"블리드미러"};
 function renderPresets(){var p=loadPresets(),sel=$("p-sel"),cur=sel.value;
   sel.innerHTML=p.length?'<option value="">저장한 프리셋에서 고르기 ('+p.length+')</option>'+p.map(function(x,i){var tag=TYPE_TAG[(x.cfg||{}).type]||"";return '<option value="'+i+'">'+(tag?"["+tag+"] ":"")+x.name+" — "+x.when+"</option>"}).join(""):'<option value="">저장된 프리셋이 없습니다</option>';
   if(cur&&p[+cur])sel.value=cur;$("p-load").disabled=$("p-del").disabled=!p.length;}
