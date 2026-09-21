@@ -76,7 +76,7 @@ input[type=number]{width:56px;text-align:right}
 .slot{position:absolute;background:#eef2ff;border:1px solid #93c5fd;display:grid;place-items:center;font-weight:700;color:#1d4ed8;overflow:hidden}
 .slot.bk{background:#fef3c7;border-color:#f59e0b;color:#b45309}
 .slot .thumb{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;background:#fff}
-.slot.has-thumb{background:#fff}
+.slot.has-thumb{background:#fff;overflow:visible}.slot.has-thumb::after{content:"";position:absolute;inset:-1px;border:1px solid #93c5fd;z-index:1;pointer-events:none}
 body.onetouch .slot:not(.blank){cursor:pointer}body.onetouch .slot:not(.blank):hover{outline:2px solid #0078d7;outline-offset:-2px}
 .slot.has-thumb>span{display:none}
 .slot.has-thumb>small{z-index:1;background:rgba(255,255,255,.85);border-radius:2px;padding:0 3px;color:#1d4ed8;font-weight:700}
@@ -338,7 +338,7 @@ document.getElementById("dl-btn").addEventListener("click",function(){if(DOWNLOA
 var $=function(i){return document.getElementById(i)};
 var S={type:"repeat",file:null,pages:0,srcW:210,srcH:297,side:"f",sheet:0,slotRot:{f:{},b:{}},back:null};
 function twoFiles(){return (S.type==="cutstack"||S.type==="repeat")&&$("duplex").value!=="single"&&$("sides").value==="two"}
-function openBack(name,pages,w,h,mb){S.back={name:name,pages:pages,w:w,h:h};$("bk-name").textContent=name;$("bk-sub").textContent=pages+"페이지 · "+w+"×"+h+" mm · "+mb+" MB";$("bk-info").hidden=false;$("bk-drop").hidden=true;S.sheet=0;render()}
+function openBack(name,pages,w,h,mb,full){S.back={name:name,pages:pages,w:w,h:h,full:full||null};$("bk-name").textContent=name;$("bk-sub").textContent=pages+"페이지 · "+w+"×"+h+" mm · "+mb+" MB";$("bk-info").hidden=false;$("bk-drop").hidden=true;S.sheet=0;render()}
 $("bk-drop").addEventListener("click",function(){if(LOCAL){LOCAL.pick("back");return}if(webOpenNotice())return;openBack("졸업작품_도록_뒷면공통.pdf",1,210,297,3)});
 $("bk-change").addEventListener("click",function(){if(LOCAL){LOCAL.pick("back");return}if(webOpenNotice())return;openBack("졸업작품_도록_뒷면공통.pdf",1,210,297,3)});
 $("bk-x").addEventListener("click",function(){S.back=null;$("bk-info").hidden=true;$("bk-drop").hidden=false;render()});
@@ -349,7 +349,7 @@ $("drop").addEventListener("click",function(){if(LOCAL){LOCAL.pick("front");retu
 $("f-change").addEventListener("click",function(){if(LOCAL){LOCAL.pick("front");return}if(webOpenNotice())return;openFile("행사_리플렛_최종.pdf",12,210,297,38)});
 document.querySelectorAll(".tpick").forEach(function(b){b.addEventListener("click",function(){if(LOCAL){LOCAL.pick("front");return}if(webOpenNotice())return;openFile(S.file?"행사_리플렛_최종.pdf":"2026_졸업작품_도록_최종.pdf",S.file?12:96,210,297,S.file?38:486)})});
 function syncFileLabels(){document.querySelectorAll(".tfile").forEach(function(e){e.textContent=S.file?S.file+" · "+S.pages+"p":""})}
-function openFile(name,pages,w,h,mb){S.file=name;S.pages=pages;S.srcW=w;S.srcH=h;$("f-name").textContent=name;$("f-sub").textContent=pages+"페이지 · "+w+"×"+h+" mm · "+mb+" MB";$("f-info").hidden=false;$("drop").hidden=true;$("f-meta").textContent=pages+"p";$("pw").value=w;$("ph").value=h;S.sheet=0;syncFileLabels();render()}
+function openFile(name,pages,w,h,mb,full){S.file=name;S.pages=pages;S.srcW=w;S.srcH=h;S.full=full||null;$("f-name").textContent=name;$("f-sub").textContent=pages+"페이지 · "+w+"×"+h+" mm · "+mb+" MB";$("f-info").hidden=false;$("drop").hidden=true;$("f-meta").textContent=pages+"p";$("pw").value=w;$("ph").value=h;S.sheet=0;syncFileLabels();render()}
 $("f-x").addEventListener("click",function(){S.file=null;S.pages=0;$("f-info").hidden=true;$("drop").hidden=false;$("f-meta").textContent="";syncFileLabels();render()});
 
 /* ---- 조판 종류 ---- */
@@ -558,11 +558,18 @@ function render(){
       /* 페이지 번호·회전·크기 계단이 바뀔 때만 src 를 바꾼다 — 간격·위치 변경은 자리만 옮긴다 */
       var pW=(pg<0&&S.back&&S.back.w)?S.back.w:srcW,pH=(pg<0&&S.back&&S.back.h)?S.back.h:srcH;
       var pSc=fit?Math.min(pw/pW,ph/pH):sc;                      /* 이 페이지의 내용 배율 */
-      var iw=(q90?pH:pW)*pSc*k,ih=(q90?pW:pH)*pSc*k;              /* 그림의 화면 크기 (회전 반영) */
+      /* 페이지 전체(블리드 포함) 크기와 그 안의 재단 박스 위치 — 없으면 재단 박스 = 페이지 */
+      var fu=(pg<0&&S.back)?S.back.full:S.full;if(!fu||!(fu.w>0))fu={w:pW,h:pH,x:0,y:0};
+      var fW=q90?fu.h:fu.w,fH=q90?fu.w:fu.h,tw=q90?pH:pW,th=q90?pW:pH;
+      var tx=deg===90?fu.h-(fu.y+pH):deg===180?fu.w-(fu.x+pW):deg===270?fu.y:fu.x;   /* 회전 후 재단 박스 위치 */
+      var ty=deg===90?fu.x:deg===180?fu.h-(fu.y+pH):deg===270?fu.w-(fu.x+pW):fu.y;
+      var iw=fW*pSc*k,ih=fH*pSc*k;                                   /* 그림(페이지 전체)의 화면 크기 */
       var src=LOCAL.thumb(pg<0?"back":"front",Math.abs(pg),Math.round(iw*(window.devicePixelRatio||1)),deg);
       if(!im){im=document.createElement("img");im.className="thumb";im.alt="";d.insertBefore(im,d.firstChild)}
       if(im.getAttribute("src")!==src)im.setAttribute("src",src);
-      im.style.cssText="position:absolute;left:"+((bw*k-iw)/2)+"px;top:"+((bh*k-ih)/2)+"px;width:"+iw+"px;height:"+ih+"px;inset:auto;object-fit:fill";
+      var lx=(bw*k-tw*pSc*k)/2-tx*pSc*k,ly=(bh*k-th*pSc*k)/2-ty*pSc*k;   /* 재단 박스가 칸 가운데 오게 */
+      var bpx=b*k,cl=Math.max(0,tx*pSc*k-bpx),ct=Math.max(0,ty*pSc*k-bpx),cr=Math.max(0,iw-((tx+tw)*pSc*k+bpx)),cb=Math.max(0,ih-((ty+th)*pSc*k+bpx));
+      im.style.cssText="position:absolute;inset:auto;left:"+lx+"px;top:"+ly+"px;width:"+iw+"px;height:"+ih+"px;object-fit:fill;clip-path:inset("+ct+"px "+cr+"px "+cb+"px "+cl+"px)";
       d.classList.add("has-thumb");
     }else if(im){im.remove()}
     if($("marks").checked&&list){var bl=bs*k,L=3*k,gapm=bl+1*k;/* 재단선 3mm, 블리드 바깥 1mm 에서 시작 */[[x*k,y*k],[(x+useW)*k,y*k],[x*k,(y+useH)*k],[(x+useW)*k,(y+useH)*k]].forEach(function(pt,q){
