@@ -238,6 +238,7 @@ input[type=number]:focus,input[type=text]:focus,select:focus{outline:1px solid #
         <div class="row"><label>재단 크기</label><div class="in"><input type="number" autocomplete="off" id="mb-tw" placeholder="원본"> × <input type="number" autocomplete="off" id="mb-th" placeholder="원본"> mm</div></div>
         <div class="row"><label>대지 크기</label><div class="in"><input type="number" autocomplete="off" id="mb-sw" placeholder="자동"> × <input type="number" autocomplete="off" id="mb-sh" placeholder="자동"> mm</div></div>
         <div class="row"><label>돔보</label><div class="in"><label class="chk"><input type="checkbox" id="mb-marks"> 재단선 표시</label></div></div>
+        <div class="row"><label>돔보 거리</label><div class="in"><input type="number" autocomplete="off" id="mb-gap" placeholder="자동" min="0" step="0.5"> mm</div></div>
         <div style="font-size:11px;color:var(--g500);margin-top:4px">페이지 가장자리를 거울상으로 늘려 사방에 블리드를 만듭니다 — 원본 100%, 내용 변형 없음. 배경이 가장자리까지 찬 디자인용 (흰 여백은 흰 블리드가 됩니다).</div>
       </div>
 
@@ -317,7 +318,7 @@ input[type=number]:focus,input[type=text]:focus,select:focus{outline:1px solid #
         <div class="info" hidden><span>기본 파일명: <b id="outname">원고_중철.pdf</b></span></div>
         <div class="prog" id="prog" hidden><i></i></div>
         <button id="btn-open" hidden></button>
-        <div style="display:flex;gap:4px;margin-top:6px"><button class="winbtn big primary" id="btn-save" style="flex:1">PDF 저장</button><button class="winbtn big" id="btn-bprint" style="flex:1">출력용 조판</button></div>
+        <div style="display:flex;gap:4px;margin-top:6px"><button class="winbtn big primary" id="btn-save" style="flex:1">PDF 저장</button><button class="winbtn big" id="btn-bprint" style="flex:1">B-Print</button></div>
       </div>
       <div class="card">
         <h3>4. 프리셋 <span class="r">이 설정을 저장해 두고 다음에 불러오기</span></h3>
@@ -668,7 +669,7 @@ function render(){
   });
   S.side="f";
 }
-["cut-dir","cut-n","cut-order","cut-ov","cut-range","odd-rev","even-rev","oe-pad","m-rev","m-pad","m-dup","dup-page","dup-n","rot-target","rot-range","rot-deg","ord-mode","mb-bleed","mb-tw","mb-th","mb-sw","mb-sh","mb-marks"].forEach(function(id){$(id).addEventListener("input",scheduleRender);$(id).addEventListener("change",render)});
+["cut-dir","cut-n","cut-order","cut-ov","cut-range","odd-rev","even-rev","oe-pad","m-rev","m-pad","m-dup","dup-page","dup-n","rot-target","rot-range","rot-deg","ord-mode","mb-bleed","mb-tw","mb-th","mb-sw","mb-sh","mb-marks","mb-gap"].forEach(function(id){$(id).addEventListener("input",scheduleRender);$(id).addEventListener("change",render)});
 S.fileB=null;S.pagesB=0;S.fileA=null;S.pagesA=0;S.fileAPath=null;
 $("m-dropA").addEventListener("click",function(){if(LOCAL){LOCAL.pick("mergeA");return}if(webOpenNotice())return;S.fileA="앞면_홀수.pdf";S.pagesA=6;$("m-a").textContent=S.fileA+" · 6p  ";$("m-a").hidden=false;render()});
 $("m-drop").addEventListener("click",function(){if(LOCAL){LOCAL.pick("mergeB");return}if(webOpenNotice())return;S.fileB="뒷면_공통.pdf";S.pagesB=1;$("m-b").textContent=S.fileB+" · 1p  ";$("m-b").hidden=false;$("m-drop").textContent="찾아보기...";render()});
@@ -736,7 +737,7 @@ function renderTool(){
       "<div class='dim' style='top:0;bottom:0;left:-16px;width:10px'><i style='top:0;bottom:0;left:5px;width:1px'></i><i style='top:0;left:0;height:1px;width:10px'></i><i style='bottom:0;left:0;height:1px;width:10px'></i><b style='top:50%;left:-18px;transform:translate(-50%,-50%) rotate(-90deg)'>"+fmtM(mH)+"</b></div>"+
       "<div class='dim box' style='left:"+tx0+"px;top:"+(ty0-14)+"px;width:"+twp+"px;height:10px'><i style='left:0;right:0;top:5px;height:1px'></i><i style='left:0;top:0;width:1px;height:10px'></i><i style='right:0;top:0;width:1px;height:10px'></i><b style='left:50%;top:-1px'>"+fmtM(tW)+"</b></div>"+
       "<div class='dim box' style='top:"+ty0+"px;left:"+(tx0-16)+"px;height:"+thp+"px;width:10px'><i style='top:0;bottom:0;left:5px;width:1px'></i><i style='top:0;left:0;height:1px;width:10px'></i><i style='bottom:0;left:0;height:1px;width:10px'></i><b style='top:50%;left:-4px;transform:translate(-50%,-50%) rotate(-90deg)'>"+fmtM(tH)+"</b></div>";
-    el.innerHTML="<div style='position:relative;margin:40px 0 0 40px;width:"+(mW*mk)+"px;height:"+(mH*mk)+"px;background:#fff;box-shadow:0 8px 30px rgba(0,0,0,.25)'>"+tiles+"<div style='position:absolute;left:"+tx0+"px;top:"+ty0+"px;width:"+twp+"px;height:"+thp+"px;border:1px dashed rgba(220,38,38,.7);pointer-events:none'></div>"+($("mb-marks").checked?mbMarks(tx0,ty0,twp,thp,pb,mk):"")+dims+"</div>";
+    el.innerHTML="<div style='position:relative;margin:40px 0 0 40px;width:"+(mW*mk)+"px;height:"+(mH*mk)+"px;background:#fff;box-shadow:0 8px 30px rgba(0,0,0,.25)'>"+tiles+"<div style='position:absolute;left:"+tx0+"px;top:"+ty0+"px;width:"+twp+"px;height:"+thp+"px;border:1px dashed rgba(220,38,38,.7);pointer-events:none'></div>"+($("mb-marks").checked?mbMarks(tx0,ty0,twp,thp,(num("mb-gap")?num("mb-gap")*mk-1*mk:pb),mk):"")+dims+"</div>";
     return;
   }
   if(S.type==="dup"){
@@ -778,7 +779,7 @@ $("side-f").addEventListener("click",function(){S.side="f";render()});$("side-b"
 var _rz=null;window.addEventListener("resize",function(){if(_rz)clearTimeout(_rz);_rz=setTimeout(function(){_rz=null;render()},150)});
 
 /* ---- 프리셋 (미리보기: 브라우저 저장) ---- */
-var FIELDS=["sw","sh","cols","rows","pw","ph","trim-preview","order","crop-l","crop-r","crop-t","crop-b","margin","gap","gapy","offx","offy","offx2","offy2","off-same","align","nup-mode","bleed","marks","center","duplex","scale","scale-pct","sides","bk-dup","bk-pad","pad-pos","creep","fill-1p","rot-back","rot-page","cut-dir","cut-n","cut-order","cut-ov","cut-range","odd-rev","even-rev","oe-pad","m-rev","m-pad","m-dup","dup-page","dup-n","rot-target","rot-range","rot-deg","ord-mode","mb-bleed","mb-tw","mb-th","mb-sw","mb-sh","mb-marks"];
+var FIELDS=["sw","sh","cols","rows","pw","ph","trim-preview","order","crop-l","crop-r","crop-t","crop-b","margin","gap","gapy","offx","offy","offx2","offy2","off-same","align","nup-mode","bleed","marks","center","duplex","scale","scale-pct","sides","bk-dup","bk-pad","pad-pos","creep","fill-1p","rot-back","rot-page","cut-dir","cut-n","cut-order","cut-ov","cut-range","odd-rev","even-rev","oe-pad","m-rev","m-pad","m-dup","dup-page","dup-n","rot-target","rot-range","rot-deg","ord-mode","mb-bleed","mb-tw","mb-th","mb-sw","mb-sh","mb-marks","mb-gap"];
 function snapshot(){var o={type:S.type,slotRot:S.slotRot};FIELDS.forEach(function(id){var e=$(id);o[id]=e.type==="checkbox"?e.checked:e.value});return o}
 function apply(o){S.type=o.type;S.slotRot=(o.slotRot&&o.slotRot.f)?o.slotRot:{f:{},b:{}};[].forEach.call($("types").children,function(x){x.classList.toggle("on",x.getAttribute("data-t")===o.type)});FIELDS.forEach(function(id){var e=$(id);if(o[id]===undefined)return;if(e.type==="checkbox")e.checked=!!o[id];else e.value=o[id]});$("sheet-sel").value="";S.sheet=0;render()}
 function loadPresets(){if(LOCAL)return LOCAL.presets;try{return JSON.parse(localStorage.getItem("impo-presets")||"null")||seed()}catch(e){return seed()}}
