@@ -726,8 +726,8 @@ function renderTool(){
       qx0=Math.max(qx0,f0);qy0=Math.max(qy0,g0);qx1=Math.min(qx1,f1);qy1=Math.min(qy1,g1);
       if(qx1-qx0<=0.5||qy1-qy0<=0.5)return;
       /* 조각 안에서 그림 위치: 반전 조각은 거울상이 되도록 뒤집어 놓는다 */
-      var ix=(xi===0?cx0:(xi<0?2*cx0-pxW:2*(cx0+pxW)))-qx0;
-      var iy=(yi===0?cy0:(yi<0?2*cy0-pxH:2*(cy0+pxH)))-qy0;
+      var ix=(xi===0?cx0:(xi<0?cx0-pxW:cx0+pxW))-qx0;
+      var iy=(yi===0?cy0:(yi<0?cy0-pxH:cy0+pxH))-qy0;
       var tf=(xi?"scaleX(-1) ":"")+(yi?"scaleY(-1)":"");
       var inner=src9?"<img src='"+src9+"' style='position:absolute;left:"+ix+"px;top:"+iy+"px;width:"+pxW+"px;height:"+pxH+"px;transform:"+(tf||"none")+"'>":"";
       tiles+="<div style='position:absolute;left:"+qx0+"px;top:"+qy0+"px;width:"+(qx1-qx0)+"px;height:"+(qy1-qy0)+"px;overflow:hidden;background:#fff'>"+inner+"</div>"})});
