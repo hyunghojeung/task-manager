@@ -314,7 +314,7 @@ input[type=number]:focus,input[type=text]:focus,select:focus{outline:1px solid #
         <div class="info" hidden><span>기본 파일명: <b id="outname">원고_중철.pdf</b></span></div>
         <div class="prog" id="prog" hidden><i></i></div>
         <button id="btn-open" hidden></button>
-        <button class="winbtn big primary" id="btn-save" style="width:100%;margin-top:6px">PDF 저장하기</button>
+        <div style="display:flex;gap:4px;margin-top:6px"><button class="winbtn big primary" id="btn-save" style="flex:1">PDF 저장</button><button class="winbtn big" id="btn-bpdf" style="flex:1">출력용 조판</button></div>
       </div>
       <div class="card">
         <h3>4. 프리셋 <span class="r">이 설정을 저장해 두고 다음에 불러오기</span></h3>
@@ -777,6 +777,7 @@ $("p-del").addEventListener("click",function(){var v=$("p-sel").value,p=loadPres
 $("p-save").addEventListener("click",function(){var name=$("p-name").value.trim();if(!name){alert("프리셋 이름을 적어주세요.");$("p-name").focus();return}var p=loadPresets();var d=new Date(),when=(d.getMonth()+1)+"."+String(d.getDate()).padStart(2,"0");var i=p.findIndex(function(x){return x.name===name});if(i>=0){if(!confirm("같은 이름이 있습니다. 덮어쓸까요?"))return;p[i]={name:name,when:when,cfg:snapshot()}}else p.unshift({name:name,when:when,cfg:snapshot()});savePresets(p);renderPresets();toast("저장했습니다")});
 
 /* ---- 저장 시뮬레이션 ---- */
+$("btn-bpdf").addEventListener("click",function(){if(LOCAL){LOCAL.save(true);return}if(webOpenNotice())return;toast("조판 결과를 B-PDF로 넘깁니다 (프로그램에서 동작)")});
 $("btn-save").addEventListener("click",function(){if(!S.pages){alert("원본 PDF를 먼저 열어주세요.");return}if(LOCAL){LOCAL.save();return}var pr=$("prog");pr.hidden=false;var i=pr.firstElementChild,w=0;$("btn-save").disabled=true;var t=setInterval(function(){w+=7;i.style.width=Math.min(100,w)+"%";if(w>=100){clearInterval(t);$("btn-save").disabled=false;setTimeout(function(){pr.hidden=true;i.style.width="0";toast("저장했습니다. (실제 프로그램에서는 저장 창이 떠서 위치와 이름을 고른 뒤 저장됩니다)")},300)}},120)});
 $("btn-open").addEventListener("click",function(){toast("저장 폴더를 엽니다 (실제 프로그램)")});
 function toast(m){var t=document.createElement("div");t.textContent=m;t.style.cssText="position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#1e293b;color:#fff;padding:9px 16px;border-radius:6px;font-size:13px;z-index:9;box-shadow:0 8px 24px rgba(0,0,0,.25)";document.body.appendChild(t);setTimeout(function(){t.remove()},2200)}
