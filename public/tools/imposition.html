@@ -92,6 +92,9 @@ body.onetouch .slot:not(.blank){cursor:pointer}body.onetouch .slot:not(.blank):h
 .rottbl td{padding:2px 4px}
 .rottbl select{min-height:28px;padding:2px 6px;font-size:12px}
 .slotgrid{display:grid;gap:3px;margin-top:4px}
+.rottbl select{font-size:11px;padding:1px 2px;width:46px;min-width:0}
+.rottbl th,.rottbl td{padding:1px 3px;font-size:11px;white-space:nowrap}
+.rottbl td:first-child,.rottbl th:first-child{color:var(--g600);padding-right:4px}
 .slotgrid button{border:1px solid var(--g300);background:#fff;border-radius:3px;min-height:34px;font-size:11px;color:var(--g600);cursor:pointer}
 .slotgrid button.r{background:#fef3c7;border-color:#fcd34d;color:#92400e;font-weight:700}
 .slot.r90 span{transform:rotate(90deg)}.slot.r180 span{transform:rotate(180deg)}.slot.r270 span{transform:rotate(270deg)}
@@ -285,9 +288,9 @@ input[type=number]:focus,input[type=text]:focus,select:focus{outline:1px solid #
         <div class="row"><label>돔보 거리</label><div class="in"><input type="number" autocomplete="off" id="bleed" value="3" min="0" step="1"></div></div>
         <div class="row"><label>재단선</label><div class="in"><label class="chk"><input type="checkbox" id="marks"> 재단선 표시 (모서리, 3mm)</label></div></div>
         <div class="row" id="row-rot"><label>회전</label><div class="in" style="flex-direction:column;align-items:stretch">
-          <table class="rottbl" id="rottbl" hidden></table>
+          <table class="rottbl" id="rottbl"></table>
           <div style="margin-top:4px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;font-size:12px">
-            <span>앞면 회전 <select id="all-f"><option>0</option><option>90</option><option>180</option><option>270</option></select>°<button class="btn sm" id="apply-f" hidden>적용</button></span>
+            <span id="rot-all-f">앞면 회전 <select id="all-f"><option>0</option><option>90</option><option>180</option><option>270</option></select>°<button class="btn sm" id="apply-f" hidden>적용</button></span>
             <label class="chk"><input type="checkbox" id="onetouch"> 원터치 재단</label>
             <span id="rot-back-span">뒷면 회전 <select id="all-b"><option>0</option><option>90</option><option>180</option><option>270</option></select>°<button class="btn sm" id="apply-b" hidden>적용</button></span>
           </div>
@@ -299,7 +302,7 @@ input[type=number]:focus,input[type=text]:focus,select:focus{outline:1px solid #
         <input type="number" autocomplete="off" id="margin" value="0" hidden>
         <div class="row"><label>전체 위치이동</label><div class="in" style="flex-direction:column;align-items:flex-start;gap:4px">
           <div>앞면 &nbsp;가로 <input type="number" autocomplete="off" id="offx" value="0" step="1"> 세로 <input type="number" autocomplete="off" id="offy" value="0" step="1"></div>
-          <div>뒷면 &nbsp;가로 <input type="number" autocomplete="off" id="offx2" value="0" step="1"> 세로 <input type="number" autocomplete="off" id="offy2" value="0" step="1"> <label class="chk" style="margin-left:6px"><input type="checkbox" id="off-same"> 앞면과 같게</label></div>
+          <div>뒷면 &nbsp;가로 <input type="number" autocomplete="off" id="offx2" value="0" step="1"> 세로 <input type="number" autocomplete="off" id="offy2" value="0" step="1"> <label class="chk" style="margin-left:6px" hidden><input type="checkbox" id="off-same"> 앞면과 같게</label></div>
         </div></div>
       </div>
 
@@ -390,8 +393,9 @@ $("fill-1p").addEventListener("change",function(){if(!this.checked)return;var n=
 function applyOneTouch(){var g=geom(),on=$("onetouch").checked,left=Math.floor(g.cols/2),dup=$("duplex").value!=="single";
   S.slotRot.f=S.slotRot.f||{};S.slotRot.b=S.slotRot.b||{};
   for(var r=0;r<g.rows;r++)for(var c=0;c<g.cols;c++){var i=r*g.cols+c;
-    var fLeft=c<left,bLeft=(mirrorAxis()==="cols")?(c>=g.cols-left):fLeft;
-    S.slotRot.f[i]=(on&&fLeft)?180:0;if(dup)S.slotRot.b[i]=(on&&bLeft)?180:0}
+    /* 오른쪽 칸을 180° 돌린다 (뒷면은 거울 축에 맞춰 반대쪽) */
+    var fRight=c>=g.cols-left,bRight=(mirrorAxis()==="cols")?(c<left):fRight;
+    S.slotRot.f[i]=(on&&fRight)?180:0;if(dup)S.slotRot.b[i]=(on&&bRight)?180:0}
   render()}
 $("onetouch").addEventListener("change",function(){if(this.checked){var g=geom();if(!(g.cols===2&&g.rows===1)){alert("원터치 재단은 배치가 2열 × 1행일 때만 쓸 수 있습니다.");this.checked=false;return}}document.body.classList.toggle("onetouch",this.checked);applyOneTouch()});
 /* 옵션 초기 상태 — 시작 직후 한 번 기록해 두고, 조판 종류를 바꿀 때 되돌린다 */
@@ -480,6 +484,11 @@ function slotName(g,c,r){if(g.rows===1&&g.cols===2)return c===0?"왼쪽 페이�
 var _gridKey="";
 function renderSlotGrid(g){
   var duplex=$("duplex").value!=="single",el=$("rottbl"),h="<tr><th></th>";
+  /* 칸별 회전은 2열 2행까지만 — 그보다 크면 표를 감추고 앞면/뒷면 전체 회전을 쓴다 */
+  var small=(g.cols<=2&&g.rows<=2);
+  el.hidden=!small;
+  $("rot-all-f").hidden=small;$("rot-back-span").hidden=small||$("duplex").value==="single";
+  if(!small){_gridKey="";return}
   var key=g.cols+"x"+g.rows+(duplex?"d":"s")+S.type;
   if(key===_gridKey){el.querySelectorAll("select").forEach(function(sel){var v=(S.slotRot[sel.getAttribute("data-side")]||{})[+sel.getAttribute("data-i")]||0;if(+sel.value!==v)sel.value=v});return}
   _gridKey=key;
@@ -525,8 +534,8 @@ function render(){
   $("row-fill1p").hidden=tool||S.type!=="cutstack";
   var two=!tool&&twoFiles();$("sides-opts").hidden=!two;$("bk-box").hidden=!two;
   if(tool){renderTool();return}
-  $("row-scale").style.display="";var bk=S.type==="booklet";$("row-rot").hidden=S.type==="cutstack"||bk;$("rot-back-span").hidden=$("duplex").value==="single";
-  if($("onetouch").checked&&S.type==="repeat"){var g0=geom(),okey=g0.cols+"x"+g0.rows+$("duplex").value+mirrorAxis();if(S._otKey!==okey){S._otKey=okey;var g2=g0,left2=Math.floor(g2.cols/2),dup2=$("duplex").value!=="single";S.slotRot.f={};S.slotRot.b={};for(var r2=0;r2<g2.rows;r2++)for(var c2=0;c2<g2.cols;c2++){var i2=r2*g2.cols+c2;S.slotRot.f[i2]=c2<left2?180:0;if(dup2)S.slotRot.b[i2]=((mirrorAxis()==="cols")?(c2>=g2.cols-left2):(c2<left2))?180:0}}}else S._otKey="";
+  $("row-scale").style.display="";var bk=S.type==="booklet";$("row-rot").hidden=S.type==="cutstack"||bk;
+  if($("onetouch").checked&&S.type==="repeat"){var g0=geom(),okey=g0.cols+"x"+g0.rows+$("duplex").value+mirrorAxis();if(S._otKey!==okey){S._otKey=okey;var g2=g0,left2=Math.floor(g2.cols/2),dup2=$("duplex").value!=="single";S.slotRot.f={};S.slotRot.b={};for(var r2=0;r2<g2.rows;r2++)for(var c2=0;c2<g2.cols;c2++){var i2=r2*g2.cols+c2;S.slotRot.f[i2]=(c2>=g2.cols-left2)?180:0;if(dup2)S.slotRot.b[i2]=((mirrorAxis()==="cols")?(c2<left2):(c2>=g2.cols-left2))?180:0}}}else S._otKey="";
   document.querySelectorAll(".bkonly").forEach(function(e){e.hidden=!bk});$("row-arr").hidden=bk;
   var single=$("duplex").querySelector('[value="single"]');single.hidden=bk;if(bk&&$("duplex").value==="single")$("duplex").value="long";
   $("lbl-gap").textContent=bk?"등 간격":"배치간격";$("gap-lx").textContent=bk?"":"가로";$("gap-ly").textContent=bk?"세트 간격":"세로";$("gapy-wrap").hidden=bk;
