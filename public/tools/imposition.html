@@ -92,6 +92,8 @@ body.onetouch .slot:not(.blank){cursor:pointer}body.onetouch .slot:not(.blank):h
 .rottbl td{padding:2px 4px}
 .rottbl select{min-height:28px;padding:2px 6px;font-size:12px}
 .slotgrid{display:grid;gap:3px;margin-top:4px}
+.cropin{gap:1px;font-size:11px;color:var(--g600);flex-wrap:nowrap;white-space:nowrap}
+.cropin input{width:32px;min-width:0;padding:2px 2px;font-size:11px;text-align:center}
 .rottbl select{font-size:11px;padding:1px 2px;width:46px;min-width:0}
 .rottbl th,.rottbl td{padding:1px 3px;font-size:11px;white-space:nowrap}
 .rottbl td:first-child,.rottbl th:first-child{color:var(--g600);padding-right:4px}
@@ -283,6 +285,7 @@ input[type=number]:focus,input[type=text]:focus,select:focus{outline:1px solid #
         </div></div>
         <div class="row"><label>재단 크기</label><div class="in"><input type="number" autocomplete="off" id="pw" value="210"> × <input type="number" autocomplete="off" id="ph" value="297"></div></div>
         <div class="row"><label></label><div class="in"><label class="chk"><input type="checkbox" id="trim-preview"> 재단 미리보기</label></div></div>
+        <div class="row"><label>크롭</label><div class="in cropin">좌<input type="number" autocomplete="off" id="crop-l" value="0" min="0" step="1">우<input type="number" autocomplete="off" id="crop-r" value="0" min="0" step="1">상<input type="number" autocomplete="off" id="crop-t" value="0" min="0" step="1">하<input type="number" autocomplete="off" id="crop-b" value="0" min="0" step="1"></div></div>
         <div class="row" id="row-arr"><label>배치</label><div class="in"><input type="number" autocomplete="off" id="cols" value="1" min="1" max="12"> 열 × <input type="number" autocomplete="off" id="rows" value="1" min="1" max="12"> 행<button id="autofit" hidden></button></div></div>
         <div class="row" id="row-gap"><label id="lbl-gap">배치간격</label><div class="in"><span id="gap-lx">가로</span> <input type="number" autocomplete="off" id="gap" value="0" min="0" step="1"> <span id="gapy-wrap"><span id="gap-ly">세로</span> <input type="number" autocomplete="off" id="gapy" value="0" min="0" step="1"></span></div></div>
         <div class="row"><label>돔보 거리</label><div class="in"><input type="number" autocomplete="off" id="bleed" value="3" min="0" step="1"></div></div>
@@ -424,7 +427,7 @@ $("sheet-del").addEventListener("click",function(){var a=loadSizes(),i=+$("sheet
 renderSizes();
 $("rot").addEventListener("click",function(){var a=$("sw").value;$("sw").value=$("sh").value;$("sh").value=a;render()});
 $("autofit").addEventListener("click",function(){var g=geom();var pw=num("pw",S.srcW)+2*num("bleed"),ph=num("ph",S.srcH)+2*num("bleed");if(g.rotPage){var t0=pw;pw=ph;ph=t0}var c=Math.max(1,Math.floor((g.W-2*g.m+g.gap)/(pw+g.gap))),r=Math.max(1,Math.floor((g.H-2*g.m+g.gapy)/(ph+g.gapy)));$("cols").value=c;$("rows").value=r;render()});
-["sw","sh","cols","rows","pw","ph","trim-preview","order","margin","gap","gapy","offx","offy","offx2","offy2","off-same","bleed","marks","center","duplex","scale","scale-pct","align","nup-mode","sides","bk-dup","bk-pad","pad-pos","creep","fill-1p"].forEach(function(id){$(id).addEventListener("input",function(){if(id==="sw"||id==="sh")$("sheet-sel").value="";scheduleRender()});/* 보고 있던 판은 유지 — 판 수가 줄면 pager() 가 마지막 판으로 맞춘다 */$(id).addEventListener("change",render)});
+["sw","sh","cols","rows","pw","ph","trim-preview","order","crop-l","crop-r","crop-t","crop-b","margin","gap","gapy","offx","offy","offx2","offy2","off-same","bleed","marks","center","duplex","scale","scale-pct","align","nup-mode","sides","bk-dup","bk-pad","pad-pos","creep","fill-1p"].forEach(function(id){$(id).addEventListener("input",function(){if(id==="sw"||id==="sh")$("sheet-sel").value="";scheduleRender()});/* 보고 있던 판은 유지 — 판 수가 줄면 pager() 가 마지막 판으로 맞춘다 */$(id).addEventListener("change",render)});
 /* 연속 입력은 한 프레임에 한 번만 그린다 (T1) */
 var _rt=null,_raf=0;
 function scheduleRender(){if(_rt)clearTimeout(_rt);_rt=setTimeout(function(){_rt=null;if(document.hidden){render();return}if(_raf)cancelAnimationFrame(_raf);_raf=requestAnimationFrame(function(){_raf=0;render()})},30)}
@@ -601,6 +604,9 @@ function render(){
       var pSc=fit?Math.min(pw/pW,ph/pH):sc;                      /* 이 페이지의 내용 배율 */
       /* 페이지 전체 크기와 그 안의 기준 박스 위치 — 중철이 아니면 기준 박스 = 페이지 */
       var fu=bt?{w:pgW,h:pgH,x:bt.x||0,y:bt.y||0}:{w:pW,h:pH,x:0,y:0};
+      /* 크롭: 기준 영역(=칸에 놓을 부분)을 사방에서 잘라낸다 */
+      var cl0=num("crop-l"),cr0=num("crop-r"),ct0=num("crop-t"),cb0=num("crop-b");
+      if((cl0||cr0||ct0||cb0)&&(pW-cl0-cr0>1)&&(pH-ct0-cb0>1)){fu={w:fu.w,h:fu.h,x:(fu.x||0)+cl0,y:(fu.y||0)+ct0};pW=pW-cl0-cr0;pH=pH-ct0-cb0}
       var fW=q90?fu.h:fu.w,fH=q90?fu.w:fu.h,tw=q90?pH:pW,th=q90?pW:pH;
       var tx=deg===90?fu.h-(fu.y+pH):deg===180?fu.w-(fu.x+pW):deg===270?fu.y:fu.x;   /* 회전 후 재단 박스 위치 */
       var ty=deg===90?fu.x:deg===180?fu.h-(fu.y+pH):deg===270?fu.w-(fu.x+pW):fu.y;
@@ -754,7 +760,7 @@ $("side-f").addEventListener("click",function(){S.side="f";render()});$("side-b"
 var _rz=null;window.addEventListener("resize",function(){if(_rz)clearTimeout(_rz);_rz=setTimeout(function(){_rz=null;render()},150)});
 
 /* ---- 프리셋 (미리보기: 브라우저 저장) ---- */
-var FIELDS=["sw","sh","cols","rows","pw","ph","trim-preview","order","margin","gap","gapy","offx","offy","offx2","offy2","off-same","align","nup-mode","bleed","marks","center","duplex","scale","scale-pct","sides","bk-dup","bk-pad","pad-pos","creep","fill-1p","rot-back","rot-page","cut-dir","cut-n","cut-order","cut-ov","cut-range","odd-rev","even-rev","oe-pad","m-rev","m-pad","m-dup","dup-page","dup-n","rot-target","rot-range","rot-deg","ord-mode","mb-bleed"];
+var FIELDS=["sw","sh","cols","rows","pw","ph","trim-preview","order","crop-l","crop-r","crop-t","crop-b","margin","gap","gapy","offx","offy","offx2","offy2","off-same","align","nup-mode","bleed","marks","center","duplex","scale","scale-pct","sides","bk-dup","bk-pad","pad-pos","creep","fill-1p","rot-back","rot-page","cut-dir","cut-n","cut-order","cut-ov","cut-range","odd-rev","even-rev","oe-pad","m-rev","m-pad","m-dup","dup-page","dup-n","rot-target","rot-range","rot-deg","ord-mode","mb-bleed"];
 function snapshot(){var o={type:S.type,slotRot:S.slotRot};FIELDS.forEach(function(id){var e=$(id);o[id]=e.type==="checkbox"?e.checked:e.value});return o}
 function apply(o){S.type=o.type;S.slotRot=(o.slotRot&&o.slotRot.f)?o.slotRot:{f:{},b:{}};[].forEach.call($("types").children,function(x){x.classList.toggle("on",x.getAttribute("data-t")===o.type)});FIELDS.forEach(function(id){var e=$(id);if(o[id]===undefined)return;if(e.type==="checkbox")e.checked=!!o[id];else e.value=o[id]});$("sheet-sel").value="";S.sheet=0;render()}
 function loadPresets(){if(LOCAL)return LOCAL.presets;try{return JSON.parse(localStorage.getItem("impo-presets")||"null")||seed()}catch(e){return seed()}}
