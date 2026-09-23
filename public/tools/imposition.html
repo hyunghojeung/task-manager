@@ -92,8 +92,9 @@ body.onetouch .slot:not(.blank){cursor:pointer}body.onetouch .slot:not(.blank):h
 .rottbl td{padding:2px 4px}
 .rottbl select{min-height:28px;padding:2px 6px;font-size:12px}
 .slotgrid{display:grid;gap:3px;margin-top:4px}
-.cropin{gap:1px;font-size:11px;color:var(--g600);flex-wrap:nowrap;white-space:nowrap}
-.cropin input{width:32px;min-width:0;padding:2px 2px;font-size:11px;text-align:center}
+.cropin{gap:2px;font-size:11px;color:var(--g600);flex-wrap:nowrap;white-space:nowrap}
+.cropin input{width:26px;min-width:0;padding:2px 1px;font-size:11px;text-align:center;-moz-appearance:textfield}
+.cropin input::-webkit-outer-spin-button,.cropin input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
 .rottbl select{font-size:11px;padding:1px 2px;width:46px;min-width:0}
 .rottbl th,.rottbl td{padding:1px 3px;font-size:11px;white-space:nowrap}
 .rottbl td:first-child,.rottbl th:first-child{color:var(--g600);padding-right:4px}
@@ -285,7 +286,7 @@ input[type=number]:focus,input[type=text]:focus,select:focus{outline:1px solid #
         </div></div>
         <div class="row"><label>재단 크기</label><div class="in"><input type="number" autocomplete="off" id="pw" value="210"> × <input type="number" autocomplete="off" id="ph" value="297"></div></div>
         <div class="row"><label></label><div class="in"><label class="chk"><input type="checkbox" id="trim-preview"> 재단 미리보기</label></div></div>
-        <div class="row"><label>크롭</label><div class="in cropin">좌<input type="number" autocomplete="off" id="crop-l" value="0" min="0" step="1">우<input type="number" autocomplete="off" id="crop-r" value="0" min="0" step="1">상<input type="number" autocomplete="off" id="crop-t" value="0" min="0" step="1">하<input type="number" autocomplete="off" id="crop-b" value="0" min="0" step="1"></div></div>
+        <div class="row"><label>크롭</label><div class="in cropin">좌<input type="text" inputmode="numeric" autocomplete="off" id="crop-l" value="0">우<input type="text" inputmode="numeric" autocomplete="off" id="crop-r" value="0">상<input type="text" inputmode="numeric" autocomplete="off" id="crop-t" value="0">하<input type="text" inputmode="numeric" autocomplete="off" id="crop-b" value="0"></div></div>
         <div class="row" id="row-arr"><label>배치</label><div class="in"><input type="number" autocomplete="off" id="cols" value="1" min="1" max="12"> 열 × <input type="number" autocomplete="off" id="rows" value="1" min="1" max="12"> 행<button id="autofit" hidden></button></div></div>
         <div class="row" id="row-gap"><label id="lbl-gap">배치간격</label><div class="in"><span id="gap-lx">가로</span> <input type="number" autocomplete="off" id="gap" value="0" min="0" step="1"> <span id="gapy-wrap"><span id="gap-ly">세로</span> <input type="number" autocomplete="off" id="gapy" value="0" min="0" step="1"></span></div></div>
         <div class="row"><label>돔보 거리</label><div class="in"><input type="number" autocomplete="off" id="bleed" value="3" min="0" step="1"></div></div>
@@ -303,7 +304,7 @@ input[type=number]:focus,input[type=text]:focus,select:focus{outline:1px solid #
         <div class="row" id="row-scale"><label>배율</label><div class="in"><select id="scale"><option value="none" selected>원본 크기 그대로 (기본)</option><option value="fit">재단 크기에 맞게 축소/확대</option><option value="paper">용지 크기에 맞게</option><option value="pct">배율 직접 입력</option></select><span id="scale-pct-wrap" hidden><input type="number" autocomplete="off" id="scale-pct" value="100" min="1" max="1000" step="1"> %</span></div></div>
         <select id="align" hidden><option value="center" selected>center</option></select>
         <input type="number" autocomplete="off" id="margin" value="0" hidden>
-        <div class="row"><label>전체 위치이동</label><div class="in" style="flex-direction:column;align-items:flex-start;gap:4px">
+        <div class="row"><label>전체이동</label><div class="in" style="flex-direction:column;align-items:flex-start;gap:4px">
           <div>앞면 &nbsp;가로 <input type="number" autocomplete="off" id="offx" value="0" step="1"> 세로 <input type="number" autocomplete="off" id="offy" value="0" step="1"></div>
           <div>뒷면 &nbsp;가로 <input type="number" autocomplete="off" id="offx2" value="0" step="1"> 세로 <input type="number" autocomplete="off" id="offy2" value="0" step="1"> <label class="chk" style="margin-left:6px" hidden><input type="checkbox" id="off-same"> 앞면과 같게</label></div>
         </div></div>
