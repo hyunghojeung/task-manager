@@ -26,8 +26,16 @@ export async function GET(request: NextRequest) {
   const ver = String(data.version || "").trim().replace(/[^\w.\-]+/g, "");
   const dlName = ver ? data.file_name.replace(/(\.[A-Za-z0-9]+)$/, `_v${ver}$1`) : data.file_name;
   const { data: signed } = await supabase.storage.from("downloads").createSignedUrl(data.storage_path, 60 * 10, { download: dlName });
+  // 코드만 담은 작은 zip (있으면 같이 알려 준다 — 런타임이 같으면 이것만 받아 갈아끼운다)
+  const { data: app } = await supabase.from("program_releases")
+    .select("version, size_bytes, note, storage_path, updated_at").eq("key", key + "_app").maybeSingle();
+  let appInfo: Record<string, unknown> | null = null;
+  if (app?.storage_path) {
+    const { data: appSigned } = await supabase.storage.from("downloads").createSignedUrl(app.storage_path, 60 * 10);
+    appInfo = { version: app.version, size_bytes: app.size_bytes, runtime: app.note, updated_at: app.updated_at, url: appSigned?.signedUrl || "" };
+  }
   return NextResponse.json({
     key: data.key, version: data.version, file_name: data.file_name, size_bytes: data.size_bytes,
-    note: data.note, updated_at: data.updated_at, url: signed?.signedUrl || "",
+    note: data.note, updated_at: data.updated_at, url: signed?.signedUrl || "", app: appInfo,
   });
 }
