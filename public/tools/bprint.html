@@ -1039,6 +1039,7 @@ body{padding-inline:12px;padding-block:12px 24px}
   ptabs.forEach(function(b){b.addEventListener('click',function(){ptabs.forEach(function(x){x.setAttribute('aria-selected',String(x===b))});['page','nup','ops','bg','bw','ol','ana'].forEach(function(k){$('pp-'+k).hidden=k!==b.dataset.p});if(b.dataset.p==='ana')runAna();setView(b.dataset.p);if(b.dataset.p==='nup'&&!$('nu-on').checked)setNup('2')})});
   var rsT;window.addEventListener('resize',function(){clearTimeout(rsT);rsT=setTimeout(function(){renderPreview()},120)});
   buildPages();setNup('off');paperSync();setView('page');
+  (function(){var t=document.querySelector('.ptabs [data-p="nup"]');if(t)t.click();})();   /* 첫 화면: N-up */
 
   // ---- Bcount 웹 미리보기: 내려받기 버튼·버전 ----
   var DOWNLOAD_URL="/api/program-releases/bprint/download";
