@@ -13,8 +13,11 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ key
   const session = await getApiSession();
   if (!session) return unauthorized();
   const { key } = await params;
-  if (key === "imposition" && !(await getCompanyFeatures(session.company.id)).imposition) {
-    return NextResponse.json({ error: "이 업체는 임포지션 기능을 사용할 수 없습니다." }, { status: 403 });
+  // 상품별 이용권 — B-imposition 과 B-PRINT 는 따로 산다
+  if (key === "imposition" || key === "bprint") {
+    const f = await getCompanyFeatures(session.company.id);
+    const ok = key === "bprint" ? f.print : f.imposition;
+    if (!ok) return NextResponse.json({ error: `이 업체는 ${key === "bprint" ? "B-PRINT" : "B-imposition"} 사용 권한이 없습니다.` }, { status: 403 });
   }
   const supabase = getSupabase();
   const { data } = await supabase.from("program_releases").select("storage_path, file_name, version").eq("key", key).maybeSingle();

@@ -3,7 +3,7 @@ import { getSupabase } from "@/lib/supabase-admin";
 // 프로그램 배포 파일 올리기 — 관리자 화면(세션)과 빌드 스크립트(프로그램 토큰) 둘 다 이 함수를 쓴다.
 export const RELEASE_BUCKET = "downloads";
 export const RELEASE_MAX_SIZE = 200 * 1024 * 1024;
-export const RELEASE_KEYS = ["imposition"] as const;
+export const RELEASE_KEYS = ["imposition", "bprint"] as const;
 
 export async function saveRelease(form: FormData, uploadedBy: string): Promise<{ ok: true; release: Record<string, unknown> } | { ok: false; error: string; status: number }> {
   const file = form.get("file") as File | null;

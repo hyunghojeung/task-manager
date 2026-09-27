@@ -2,12 +2,13 @@
 
 import { usePathname } from "next/navigation";
 
-export default function NavBar({ role, hubEnabled, features }: { role?: string; hubEnabled?: boolean; features?: { hub: boolean; imposition: boolean; taekbae: boolean; sales: boolean } }) {
-  // 임포지션·송장변환·매출리스트는 최고관리자가 켜 준 업체에만 보인다
-  const f = features || { hub: false, imposition: false, taekbae: false, sales: false };
+export default function NavBar({ role, hubEnabled, features }: { role?: string; hubEnabled?: boolean; features?: { hub: boolean; imposition: boolean; print: boolean; taekbae: boolean; sales: boolean } }) {
+  // B-PRINT·임포지션·송장변환·매출리스트는 최고관리자가 켜 준 업체에만 보인다 (B-PRINT 와 B-imposition 은 따로 파는 상품)
+  const f = features || { hub: false, imposition: false, print: false, taekbae: false, sales: false };
   const pathname = usePathname();
 
   const links: Array<{ href: string; label: string; color: string; text?: string; external?: boolean }> = [
+    ...(f.print ? [{ href: "/dashboard/bprint", label: "B-PRINT", color: "bg-indigo-700 hover:bg-indigo-800" }] : []),
     ...(f.imposition ? [{ href: "/dashboard/imposition", label: "B-imposition", color: "bg-slate-700 hover:bg-slate-800" }] : []),
     // 업무관리: 최고관리자가 업체에 켜 주고, 관리자가 사용자별로 켜 준 사람에게만 보인다
     ...(f.hub && hubEnabled

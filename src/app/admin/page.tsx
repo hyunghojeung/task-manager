@@ -1096,10 +1096,12 @@ function ShopTab() {
   );
 }
 
-// ===== 프로그램 배포 (B-imposition exe) =====
+// ===== 프로그램 배포 (B-imposition · B-PRINT) =====
 interface Release { key: string; file_name: string; version: string; size_bytes: number; note: string; uploaded_by: string; updated_at: string }
+const PROGRAMS = [{ key: "imposition", label: "B-imposition", exe: "BcountImposition.exe" }, { key: "bprint", label: "B-PRINT", exe: "BPrint.exe" }];
 function ProgramTab() {
   const [rows, setRows] = useState<Release[]>([]);
+  const [progKey, setProgKey] = useState("imposition");
   const [file, setFile] = useState<File | null>(null);
   const [version, setVersion] = useState("");
   const [note, setNote] = useState("");
@@ -1113,9 +1115,9 @@ function ProgramTab() {
 
   async function upload() {
     if (!file) { alert("배포 파일(zip)을 고르세요."); return; }
-    if (!confirm(`${file.name} (${(file.size / 1048576).toFixed(1)} MB)를 올릴까요? 직원들이 "B-imposition" 화면에서 바로 이 파일을 내려받게 됩니다.`)) return;
+    if (!confirm(`${file.name} (${(file.size / 1048576).toFixed(1)} MB)를 올릴까요? 직원들이 "${prog.label}" 화면에서 바로 이 파일을 내려받게 됩니다.`)) return;
     const fd = new FormData();
-    fd.append("file", file); fd.append("key", "imposition"); fd.append("version", version); fd.append("note", note);
+    fd.append("file", file); fd.append("key", progKey); fd.append("version", version); fd.append("note", note);
     setBusy(true);
     const res = await fetch("/api/program-releases", { method: "POST", body: fd });
     const d = await res.json().catch(() => ({}));
@@ -1125,12 +1127,22 @@ function ProgramTab() {
   }
 
   const fmt = (iso: string) => iso ? new Date(iso).toLocaleString("ko-KR", { timeZone: "Asia/Seoul", hour12: false }) : "-";
-  const cur = rows.find(r => r.key === "imposition");
+  const prog = PROGRAMS.find(p => p.key === progKey) || PROGRAMS[0];
+  const cur = rows.find(r => r.key === progKey);
 
   return (
     <div className="bg-white rounded-lg shadow-sm p-6">
       <h2 className="text-lg font-bold mb-1">프로그램 배포</h2>
-      <p className="text-sm text-gray-500 mb-5">B-imposition(윈도우 프로그램) 배포 파일(zip)을 올려 두면, 로그인한 직원이 &quot;B-imposition&quot; 화면의 다운로드 버튼으로 받습니다. 받은 zip 은 압축을 풀고 폴더 안의 BcountImposition.exe 를 실행합니다.</p>
+      <p className="text-sm text-gray-500 mb-4">{prog.label}(윈도우 프로그램) 배포 파일(zip)을 올려 두면, 로그인한 직원이 &quot;{prog.label}&quot; 화면의 다운로드 버튼으로 받습니다. 받은 zip 은 압축을 풀고 폴더 안의 {prog.exe} 를 실행합니다. 두 프로그램은 따로 파는 상품이라 배포도 따로 합니다.</p>
+
+      <div className="flex gap-2 mb-5">
+        {PROGRAMS.map(p => (
+          <button key={p.key} onClick={() => setProgKey(p.key)}
+            className={`px-4 py-1.5 rounded text-sm font-medium border ${progKey === p.key ? "bg-blue-600 text-white border-blue-600" : "bg-white text-gray-600 border-gray-300"}`}>
+            {p.label}
+          </button>
+        ))}
+      </div>
 
       <div className="border border-gray-200 rounded p-4 mb-6 text-sm">
         <div className="font-bold mb-2">지금 배포 중인 파일</div>
@@ -1141,7 +1153,7 @@ function ProgramTab() {
             <span className="text-gray-500">올린 사람</span><span>{cur.uploaded_by || "-"}</span>
             <span className="text-gray-500">올린 때</span><span>{fmt(cur.updated_at)}</span>
             {cur.note && <><span className="text-gray-500">메모</span><span className="whitespace-pre-wrap">{cur.note}</span></>}
-            <span className="text-gray-500">받기</span><span><a href="/api/program-releases/imposition/download" className="text-blue-600 hover:underline">지금 파일 내려받기</a></span>
+            <span className="text-gray-500">받기</span><span><a href={`/api/program-releases/${progKey}/download`} className="text-blue-600 hover:underline">지금 파일 내려받기</a></span>
           </div>
         ) : (
           <p className="text-gray-500">아직 올린 파일이 없습니다. 이 경우 저장소에 들어 있는 배포본이 내려갑니다.</p>
