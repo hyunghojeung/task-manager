@@ -549,7 +549,7 @@ body{padding-inline:12px;padding-block:12px 24px}
       return;
     }
     var c=nupC(),r=nupR(),gap=+$('nu-gap').value||0,gapy=+$('nu-gapy').value||0,m=+$('nu-m').value||0;
-    var per=c*r,plan=nupPlan(per),sheets=plan.length;
+    var per=c*r,plan=nupPlan($('nu-order').value==='repeat'?1:per),sheets=plan.length;   /* 반복은 판마다 쪽 하나 */
     if(pv>=sheets)pv=sheets-1;if(pv<0)pv=0;
     var item=plan[pv]||{nup:true,idx:[0]};
     if(!item.nup){                                   /* 구간 밖 — 조판하지 않고 원본 그대로 한 장 */
