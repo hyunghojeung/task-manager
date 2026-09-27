@@ -1,0 +1,1058 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>B-PRINT</title>
+<style>
+:root{--bg:#f0f0f0;--card:#fff;--ink:#111827;--muted:#6b7280;--faint:#9ca3af;--line:#d9d9d9;--accent:#0067c0;--accent-ink:#fff;--soft:#e8f1fb;--sel:#cfe4fb;--warn:#92400e;--warn-bg:#fffbeb;--stage:#cfcfcf;--paper:#fff;--shadow:0 6px 20px rgba(0,0,0,.18)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1c2028;--card:#262b35;--ink:#e5e7eb;--muted:#9ca3af;--faint:#6b7280;--line:#3a4453;--accent:#3b82f6;--soft:#1e3a5f;--sel:#274b7a;--warn-bg:#3a2e12;--stage:#3b414d;--paper:#f3f4f6;--shadow:0 6px 20px rgba(0,0,0,.45)}}
+:root[data-theme="dark"]{--bg:#1c2028;--card:#262b35;--ink:#e5e7eb;--muted:#9ca3af;--faint:#6b7280;--line:#3a4453;--accent:#3b82f6;--soft:#1e3a5f;--sel:#274b7a;--warn-bg:#3a2e12;--stage:#3b414d;--paper:#f3f4f6;--shadow:0 6px 20px rgba(0,0,0,.45)}
+body{background:var(--bg);color:var(--ink);font:12px/1.5 "Segoe UI","Malgun Gothic",system-ui,sans-serif;padding-inline:16px;padding-block:14px 40px}
+.wrap{max-width:1280px;margin:0 auto}
+[hidden]{display:none!important}
+h1{font-size:18px;margin:0 0 4px}
+.lead{color:var(--muted);margin:0 0 14px;font-size:13px}
+.tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px}
+.tabs button{border:1px solid var(--line);background:var(--card);color:var(--ink);padding:8px 14px;border-radius:6px;cursor:pointer;font:inherit;font-size:13px}
+.tabs button[aria-selected="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+/* ===== 프로그램 창 ===== */
+.app{background:var(--card);border:1px solid var(--line);border-radius:6px;overflow:hidden;box-shadow:var(--shadow)}
+.bar{background:var(--bg);border-bottom:1px solid var(--line);padding:6px 12px;display:flex;align-items:center;gap:10px;font-size:12px}
+.bar b{font-size:14px}.bar .v{font-size:11px;background:var(--soft);border-radius:3px;padding:1px 6px;color:var(--accent);font-weight:700}
+.bar .st{margin-left:auto;color:var(--muted)}
+.main{display:grid;grid-template-columns:330px 260px minmax(0,1fr);min-height:560px}
+@media (max-width:900px){.main{grid-template-columns:1fr}}
+.pages{border-right:1px solid var(--line);background:var(--bg);display:flex;flex-direction:column;min-height:0}
+.pages .tools{display:flex;flex-wrap:nowrap;gap:3px;padding:8px;border-bottom:1px solid var(--line)}
+.pages .tools .winbtn{padding:4px 7px;font-size:11.5px}
+.winbtn{border:1px solid #adadad;background:linear-gradient(#fefefe,#e6e6e6);color:#000;border-radius:0;padding:4px 10px;font:inherit;font-size:12px;cursor:pointer;min-height:26px}
+.winbtn.primary{background:linear-gradient(#3d8be0,#0067c0);color:#fff;border-color:#0058a6;font-weight:700}
+.winbtn.big{padding:8px 14px;font-size:13px}
+.winbtn:disabled{opacity:.5;cursor:default}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));overflow-x:hidden;gap:8px;padding:8px;overflow:auto;max-height:560px}
+.pg{position:relative;background:var(--card);border:2px solid var(--line);border-radius:3px;padding:4px;cursor:pointer;user-select:none}
+.pg.sel{border-color:var(--accent);background:var(--sel)}
+.pg .th{aspect-ratio:210/297;background:var(--paper);border:1px solid #cbd5e1;display:flex;align-items:center;justify-content:center;color:#334155;font-weight:700;font-size:16px;position:relative;overflow:hidden}
+.pg .th.blank{background:repeating-linear-gradient(45deg,#f8fafc 0 6px,#eef2f7 6px 12px);color:#94a3b8;font-size:11px;font-weight:400}
+.pg .th .art{position:absolute;inset:6px 6px auto 6px;height:34%;background:linear-gradient(120deg,#93c5fd,#c4b5fd);border-radius:2px}
+.pg .th .txt{position:absolute;left:6px;right:6px;bottom:8px;height:30%;background:repeating-linear-gradient(#e2e8f0 0 3px,transparent 3px 7px)}
+.pg .th.r90{transform:rotate(90deg) scale(.7)}.pg .th.r180{transform:rotate(180deg)}.pg .th.r270{transform:rotate(270deg) scale(.7)}
+.pg .no{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-top:3px}
+.pg .badge{position:absolute;top:6px;right:6px;font-size:10px;background:#fde68a;color:#92400e;padding:0 4px;border-radius:2px;font-weight:700}
+.stage{background:var(--stage);display:flex;flex-direction:column;min-width:0}
+.pager{display:flex;align-items:center;gap:6px;padding:8px 12px;background:var(--card);border-bottom:1px solid var(--line);font-size:12px}
+.pager input{width:44px;text-align:center;font:inherit;padding:3px}
+.pager .info{margin-left:auto;color:var(--muted)}
+.canvas{flex:1;display:flex;align-items:center;justify-content:center;padding:24px;overflow:auto}
+.paper{background:var(--paper);box-shadow:var(--shadow);position:relative}
+.paper .cell{position:absolute;z-index:1;box-sizing:border-box;display:flex;align-items:center;justify-content:center;color:#334155;font-weight:700;font-size:22px;background:#fff;overflow:hidden}
+.paper .cell .art{position:absolute;inset:8% 8% auto 8%;height:34%;background:linear-gradient(120deg,#93c5fd,#c4b5fd);border-radius:2px}
+.paper .cell .txt{position:absolute;left:8%;right:8%;bottom:10%;height:28%;background:repeating-linear-gradient(#e2e8f0 0 4px,transparent 4px 9px)}
+.paper .cell.blank{background:repeating-linear-gradient(45deg,#f8fafc 0 8px,#eef2f7 8px 16px);color:#94a3b8;font-size:14px;font-weight:400}
+.dim{position:absolute;font-size:10px;color:#b91c1c;white-space:nowrap;pointer-events:none}
+.dim i{position:absolute;background:#ef4444;opacity:.75}
+.dim b{position:absolute;background:rgba(255,255,255,.9);padding:0 3px;border-radius:2px;font-weight:600;transform:translate(-50%,-50%)}
+.panel{border-right:1px solid var(--line);background:var(--bg);display:flex;flex-direction:column;min-height:0}
+.ptabs{display:flex;border-bottom:1px solid var(--line);background:var(--card)}
+.ptabs button{flex:0 0 auto;min-width:112px;border:0;background:transparent;color:var(--muted);padding:9px 18px;font:inherit;font-size:13px;cursor:pointer;border-bottom:2px solid transparent}
+.ptabs button[aria-selected="true"]{color:var(--accent);border-bottom-color:var(--accent);font-weight:700;background:var(--card)}
+.filebar{display:flex;align-items:center;gap:8px;margin:10px 10px 0;padding:10px;border:2px dashed var(--line);border-radius:6px;background:var(--card);font-size:12px}
+.filebar #p-file-info{flex:1;min-width:0;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center}
+.filebar #p-file-info b{color:var(--ink);font-weight:600}
+.filebar.over{border-color:var(--accent);background:var(--soft)}
+.filebar.over #p-file-info{color:var(--accent)}
+.filebar.has #p-file-info{color:var(--ink)}
+.paperbar{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:8px 10px;border-bottom:1px solid var(--line);background:var(--card);font-size:12px}
+.paperbar label{color:var(--muted)}
+.paperbar select{font:inherit;padding:3px 5px;border:1px solid var(--line);border-radius:2px;background:var(--card);color:var(--ink)}
+.paperbar input{font:inherit;width:62px;padding:3px 5px;border:1px solid var(--line);border-radius:2px;background:var(--card);color:var(--ink)}
+.pbody{padding:10px;overflow:auto;flex:1}
+.card{background:var(--card);border:1px solid var(--line);border-radius:4px;padding:8px 10px;margin-bottom:8px}
+.card h3{margin:0 0 6px;font-size:12px;font-weight:700;border-left:3px solid var(--accent);padding-left:6px}
+.row{display:grid;grid-template-columns:88px 1fr;gap:6px 8px;align-items:center;margin:4px 0;font-size:12px}
+.row label{color:var(--muted)}
+.row input[type=number],.row input[type=text],.row select{font:inherit;padding:3px 5px;border:1px solid var(--line);border-radius:2px;background:var(--card);color:var(--ink);min-width:0}
+.row input[type=number]{width:60px}
+.row .tight{display:flex;align-items:center;gap:4px;white-space:nowrap;font-size:11.5px;color:var(--muted)}
+.row .tight input[type=number]{width:44px;padding:3px 4px;text-align:center}
+.cropin input{width:34px;text-align:center;padding:3px 2px;-moz-appearance:textfield}
+.cropin input::-webkit-outer-spin-button,.cropin input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.cropin input::placeholder{color:var(--faint)}
+.chk{display:inline-flex;align-items:center;gap:4px;margin-right:8px}
+.btns{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+.ops{list-style:none;padding:0;margin:0;font-size:12px}
+.ops li{display:flex;gap:6px;align-items:center;padding:4px 6px;border-bottom:1px solid var(--line)}
+.ops li span{flex:1}
+.ops li small{color:var(--faint)}
+.ops li u{color:var(--accent);cursor:pointer;text-decoration:none}
+.foot{padding:10px;border-top:1px solid var(--line);background:var(--card)}
+.foot .fn{font-size:11px;color:var(--muted);margin-bottom:6px}
+.fdrop{border:2px dashed var(--line);border-radius:6px;background:var(--card);padding:14px;text-align:center;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:6px}
+.fdrop b{color:var(--ink);font-size:13px}
+.fdrop.over{border-color:var(--accent);background:var(--soft);color:var(--accent)}
+.fdrop .btns{margin-top:2px}
+.ftbl{width:100%;border-collapse:collapse;font-size:12px;margin-top:6px}
+.ftbl th{text-align:left;color:var(--muted);font-weight:600;font-size:11px;border-bottom:1px solid var(--line);padding:4px 6px;white-space:nowrap}
+.ftbl td{border-bottom:1px solid var(--line);padding:5px 6px;vertical-align:middle}
+.ftbl tfoot td{border-top:2px solid var(--line);border-bottom:0;padding:7px 6px;background:var(--bg);font-weight:600}
+.ftbl tfoot .sz{font-weight:400;color:var(--muted)}
+.ftbl td.nm{font-weight:600}
+.ftbl td u{color:var(--accent);cursor:pointer;text-decoration:none;margin-right:4px}
+.ftbl .conv{color:var(--accent);font-weight:600}
+.chipw{display:inline-block;font-size:10px;font-weight:700;padding:1px 6px;border-radius:999px;background:#fef3c7;color:#92400e;margin-left:4px}
+.tblwrap{overflow-x:auto}
+.pnbox.two{grid-template-columns:repeat(2,1fr)}
+.pnbox{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;border:1px solid var(--line);background:var(--bg);padding:6px;margin-top:4px}
+.pnbox div{display:flex;flex-direction:column;gap:2px}
+.pnbox span{font-size:10px;color:var(--muted)}
+.pnbox input{font:inherit;font-size:12px;padding:3px 4px;border:1px solid var(--line);border-radius:2px;background:var(--card);color:var(--ink);min-width:0;width:100%;box-sizing:border-box}
+.pnprev{margin-top:6px;border:1px dashed var(--line);background:var(--card);padding:10px 8px 6px;font-size:11px;color:var(--muted);text-align:center}
+.pnprev b{display:block;color:var(--ink);font-size:13px;font-weight:400;margin-top:4px}
+.note{font-size:11px;color:var(--muted);background:var(--soft);border-radius:3px;padding:6px 8px;margin-top:6px}
+.warn{font-size:11px;color:var(--warn);background:var(--warn-bg);border-radius:3px;padding:6px 8px;margin-top:6px}
+/* ===== 기획 ===== */
+.doc{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:18px 20px;font-size:13px}
+.doc h2{font-size:15px;margin:18px 0 8px}.doc h2:first-child{margin-top:0}
+.doc table{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:6px}
+.doc th,.doc td{border-bottom:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+.doc th{color:var(--muted);font-weight:600;font-size:11px}
+.doc .tblwrap{overflow-x:auto}
+.doc ul,.doc ol{margin:0;padding-left:18px;display:grid;gap:4px}
+.doc .q{background:var(--warn-bg);color:var(--warn);border-radius:4px;padding:8px 10px;margin-top:8px}
+.tag{display:inline-block;font-size:10px;font-weight:700;padding:1px 6px;border-radius:999px;background:var(--soft);color:var(--accent);margin-right:4px}
+.ctx{position:fixed;z-index:50;background:var(--card);border:1px solid var(--line);box-shadow:var(--shadow);min-width:170px;padding:4px 0;font-size:12px}
+.ctx div{padding:6px 14px;cursor:pointer;display:flex;justify-content:space-between;gap:10px}.ctx div:hover{background:var(--soft)}
+.ctx div small{color:var(--faint)}.ctx hr{border:0;border-top:1px solid var(--line);margin:4px 0}
+.ctx .sub{padding-left:22px;color:var(--muted)}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#111;color:#fff;padding:8px 14px;border-radius:4px;font-size:12px;opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.on{opacity:.92}
+
+/* 파일결합 화면: 글자·줄 간격을 키워 읽기 쉽게 */
+#pp-page{font-size:13.5px;line-height:1.6}
+#pp-page .card{padding:12px 14px;margin-bottom:12px}
+#pp-page .card h3{font-size:14.5px;margin-bottom:10px;padding-left:8px}
+#pp-page .fdrop{padding:20px;gap:8px}
+#pp-page .fdrop b{font-size:15px}
+#pp-page .winbtn{font-size:13.5px;min-height:32px;padding:6px 14px}
+#pp-page .winbtn.big{font-size:14.5px;padding:10px 20px}
+#pp-page .ftbl{font-size:13.5px;margin-top:10px}
+#pp-page .ftbl th{font-size:12.5px;padding:8px}
+#pp-page .ftbl td{padding:10px 8px}
+#pp-page .ftbl tfoot td{padding:11px 8px}
+#pp-page .ftbl td u{font-size:15px;margin-right:7px}
+#pp-page .chk{font-size:13.5px;gap:6px;margin-right:12px}
+#pp-page .chk input{width:15px;height:15px}
+#pp-page .note{font-size:13px;padding:10px 12px;line-height:1.6}
+#pp-page select,#pp-page input[type=number],#pp-page input[type=text]{font-size:13.5px;padding:5px 7px}
+#size-opts input[type=number]{width:64px;text-align:center}
+#size-opts select{padding:5px 4px}
+#pp-page .chipw{font-size:11.5px;padding:2px 8px}
+</style>
+<style>
+/* Bcount 화면 안(iframe)에 들어가는 만큼 여백을 줄인다 */
+body{padding-inline:12px;padding-block:12px 24px}
+.wrap{max-width:none}
+.pg .th img{max-width:100%;max-height:100%;display:block}
+</style>
+<div class="wrap">
+
+  <div class="app">
+    <div class="bar"><b>B-PRINT</b><span class="v">v1.0.0</span><span style="color:var(--muted)" id="bar-file"></span><span hidden><button id="b-save">PDF 저장하기</button><b id="outname"></b><span id="out-info"></span></span><button class="winbtn" id="dl-btn" type="button" style="margin-left:18px;font-weight:700;padding:5px 16px">B-PRINT 프로그램 다운로드</button><span class="st">미리보기 화면 — 실제 파일은 내려받은 프로그램에서 엽니다</span></div>
+        <div class="ptabs" role="tablist">
+          <button role="tab" aria-selected="true" data-p="page">파일결합</button>
+          <button role="tab" aria-selected="false" data-p="nup">N-up</button>
+          <button role="tab" aria-selected="false" data-p="ops">쪽번호</button><button role="tab" aria-selected="false" data-p="bg">배경</button><button role="tab" aria-selected="false" data-p="bw">흑백 변환</button><button role="tab" aria-selected="false" data-p="ol">아웃라인</button><button role="tab" aria-selected="false" data-p="ana">분석</button>
+        </div>
+    <div class="main">
+      <div class="panel">
+        <div class="filebar" id="filebar">
+          <button class="winbtn" id="p-file-add">PDF 열기...</button>
+          <span id="p-file-info">Drag &amp; Drop</span>
+          <button class="winbtn" id="p-file-clear">비우기</button>
+        </div>
+        <div class="paperbar" hidden>
+          <label>용지</label>
+          <select id="pp-preset">
+            <option value="">원본 그대로</option>
+            <option value="210,297">A4 210×297</option>
+            <option value="297,420">A3 297×420</option>
+            <option value="148,210">A5 148×210</option>
+            <option value="182,257">B5 182×257</option>
+            <option value="215.9,279.4">Letter</option>
+            <option value="custom">직접 입력</option>
+          </select>
+          <input type="number" id="pp-w" min="10" step="1"> × <input type="number" id="pp-h" min="10" step="1"> mm
+          <button class="winbtn" id="pp-rot" title="가로/세로 바꾸기">↻</button>
+        </div>
+        <div class="pbody">
+          <!-- 페이지 탭 -->
+          <div id="pp-page">
+            <div class="card"><h3>파일 결합 <span id="file-n" style="font-weight:400;color:var(--muted)"></span></h3>
+              <div class="fdrop" id="f-drop">
+                <b>Drag &amp; Drop</b>
+                <span>또는</span>
+                <span class="btns"><button class="winbtn" id="f-add">파일 첨부하기...</button><button class="winbtn" id="f-clear">모두 비우기</button></span>
+              </div>
+              <div class="tblwrap"><table class="ftbl">
+                <thead><tr><th style="width:26px">#</th><th>파일</th><th style="width:56px">쪽수</th><th>들어 있는 페이지 크기</th><th style="width:96px">결합 후</th><th style="width:72px">순서</th></tr></thead>
+                <tbody id="flist"></tbody>
+                <tfoot id="ftotal"></tfoot>
+              </table></div>
+              <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-start;margin-top:12px">
+                <label class="chk"><input type="checkbox" id="f-even"> 홀수 쪽 파일은 빈 페이지를 넣어 짝수로 맞춘 뒤 합치기</label>
+                <span style="display:flex;flex-wrap:wrap;align-items:center;gap:12px"><label class="chk" style="margin-right:0"><input type="checkbox" id="f-size"> 크기가 다른 파일을 모두 같은 크기로 맞추어 합치기</label><span id="size-opts" hidden style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
+                <span>크기 <select id="sz-preset" style="width:100px"><option value="210,297">A4 210×297</option><option value="297,420">A3 297×420</option><option value="148,210">A5 148×210</option><option value="182,257">B5 182×257</option><option value="">직접</option></select>
+                <input type="number" id="sz-w" min="10"> × <input type="number" id="sz-h" min="10"> mm</span>
+                <span>방식 <select id="sz-mode"><option value="fit">다 보이게</option><option value="fill">꽉 채우기</option><option value="none">원본 그대로</option></select></span>
+              </span></span>
+                <span style="display:flex;flex-wrap:wrap;align-items:center;gap:12px"><label class="chk" style="margin-right:0"><input type="checkbox" id="f-orient"> 방향이 다른 페이지는 90° 돌려 맞추기</label><span id="orient-opts" hidden style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
+                <span>전체 <select id="f-orient-to"><option value="portrait">세로</option><option value="landscape">가로</option></select></span>
+                <span><b id="f-orient-src">가로</b>페이지 회전 <select id="f-orient-dir"><option value="cw">시계 방향 90°</option><option value="ccw">반시계 방향 90°</option></select></span>
+              </span></span>
+              </div>
+              
+              <div id="f-sum" class="note" style="background:var(--soft);margin-top:10px"></div>
+              <div class="btns" style="margin-top:10px">
+                <button class="winbtn big primary" id="f-save">PDF 저장</button>
+                <button class="winbtn big" id="f-tonup">결합 후 N-up 조판</button>
+              </div>
+            </div>
+
+            <div hidden><select id="bl-pos"><option value="after">뒤</option><option value="before">앞</option><option value="start">맨 앞</option><option value="end">맨 뒤</option></select><input type="number" id="bl-n" placeholder="1"><select id="bl-size"><option>옆 페이지와 같게</option></select></div>
+          </div>
+
+          <!-- N-up 탭 -->
+          <div id="pp-nup" hidden>
+            <div class="card"><h3>N-up</h3>
+              <div class="btns" id="nu-presets">
+                <button class="winbtn" data-nup="off">안 함</button>
+                <button class="winbtn" data-nup="2">2up</button>
+                <button class="winbtn" data-nup="custom">Nup</button>
+              </div>
+              <div class="row" id="row-nu-cr" hidden><label>배치</label><span><input type="number" id="nu-c" placeholder="열" min="1" max="8"> 열 × <input type="number" id="nu-r" placeholder="행" min="1" max="8"> 행</span></div>
+              <label class="chk" hidden><input type="checkbox" id="nu-on"></label>
+              <div class="row"><label>순서</label><select id="nu-order"><option value="seq">순차 (1,2 / 3,4 …)</option><option value="repeat">반복 (1,1 / 2,2 …)</option></select></div>
+              <div class="row"><label>용지 크기</label><span class="tight">가로<input type="number" id="nu-sw" min="1">세로<input type="number" id="nu-sh" min="1">mm</span></div>
+              <div class="row"><label>저장한 용지</label><span class="tight" style="gap:4px"><select id="nu-sheet-sel" style="flex:1;min-width:0;font-size:11.5px"><option value="">고르기</option></select><button class="winbtn" id="nu-sheet-del" style="padding:3px 8px;font-size:11.5px">삭제</button></span></div>
+              <div class="row"><label>용지 저장</label><span class="tight" style="gap:4px"><input type="text" id="nu-sheet-name" placeholder="이름 (예: SRA3)" style="flex:1;min-width:0;font-size:11.5px;padding:3px 5px"><button class="winbtn" id="nu-sheet-save" style="padding:3px 10px;font-size:11.5px">저장</button></span></div>
+              <div class="row"><label>방향</label><select id="nu-dir"><option value="h">가로 (좌우로 배치)</option><option value="v">세로 (위아래로 배치)</option></select></div>
+              <div class="row"><label>N-up 크기</label><span class="tight">가로<input type="number" id="nu-w" placeholder="원본" min="1">세로<input type="number" id="nu-h" placeholder="원본" min="1">mm</span></div>
+              <div class="row"><label>간격</label><span class="tight">가로<input type="number" id="nu-gap" placeholder="0" min="0">세로<input type="number" id="nu-gapy" placeholder="0" min="0">mm</span></div>
+              <div class="row"><label>사방여백</label><span class="tight"><input type="number" id="nu-m" placeholder="0" min="0">mm</span></div>
+              <div class="row"><label>N-up 구간</label><span class="tight cropin" style="gap:3px"><input type="text" inputmode="numeric" id="nu-ra" title="시작 쪽" style="width:30px">~<input type="text" inputmode="numeric" id="nu-rb" title="끝 쪽" style="width:30px"><button class="winbtn" id="nu-radd" style="padding:3px 6px;font-size:11.5px">추가</button><button class="winbtn" id="nu-rclr" style="padding:3px 6px;font-size:11.5px">해제</button></span></div>
+              <div class="row"><label>크롭</label><span class="tight cropin"><input type="text" inputmode="numeric" id="nu-cl" placeholder="좌" title="왼쪽"><input type="text" inputmode="numeric" id="nu-cr" placeholder="우" title="오른쪽"><input type="text" inputmode="numeric" id="nu-ct" placeholder="상" title="위"><input type="text" inputmode="numeric" id="nu-cb" placeholder="하" title="아래"></span></div>
+              <div class="row"><label>배율</label><select id="nu-scale"><option>원본 100%</option><option>칸에 맞게 축소/확대</option></select></div>
+              <div class="row"><label>페이지 회전</label><select id="nu-rot"><option value="0">회전 없음</option><option value="90">90° (시계)</option><option value="180">180°</option><option value="270">270°</option><option value="auto">자동 (칸 방향에 맞춰)</option></select></div>
+            </div>
+            <div class="card"><h3>테두리</h3>
+              <div class="row"><label>사용</label><span><label class="chk"><input type="checkbox" id="bd-on" checked> 각 쪽 둘레에 선</label></span></div>
+              <div class="row"><label>굵기</label><span><input type="number" id="bd-w" placeholder="0.5" min="0.1" step="0.1"> pt</span></div>
+              <div class="row"><label>색</label><select id="bd-c"><option value="#000">검정</option><option value="#9ca3af">회색 60%</option><option value="#dc2626">빨강</option><option value="#2563eb">파랑</option></select></div>
+              <div class="row"><label>위치</label><select id="bd-pos"><option value="edge">쪽 가장자리에</option><option value="in">안쪽으로</option><option value="out">바깥으로</option></select></div>
+              <div class="row" id="row-bd-off" hidden><label>거리</label><span class="tight"><input type="number" id="bd-off" placeholder="3" min="0" step="0.5">mm</span></div>
+            </div>
+            <div class="btns" style="margin-bottom:8px"><button class="winbtn big primary" id="nup-save">PDF 저장</button></div>
+            <label class="chk" hidden><input type="checkbox" id="mk-on"></label>
+          </div>
+
+          <!-- 분석 탭 -->
+          <div id="pp-ana" hidden>
+            <div class="card"><h3>파일 분석</h3>
+              <div class="btns"><button class="winbtn" id="ana-run">분석 시작</button></div>
+              <ul class="ops" id="ana-list"></ul>
+            </div>
+          </div>
+
+          <!-- 머리꼬리 탭 (아크로뱃 "머리말 및 꼬리말 추가" 방식) -->
+          <div id="pp-ops" hidden>
+            <div class="card"><h3>머리말 및 꼬리말 추가 <span style="font-weight:400;color:var(--muted);font-size:11px">— 지금 화면(N-up 결과) 위에 얹힙니다</span></h3>
+              <div class="row"><label>저장된 설정</label><span class="tight" style="gap:4px"><select id="hf-preset" style="flex:1;min-width:0;font-size:11.5px"><option value="">[지정된 항목 없음]</option></select><button class="winbtn" id="hf-pdel" style="padding:3px 8px;font-size:11.5px">삭제</button></span></div>
+              <div class="row"><label>설정 저장</label><span class="tight" style="gap:4px"><input type="text" id="hf-pname" placeholder="이름" style="flex:1;min-width:0;font-size:11.5px;padding:3px 5px"><button class="winbtn" id="hf-psave" style="padding:3px 8px;font-size:11.5px">저장</button></span></div>
+            </div>
+
+            <div class="card"><h3>글꼴</h3>
+              <div class="row"><label>이름</label><select id="hf-font"><option>굴림</option><option>맑은 고딕</option><option>바탕</option><option>돋움</option><option>Arial</option><option>Times New Roman</option></select></div>
+              <div class="row"><label>크기</label><span class="tight" style="gap:5px"><input type="number" id="hf-size" placeholder="8" min="4" max="48" step="0.5">pt<button class="winbtn" id="hf-u" title="밑줄" style="padding:2px 9px;font-weight:700;text-decoration:underline">U</button><input type="color" id="hf-color" value="#000000" title="글자 색" style="width:32px;height:24px;padding:0;border:1px solid var(--line)"></span></div>
+            </div>
+
+            <div class="card"><h3>머리말 · 꼬리말 텍스트</h3>
+              <div id="hd-body">
+                <div style="font-size:11px;color:var(--muted);margin:2px 0 0">머리말 (위)</div>
+                <div class="pnbox">
+                  <div><span>왼쪽</span><input type="text" id="hf-hl" placeholder=""></div>
+                  <div><span>가운데</span><input type="text" id="hf-hc" placeholder=""></div>
+                  <div><span>오른쪽</span><input type="text" id="hf-hr" placeholder=""></div>
+                </div>
+                <div style="font-size:11px;color:var(--muted);margin:8px 0 0">꼬리말 (아래)</div>
+                <div class="pnbox">
+                  <div><span>왼쪽</span><input type="text" id="hf-fl" placeholder=""></div>
+                  <div><span>가운데</span><input type="text" id="hf-fc" placeholder=""></div>
+                  <div><span>오른쪽</span><input type="text" id="hf-fr" placeholder=""></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="card"><h3>삽입 · 형식</h3>
+              <div class="btns" style="margin-top:0"><button class="winbtn" data-ins="&lt;&lt;1&gt;&gt;">페이지 번호 삽입</button><button class="winbtn" data-ins="&lt;&lt;날짜&gt;&gt;">날짜 삽입</button><button class="winbtn" data-ins="&lt;&lt;파일명&gt;&gt;">파일명</button></div>
+              <div class="row"><label>쪽 범위</label><span class="tight cropin" style="gap:4px"><input type="text" inputmode="numeric" id="hf-from" placeholder="처음" title="시작 쪽" style="width:42px">부터<input type="text" inputmode="numeric" id="hf-to" placeholder="끝" title="끝 쪽" style="width:42px">까지</span></div>
+              <div class="row"><label>시작 번호</label><input type="number" id="hf-start" placeholder="1" min="0"></div>
+              <div class="btns"><button class="winbtn" id="hf-fmt" style="border:0;background:none;color:var(--accent);padding:4px 0;text-decoration:underline">페이지 번호 및 날짜 형식...</button></div>
+              <div id="hf-fmtbox" hidden>
+                <div class="row"><label>페이지 번호</label><select id="hf-numfmt"><option value="1">1, 2, 3</option><option value="i">i, ii, iii</option><option value="I">I, II, III</option><option value="a">a, b, c</option><option value="01">01, 02, 03</option></select></div>
+                  <div class="row"><label>날짜</label><select id="hf-datefmt"><option value="ymd">2026-09-27</option><option value="ymd2">26-09-27</option><option value="kor">2026년 9월 27일</option><option value="mdy">09/27/2026</option></select></div>
+              </div>
+              <div class="row"><label>넣을 쪽</label><select id="hf-scope"><option value="all">모든 쪽</option><option value="noblank">빈 페이지 빼고</option><option value="odd">홀수 쪽만</option><option value="even">짝수 쪽만</option></select></div>
+            </div>
+
+            <div class="card"><h3>여백 (밀리미터)</h3>
+              <div class="row"><label>위쪽 / 아래쪽</label><span class="tight cropin" style="gap:5px"><input type="text" inputmode="decimal" id="hf-mt" placeholder="12.7" title="위쪽" style="width:46px"><input type="text" inputmode="decimal" id="hf-mb" placeholder="12.7" title="아래쪽" style="width:46px"></span></div>
+              <div class="row"><label>왼쪽 / 오른쪽</label><span class="tight cropin" style="gap:5px"><input type="text" inputmode="decimal" id="hf-ml" placeholder="25.4" title="왼쪽" style="width:46px"><input type="text" inputmode="decimal" id="hf-mr" placeholder="25.4" title="오른쪽" style="width:46px"></span></div>
+            </div>
+            <div class="btns" style="margin-bottom:8px"><button class="winbtn big primary" id="hf-save">PDF 저장</button></div>
+          </div>
+
+          <div id="pp-bg" hidden>
+            <div class="card"><h3>배경 <span style="font-weight:400;color:var(--muted);font-size:11px">— 지금 화면(N-up 결과)에 깔거나 얹습니다</span></h3>
+              <label class="chk"><input type="checkbox" id="bg-on"> 사용</label>
+              <div class="row"><label>위치</label><select id="bg-z"><option value="back">뒤에 깔기 (배경)</option><option value="front">앞에 얹기 (워터마크)</option></select></div>
+              <div class="row"><label>종류</label><select id="bg-kind"><option value="color">색</option><option value="image">이미지</option><option value="pdf">PDF</option></select></div>
+              <div class="row" id="row-bg-color"><label>색</label><span class="tight"><input type="color" id="bg-color" value="#f1f5f9" style="width:44px;padding:0;height:24px"></span></div>
+              <div id="row-bg-file" hidden>
+                <div class="fdrop" id="bg-drop" style="padding:10px;gap:4px;margin-top:4px">
+                  <b style="font-size:12px">Drag &amp; Drop</b>
+                  <span class="btns" style="margin-top:0"><button class="winbtn" id="bg-pick">열기...</button></span>
+                  <span id="bg-name" style="max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">없음</span>
+                </div>
+                <div class="row" id="row-bg-page" hidden><label>쓸 쪽</label><span class="tight"><input type="number" id="bg-page" placeholder="1" min="1" style="width:46px"> 쪽</span></div>
+              </div>
+              <div class="row"><label>투명도</label><span><input type="number" id="bg-op" placeholder="100" min="0" max="100" step="5"> %</span></div>
+              <div class="row"><label>회전</label><span><input type="number" id="bg-rot" placeholder="0" min="-180" max="180" step="15"> °</span></div>
+              <div class="row"><label>배율</label><span><input type="number" id="bg-scale" placeholder="100" min="1" max="400" step="5"> %</span></div>
+              <label class="chk"><input type="checkbox" id="bg-fit"> 쪽에 맞추기</label>
+              <div class="row"><label>가로 위치</label><select id="bg-ax"><option value="left">왼쪽</option><option value="center" selected>가운데</option><option value="right">오른쪽</option></select></div>
+              <div class="row"><label>세로 위치</label><select id="bg-ay"><option value="top">위</option><option value="middle" selected>가운데</option><option value="bottom">아래</option></select></div>
+              <div class="row"><label>여백</label><span class="tight cropin"><input type="text" inputmode="numeric" id="bg-ox" placeholder="가로" title="가로 여백"><input type="text" inputmode="numeric" id="bg-oy" placeholder="세로" title="세로 여백"></span></div>
+              <div class="row"><label>넣을 쪽</label><select id="bg-scope"><option value="all">모든 쪽</option><option value="noblank">빈 페이지 빼고</option><option value="odd">홀수 쪽만</option><option value="even">짝수 쪽만</option></select></div>
+              <div class="row"><label>적용 구간</label><span class="tight cropin" style="gap:3px"><input type="text" inputmode="numeric" id="bg-ra" title="시작 쪽" style="width:30px">~<input type="text" inputmode="numeric" id="bg-rb" title="끝 쪽" style="width:30px"><button class="winbtn" id="bg-radd" style="padding:3px 6px;font-size:11.5px">추가</button><button class="winbtn" id="bg-rclr" style="padding:3px 6px;font-size:11.5px">해제</button></span></div>
+            </div>
+            <div class="btns" style="margin-bottom:8px"><button class="winbtn big primary" id="bg-save">PDF 저장</button></div>
+          </div>
+
+          <!-- 흑백 변환 탭 -->
+          <div id="pp-bw" hidden>
+            <div class="card"><h3>흑백 변환 <span style="font-weight:400;color:var(--muted);font-size:11px">— 모든 색을 먹(K) 1도로</span></h3>
+              <label class="chk"><input type="checkbox" id="bw-on"> 사용</label>
+              <div class="row"><label>변환</label><select id="bw-mode"><option value="gray">회색 농도로 (K 0~100%)</option><option value="mono">모두 검정으로 (K 100%)</option></select></div>
+              <label class="chk" title="리치 블랙(4도 검정) → K 100%&#10;&#10;켜면: C·M·Y가 섞인 검정(예: C40 M30 Y30 K100)을 찾아 정확히 K 100% 한 판으로 바꿉니다. C·M·Y 판에서는 완전히 빠집니다.&#10;끄면: 밝기 환산식대로만 가서 K 97% 같은 애매한 값이 남을 수 있습니다. 화면에선 같아 보여도 인쇄하면 약간 옅은 검정이 됩니다.&#10;검정 글자가 많은 문서일수록 켜 두는 쪽이 안전합니다."><input type="checkbox" id="bw-rich" checked> 리치 블랙(4도 검정) → K 100%</label>
+              <label class="chk" title="별색(스팟)도 K로 변환&#10;&#10;켜면: Pantone 같은 별색 판을 K 농도로 환산해 K 판에 합칩니다. 별색 판이 사라져 결과가 진짜 1도가 됩니다.&#10;  예) Pantone 485 빨강 100% → 약 K 70%,  별색 50% 망점 → 약 K 35%&#10;끄면: C·M·Y만 없어지고 별색 판은 그대로 남습니다. 결과가 K + 별색 = 2도가 되어 1도로 걸 수 없습니다."><input type="checkbox" id="bw-spot" checked> 별색(스팟)도 K로 변환</label>
+              <div class="row" id="row-bw-th" hidden><label>임계값</label><span class="tight"><input type="number" id="bw-th" placeholder="50" min="1" max="99" step="5"> %</span></div>
+              <div class="row" title="밝기 / 대비&#10;&#10;환산된 K 농도에 톤 커브를 겁니다.&#10;밝기 +20% : K60 → 48%,  K20 → 16%  (전체가 옅어짐)&#10;밝기 -20% : K60 → 72%,  K20 → 24%  (전체가 진해짐)&#10;대비 +30% : K60 → 63%,  K20 → 14%  (진한 곳은 더 진하게, 연한 곳은 더 연하게)&#10;흰색(K 0%)은 어느 설정에서도 그대로 흰색입니다."><label>밝기 / 대비</label><span class="tight cropin" style="gap:4px"><input type="text" inputmode="numeric" id="bw-br" title="밝기 % — 전체를 옅게(+)/진하게(-)" style="width:38px">/<input type="text" inputmode="numeric" id="bw-ct" title="대비 % — 50%를 기준으로 진한 곳은 더 진하게, 연한 곳은 더 연하게" style="width:38px">%</span></div>
+              <div class="row"><label>적용 구간</label><span class="tight cropin" style="gap:3px"><input type="text" inputmode="numeric" id="bw-ra" title="시작 쪽" style="width:30px">~<input type="text" inputmode="numeric" id="bw-rb" title="끝 쪽" style="width:30px"><button class="winbtn" id="bw-radd" style="padding:3px 6px;font-size:11.5px">추가</button><button class="winbtn" id="bw-rclr" style="padding:3px 6px;font-size:11.5px">해제</button></span></div>
+              <label class="chk"><input type="checkbox" id="bw-orig"> 원본 보기</label>
+            </div>
+            <div class="btns" style="margin-bottom:8px"><button class="winbtn big primary" id="bw-save">PDF 저장</button></div>
+          </div>
+
+          <!-- 아웃라인 탭 -->
+          <div id="pp-ol" hidden>
+            <div class="card"><h3>아웃라인 <span style="font-weight:400;color:var(--muted);font-size:11px">— 서체를 윤곽선(패스)으로</span></h3>
+              <label class="chk"><input type="checkbox" id="ol-on"> 사용</label>
+              <div class="row"><label>대상</label><select id="ol-target"><option value="all">모든 서체</option><option value="noembed">임베드 안 된 서체만</option></select></div>
+              <label class="chk" title="획(선)도 면으로 변환&#10;&#10;켜면: 선 굵기를 가진 획(stroke)을 같은 모양의 면(path)으로 바꿉니다. 확대·축소해도 선 굵기가 변하지 않습니다.&#10;끄면: 획은 그대로 둡니다. 배율을 바꿔 조판하면 선 굵기도 같이 변합니다."><input type="checkbox" id="ol-stroke" checked> 획(선)도 면으로 변환</label>
+              <label class="chk" title="투명도·중첩 평면화 (이미지 포함)&#10;&#10;켜면: 투명도·혼합 모드가 걸린 곳을 미리 합쳐 한 겹으로 만듭니다. 이미지와 겹친 부분도 계산해 둡니다. RIP마다 다르게 나오는 문제가 없어집니다.&#10;끄면: 투명도를 그대로 남깁니다. 파일은 가볍지만 출력기에 따라 결과가 달라질 수 있습니다.&#10;평면화하면 겹친 부분의 이미지는 다시 만들어지므로 그 부분만 해상도가 정해집니다."><input type="checkbox" id="ol-flat"> 투명도·중첩 평면화 (이미지 포함)</label>
+            </div>
+            <div class="card"><h3>파일에 쓰인 서체</h3>
+              <ul class="ops" id="ol-fonts"></ul>
+            </div>
+            <div class="warn" id="ol-warn" hidden></div>
+            <div class="btns" style="margin-bottom:8px"><button class="winbtn big primary" id="ol-save">PDF 저장</button></div>
+          </div>
+        </div>
+      </div>
+      <div class="pages">
+        <div class="tools">
+          <button class="winbtn" id="b-open">파일</button>
+          <button class="winbtn" id="b-all">전체</button>
+          <button class="winbtn" id="b-odd">홀수</button>
+          <button class="winbtn" id="b-even">짝수</button>
+          <button class="winbtn" id="b-none">해제</button>
+        </div>
+        <div class="grid" id="grid"></div>
+      </div>
+      <div class="stage">
+        <div class="pager">
+          <button class="winbtn" id="pv-prev">‹</button>
+          <span id="pv-label">페이지</span> <input id="pv-no" type="number" value="1" min="1"> <span id="pv-total">/ 12</span>
+          <button class="winbtn" id="pv-next">›</button>
+          <span class="info" id="pv-info"></span>
+        </div>
+        <div class="canvas"><div class="paper" id="paper"></div></div>
+      </div>
+    </div>
+
+      </div>
+    </div>
+  </div>
+  
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  var toastT;function toast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('on');clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove('on')},1800)}
+
+  // ---- 예시 문서: 12쪽 ----
+  var files=[{name:'행사_리플렛_최종.pdf',n:12,w:210,h:297,sizes:[[210,297,12]]},{name:'신청서_양식.pdf',n:3,w:148,h:210,sizes:[[148,210,3]]}];
+  var SAMPLE=[{name:'추가_부록.pdf',n:5,w:210,h:297,sizes:[[210,297,4],[297,420,1]]},{name:'안내문_2026.pdf',n:2,w:297,h:420,sizes:[[297,420,2]]},{name:'참가자_명단.pdf',n:8,w:210,h:297,sizes:[[210,297,6],[297,210,2]]},{name:'표지_최종.pdf',n:1,w:182,h:257,sizes:[[182,257,1]]}];
+  var pages=[];
+  function buildPages(){
+    pages=[];var even=document.getElementById('f-even').checked;
+    var base=baseSize();
+    var ori=$('f-orient').checked,oriTo=$('f-orient-to').value,oriDir=$('f-orient-dir').value;
+    files.forEach(function(f,fi){
+      var w=base?base.w:f.w,h=base?base.h:f.h,conv=base&&(f.w!==base.w||f.h!==base.h);
+      var land=(w>h);                                                   /* 이 파일의 방향 */
+      var turn=ori&&((oriTo==='portrait'&&land)||(oriTo==='landscape'&&!land));
+      var rot=turn?(oriDir==='cw'?90:270):0;
+      for(var q=1;q<=f.n;q++)pages.push({src:q,rot:rot,blank:false,file:fi,w:w,h:h,conv:conv});
+      if(even&&f.n%2===1)pages.push({src:0,rot:rot,blank:true,file:fi,pad:true,w:w,h:h});
+    });
+    sel=[];lastClick=-1;pv=0;
+  }
+  var sel=[];var ops=[];var pv=0;var lastClick=-1;
+  function showCtx(x,y){hideCtx();var m=document.createElement('div');m.className='ctx';m.id='ctx';
+    var n=sel.length;
+    m.innerHTML='<div data-op="dup">복사 <small>'+n+'장</small></div><div data-op="del">삭제 <small>'+n+'장</small></div><hr>'+
+      '<div data-op="blank-before">빈 페이지 추가 — 앞에</div><div data-op="blank-after">빈 페이지 추가 — 뒤에</div><hr>'+
+      '<div data-op="rot90">회전 90°</div><div data-op="rot180">회전 180°</div><div data-op="rot270">회전 270°</div><hr>'+
+      '<div data-op="up">▲ 앞으로</div><div data-op="down">▼ 뒤로</div><hr><div data-op="none">선택 해제</div>';
+    m.style.left=Math.min(x,window.innerWidth-190)+'px';m.style.top=Math.min(y,window.innerHeight-330)+'px';document.body.appendChild(m);
+    m.addEventListener('click',function(e){var t=e.target.closest('[data-op]');if(!t)return;var op=t.dataset.op;hideCtx();
+      if(op==='none'){sel=[];renderAll();return}
+      if(op==='blank-before'||op==='blank-after'){document.getElementById('bl-pos').value=op==='blank-before'?'before':'after';document.getElementById('bl-n').value=1;runOp('blank');return}
+      runOp(op)})}
+  function hideCtx(){var c=document.getElementById('ctx');if(c)c.remove()}
+  document.addEventListener('click',function(e){if(!e.target.closest('.ctx'))hideCtx()});document.addEventListener('keydown',function(e){if(e.key==='Escape')hideCtx()});
+  var $=function(id){return document.getElementById(id)};
+
+  function renderGrid(){
+    var g=$('grid');g.innerHTML='';
+    pages.forEach(function(p,i){
+      var d=document.createElement('div');d.className='pg'+(sel.indexOf(i)>=0?' sel':'');
+      var fn=(p.file!==undefined&&files[p.file])?files[p.file].name.replace(/\.pdf$/i,''):'';d.innerHTML='<div class="th'+(p.blank?' blank':'')+(p.rot?' r'+p.rot:'')+'">'+(p.blank?(p.pad?'짝수 맞춤':'빈 페이지'):'<div class="art"></div><div class="txt"></div>'+p.src)+'</div>'+(p.rot?'<span class="badge">'+p.rot+'°</span>':'')+(p.conv?'<span class="badge" style="background:#bfdbfe;color:#1e40af;top:auto;bottom:22px">크기 변환</span>':'')+'<div class="no"><span>'+(i+1)+'</span><span style="max-width:72%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(p.blank&&p.pad?'빈':fn)+'</span></div>';
+      d.addEventListener('click',function(e){
+        if(e.shiftKey&&lastClick>=0){var a=Math.min(lastClick,i),z=Math.max(lastClick,i);for(var q=a;q<=z;q++)if(sel.indexOf(q)<0)sel.push(q)}
+        else{var k=sel.indexOf(i);if(k>=0)sel.splice(k,1);else sel.push(i)}
+        lastClick=i;pv=i;renderAll()});
+      d.addEventListener('contextmenu',function(e){e.preventDefault();if(sel.indexOf(i)<0){sel.push(i)}lastClick=i;pv=i;renderAll();showCtx(e.clientX,e.clientY)});
+      g.appendChild(d)});
+    var selEl=$('sel-n');if(selEl)selEl.textContent=sel.length?'('+sel.length+'장: '+sel.map(function(i){return i+1}).sort(function(a,b){return a-b}).join(', ')+')':'(없음)';
+    $('bar-file').textContent=files.length?('파일 '+files.length+'개 · '+pages.length+'p · 210×297 mm'):'파일 없음 — 파일 첨부하기';
+    $('out-info').textContent=nupOn()?Math.ceil(pages.length/(nupC()*nupR()))+'p (N-up '+nupC()+'×'+nupR()+')':pages.length+'p';
+    var bn=files.length?files[0].name.replace(/\.pdf$/i,''):'문서';$('outname').textContent=bn+(files.length>1?'_외'+(files.length-1)+'개':'')+'_'+(nupOn()?(nupC()*nupR())+'업':'편집')+'.pdf';
+  }
+  function nupOn(){return $('nu-on').checked}function nupC(){return Math.max(1,+$('nu-c').value||1)}function nupR(){return Math.max(1,+$('nu-r').value||1)}
+
+  // 쪽 구간 — 비어 있으면 전체 쪽에 조판, 구간을 넣으면 그 쪽들만 조판하고 나머지는 그대로 둔다
+  var nupRanges=[];
+  function inRange(i){
+    if(!nupRanges.length)return true;
+    return nupRanges.some(function(r){return i+1>=r.a&&i+1<=r.b});
+  }
+  function nupPlan(per){
+    var plan=[],i=0;
+    while(i<pages.length){
+      if(inRange(i)){
+        var g=[];
+        while(i<pages.length&&inRange(i)&&g.length<per){g.push(i);i++}
+        plan.push({nup:true,idx:g});
+      }else{plan.push({nup:false,idx:[i]});i++}
+    }
+    if(!plan.length)plan.push({nup:true,idx:[0]});
+    return plan;
+  }
+  function nupRangeList(){
+    var el=$('nu-rlist');if(!el)return;
+    el.innerHTML=nupRanges.length?nupRanges.map(function(r,i){
+      return '<span class="chipw" style="background:var(--sel);color:var(--accent)">'+r.a+'–'+r.b+'쪽 <u data-r="'+i+'" style="cursor:pointer">✕</u></span> ';
+    }).join(''):'전체 쪽';
+    el.querySelectorAll('u[data-r]').forEach(function(u){u.addEventListener('click',function(){
+      nupRanges.splice(+u.dataset.r,1);pv=0;nupRangeList();renderAll();});});
+  }
+  // 흑백 변환 — 결과 쪽에 그대로 적용
+  var bwRanges=[];
+  // 아웃라인 — 서체를 윤곽선으로
+  var OLFONTS=[{n:'맑은 고딕',e:true,g:412},{n:'바탕',e:true,g:207},{n:'Arial',e:false,g:96},{n:'HY헤드라인M',e:false,g:64}];
+  function olList(){
+    var u=$('ol-fonts');if(!u)return;
+    var only=($('ol-target').value==='noembed'),on=$('ol-on').checked;
+    u.innerHTML=OLFONTS.map(function(f){
+      var hit=on&&(!only||!f.e);
+      return '<li><span>'+f.n+'</span><small>'+(f.e?'임베드됨':'<b style="color:#92400e">임베드 안 됨</b>')+' · '+f.g+'자</small><small>'+(hit?'<b style="color:var(--accent)">→ 아웃라인</b>':'그대로')+'</small></li>';
+    }).join('');
+    var ne=OLFONTS.filter(function(f){return !f.e});
+    var w=$('ol-warn');
+    if(!on||!ne.length){w.hidden=true;}
+    else{
+      w.hidden=false;
+      w.innerHTML='<b>임베드 안 된 서체: '+ne.map(function(f){return f.n}).join(', ')+'</b><br>'+
+        'PDF 안에 글자 모양이 없어 그대로는 아웃라인할 수 없습니다. PC에 같은 서체가 설치돼 있으면 그것으로 아웃라인하고, 없으면 그 서체만 건너뛰고 알려 드립니다. 글자가 틀어지므로 대체 서체로 바꾸지 않습니다.';
+    }
+  }
+  function olNote(){
+    if(!$('ol-on').checked)return '';
+    var only=($('ol-target').value==='noembed');
+    var n=OLFONTS.filter(function(f){return !only||!f.e}).length;
+    return ' · <b>아웃라인</b> 서체 '+n+'종 → 패스'+($('ol-stroke').checked?' · 획→면':'')+($('ol-flat').checked?' · 평면화':'');
+  }
+  function bwNote(){
+    if(!$('bw-on').checked)return '';
+    var t=' · <b>먹 1도(K)</b> — C·M·Y 판 없음';
+    if($('bw-mode').value==='mono')t+=' · 모두 K100';
+    if($('bw-rich').checked)t+=' · 리치 블랙→K100';
+    if($('bw-spot').checked)t+=' · 별색→K';
+    return $('bw-orig').checked?' · <b>원본 보기</b>':t;
+  }
+  function bwFilter(i){
+    if(!$('bw-on').checked||$('bw-orig').checked)return '';
+    if(bwRanges.length&&!bwRanges.some(function(r){return i+1>=r.a&&i+1<=r.b}))return '';
+    var br=1+((parseFloat($('bw-br').value)||0)/100),ct=1+((parseFloat($('bw-ct').value)||0)/100);
+    var mode=$('bw-mode').value;
+    if(mode==='mono'){
+      var t=Math.min(99,Math.max(1,+$('bw-th').value||50));
+      return 'grayscale(1) brightness('+((0.5/(t/100))*br).toFixed(3)+') contrast(1000%)';
+    }
+    return 'grayscale(1) brightness('+br.toFixed(3)+') contrast('+ct.toFixed(3)+')';
+  }
+  function fitK(w,h){          // 미리보기 영역에 꽉 차게 — 창을 키우면 같이 커진다
+    var box=document.querySelector('.canvas');
+    var mw=Math.max(240,(box&&box.clientWidth?box.clientWidth:640)-56);
+    var mh=Math.max(240,(box&&box.clientHeight?box.clientHeight:560)-56);
+    return Math.min(mw/Math.max(1,w),mh/Math.max(1,h));
+  }
+  function pSize(p){                       // 돌려 놓은 쪽은 가로·세로가 바뀐 크기로 본다
+    var w=(p&&p.w)||210,h=(p&&p.h)||297;
+    return (p&&(p.rot===90||p.rot===270))?{w:h,h:w}:{w:w,h:h};
+  }
+  function renderPreview(){
+    var paper=$('paper');
+    if(!nupOn()){
+      var total=pages.length;if(pv>=total)pv=total-1;if(pv<0)pv=0;
+      $('pv-label').textContent='페이지';$('pv-no').value=total?pv+1:0;$('pv-total').textContent='/ '+total;
+      tokTotal=pages.length;
+      var p=pages[pv];var PS=paperSize();var pw0=PS?PS.w:((p&&p.w)||210),ph0=PS?PS.h:((p&&p.h)||297);var k=fitK(pw0,ph0);var w=pw0*k,h=ph0*k;var q=p&&(p.rot===90||p.rot===270);
+      paper.style.width=(q?h:w)+'px';paper.style.height=(q?w:h)+'px';
+      var hf=hfHtml(p,pv,k);
+      var bgpass=($('bg-on').checked&&$('bg-z').value==='back')?'background:transparent;':'';
+      paper.style.filter=bwFilter(pv);paper.innerHTML=bgHtml(p,pv,k,pw0,ph0)+(p?'<div class="cell'+(p.blank?' blank':'')+'" style="'+bgpass+'left:0;top:0;width:100%;height:100%;transform:rotate('+p.rot+'deg)">'+(p.blank?'빈 페이지':'<div class="art"></div><div class="txt"></div>'+p.src)+'</div>':'')+hf;
+      $('pv-info').textContent=p?((p.blank?'빈 페이지':(files[p.file]?files[p.file].name+' '+p.src+'쪽':'원본 '+p.src+'쪽'))+' · '+pw0+'×'+ph0+(p.conv?' (크기 맞춤)':'')+(p.rot?' · '+p.rot+'° 회전':'')):'';
+      return;
+    }
+    var c=nupC(),r=nupR(),gap=+$('nu-gap').value||0,gapy=+$('nu-gapy').value||0,m=+$('nu-m').value||0;
+    var per=c*r,plan=nupPlan(per),sheets=plan.length;
+    if(pv>=sheets)pv=sheets-1;if(pv<0)pv=0;
+    var item=plan[pv]||{nup:true,idx:[0]};
+    if(!item.nup){                                   /* 구간 밖 — 조판하지 않고 원본 그대로 한 장 */
+      var sp=pages[item.idx[0]],SPS=paperSize();
+      var spw=SPS?SPS.w:((sp&&sp.w)||210),sph=SPS?SPS.h:((sp&&sp.h)||297);
+      var sk=fitK(spw,sph),sq=sp&&(sp.rot===90||sp.rot===270);
+      paper.style.outline='';
+      paper.style.width=(sq?sph*sk:spw*sk)+'px';paper.style.height=(sq?spw*sk:sph*sk)+'px';
+      $('pv-label').textContent='N-up 페이지';$('pv-no').value=pv+1;$('pv-total').textContent='/ '+sheets;
+      tokTotal=sheets;
+      var sbg=($('bg-on').checked&&$('bg-z').value==='back')?'background:transparent;':'';
+      paper.style.filter=bwFilter(pv);paper.innerHTML=bgHtml(sp,pv,sk,spw,sph)+'<div class="cell'+(sp&&sp.blank?' blank':'')+'" style="'+sbg+'left:0;top:0;width:100%;height:100%;transform:rotate('+((sp&&sp.rot)||0)+'deg)">'+((sp&&sp.blank)?'빈 페이지':'<div class="art"></div><div class="txt"></div>'+(sp?sp.src:''))+'</div>'+hfHtml(sp,pv,sk);
+      $('pv-info').innerHTML='<b>조판 안 함</b> (구간 밖) · 원본 '+(item.idx[0]+1)+'쪽 · '+spw+'×'+sph+' mm';
+      return;
+    }
+    var p0=pages[item.idx[0]]||pages[0]||{w:210,h:297};
+    var ps0=pSize(p0),pw=ps0.w,ph=ps0.h;
+    var cl=+$('nu-cl').value||0,cr=+$('nu-cr').value||0,ct=+$('nu-ct').value||0,cb=+$('nu-cb').value||0;
+    var cropped=(cl||cr||ct||cb)&&(pw-cl-cr>1)&&(ph-ct-cb>1);
+    if(cropped){pw=pw-cl-cr;ph=ph-ct-cb}                                   /* 크롭한 크기 */
+    var uw=+$('nu-w').value||0,uh=+$('nu-h').value||0,fixed=(uw>0&&uh>0);   /* 지정한 이미지 크기 */
+    if(fixed){pw=uw;ph=uh}
+    var W=c*pw+(c-1)*gap+2*m,H=r*ph+(r-1)*gapy+2*m;
+    var PS=paperSize();if(PS){W=PS.w;H=PS.h}
+    var sW=+$('nu-sw').value||0,sH=+$('nu-sh').value||0;if(sW&&sH){W=sW;H=sH;PS={w:sW,h:sH}}   /* 용지 크기 직접 지정 */
+    $('nu-scale').disabled=false;
+    /* 배율: "칸에 맞게"를 고르면 이미지 크기를 넣었더라도 칸에 맞춰 줄인다 */
+    var wantFit=($('nu-scale').selectedIndex===1)||(!fixed&&!!PS);
+    var sc=1;if(wantFit){var cw=(W-2*m-(c-1)*gap)/c,ch=(H-2*m-(r-1)*gapy)/r;sc=Math.min(cw/pw,ch/ph)}
+    $('pv-label').textContent='N-up 페이지';$('pv-no').value=sheets?pv+1:0;$('pv-total').textContent='/ '+sheets;
+    var k=fitK(W,H);paper.style.width=(W*k)+'px';paper.style.height=(H*k)+'px';
+    var order=$('nu-order').value,html='',bgpass=($('bg-on').checked&&$('bg-z').value==='back')?'background:transparent;':'';
+    html+=bgHtml(pages[item.idx[0]]||pages[0]||null,pv,k,W,H);   /* 배경은 N-up 판 뒤에 */
+    var bw=pw*sc,bh=ph*sc,bx0=(W-(c*bw+(c-1)*gap))/2,by0=(H-(r*bh+(r-1)*gapy))/2;
+    for(var rr=0;rr<r;rr++)for(var cc=0;cc<c;cc++){
+      var slot=rr*c+cc,idx;
+      idx=(order==='repeat')?item.idx[0]:item.idx[slot];
+      var p=pages[idx];var x=bx0+cc*(bw+gap),y=by0+rr*(bh+gapy);
+      var bd=$('bd-on').checked?'border:'+Math.max(1,(+$('bd-w').value||0.5)*2*k)+'px solid '+$('bd-c').value+';':'border:1px dashed #cbd5e1;';
+      var bp=$('bd-pos').value,bo=+$('bd-off').value||0;
+      var off=(bp==='in'?bo:(bp==='out'?-bo:0));   /* 안쪽=칸 안으로, 바깥=칸 밖으로 */
+      $('row-bd-off').hidden=(bp==='edge');
+      var rot=$('nu-rot').value,deg=0,ps=pSize(p);
+      if(rot==='auto')deg=((bw>bh)!==(ps.w>ps.h))?90:0;else deg=+rot||0;
+      deg=(((deg+((p&&p.rot)||0))%360)+360)%360;      /* 쪽마다 돌려 둔 각도까지 더해서 */
+      var inner=(p?(p.blank?'빈':'<div class="art"></div><div class="txt"></div>'+p.src):'');
+      if(cropped&&p&&!p.blank){   /* 크롭: 잘라낸 쪽을 가린다 */
+        var cwid=(bw-2*off)*k,chei=(bh-2*off)*k,tot=cl+cr+pw,totv=ct+cb+ph;
+        inner='<div style="position:absolute;inset:0;overflow:hidden"><div style="position:absolute;left:'+(-cl/pw*cwid)+'px;top:'+(-ct/ph*chei)+'px;width:'+(tot/pw*cwid)+'px;height:'+(totv/ph*chei)+'px">'+inner+'</div></div>';
+      }
+      if(deg)inner='<div style="position:absolute;inset:0;transform:rotate('+deg+'deg)'+((deg===90||deg===270)?';transform-origin:center;width:'+((bh-2*off)*k)+'px;height:'+((bw-2*off)*k)+'px;left:'+(((bw-bh))*k/2)+'px;top:'+(((bh-bw))*k/2)+'px':'')+'">'+inner+'</div>';
+      html+='<div class="cell'+(!p||p.blank?' blank':'')+'" style="left:'+((x+off)*k)+'px;top:'+((y+off)*k)+'px;width:'+((bw-2*off)*k)+'px;height:'+((bh-2*off)*k)+'px;'+bd+bgpass+'">'+inner+'</div>';
+      if($('mk-on').checked){[[x,y,-1,-1],[x+bw,y,1,-1],[x,y+bh,-1,1],[x+bw,y+bh,1,1]].forEach(function(pt){html+='<i style="position:absolute;left:'+((pt[0]+pt[2]*1)*k+(pt[2]<0?-3*k:0))+'px;top:'+(pt[1]*k)+'px;width:'+(3*k)+'px;height:1px;background:#000"></i><i style="position:absolute;left:'+(pt[0]*k)+'px;top:'+((pt[1]+pt[3]*1)*k+(pt[3]<0?-3*k:0))+'px;width:1px;height:'+(3*k)+'px;background:#000"></i>'})}
+    }
+    var f=function(v){return Math.round(v*10)/10};
+    html+='<div class="dim" style="left:0;right:0;top:-14px;height:10px"><i style="left:0;right:0;top:5px;height:1px"></i><i style="left:0;top:0;width:1px;height:10px"></i><i style="right:0;top:0;width:1px;height:10px"></i><b style="left:50%;top:-6px">'+f(W)+'</b></div>';
+    html+='<div class="dim" style="top:0;bottom:0;left:-16px;width:10px"><i style="top:0;bottom:0;left:5px;width:1px"></i><i style="top:0;left:0;height:1px;width:10px"></i><i style="bottom:0;left:0;height:1px;width:10px"></i><b style="top:50%;left:-18px;transform:translate(-50%,-50%) rotate(-90deg)">'+f(H)+'</b></div>';
+    html+='<div class="dim" style="left:'+(bx0*k)+'px;top:'+(by0*k-14)+'px;width:'+(bw*k)+'px;height:10px"><i style="left:0;right:0;top:5px;height:1px"></i><i style="left:0;top:0;width:1px;height:10px"></i><i style="right:0;top:0;width:1px;height:10px"></i><b style="left:50%;top:-1px">'+f(bw)+'</b></div>';
+    tokTotal=sheets;                                   // N-up: 결과 판 기준으로 번호 매김
+    var base0=pages[item.idx[0]]||pages[0]||null;           // 그 판의 첫 쪽 (파일명 토큰용)
+    html+=hfHtml(base0,pv,k);                          // 머리말·꼬리말은 N-up 된 판 위에
+    paper.style.filter=bwFilter(pv);
+    paper.innerHTML=html;
+    var needW=c*bw+(c-1)*gap+2*m,needH=r*bh+(r-1)*gapy+2*m;      /* 칸이 실제로 차지하는 크기 */
+    var over=(needW>W+0.05||needH>H+0.05);
+    $('pv-info').innerHTML='결과 '+f(W)+'×'+f(H)+' mm · '+sheets+'p · 쪽 '+f(bw)+'×'+f(bh)+(sc<0.999?' ('+Math.round(sc*100)+'%)':'')+(gap?' · 간격 '+gap:'')
+      +(over?' · <b style="color:#dc2626">용지를 넘음 ('+f(needW)+'×'+f(needH)+' 필요)</b>':'')+bwNote()+olNote();
+    paper.style.outline=over?'2px solid #dc2626':'';
+  }
+  function renderOps(){}
+  var tokTotal=0;   // <<n>> 에 쓸 전체 쪽수 — N-up 이면 결과 판 수
+  // 배경 — 앞 단계(파일결합 -> N-up) 결과 뒤에 깔린다
+  var bgFile='';
+  var bgRanges=[];                 /* 비어 있으면 전체 쪽 */
+  function bgShow(p,i){
+    if(bgRanges.length&&!bgRanges.some(function(r){return i+1>=r.a&&i+1<=r.b}))return false;
+    var sc=$('bg-scope').value;
+    if(sc==='odd')return (i+1)%2===1;
+    if(sc==='even')return (i+1)%2===0;
+    if(sc==='noblank')return !(p&&p.blank);
+    return true;
+  }
+  function bgHtml(p,i,k,W,H){
+    if(!$('bg-on').checked||!bgShow(p,i))return '';
+    var op=($('bg-op').value===''?100:+$('bg-op').value)/100;
+    var rot=+$('bg-rot').value||0,kind=$('bg-kind').value;
+    var fit=$('bg-fit').checked,scl=fit?100:(+$('bg-scale').value||100);
+    var ox=(parseFloat($('bg-ox').value)||0)*k,oy=(parseFloat($('bg-oy').value)||0)*k;
+    var pw=W*k,ph=H*k,w=pw*scl/100,h=ph*scl/100;
+    var ax=$('bg-ax').value,ay=$('bg-ay').value;
+    var L=ax==='left'?ox:(ax==='right'?(pw-w-ox):((pw-w)/2+ox));
+    var T=ay==='top'?oy:(ay==='bottom'?(ph-h-oy):((ph-h)/2+oy));
+    var body=(kind==='color')?('background:'+$('bg-color').value+';')
+      :('background:repeating-linear-gradient(45deg,#e2e8f0 0 8px,#f8fafc 8px 16px);border:1px dashed #94a3b8;');
+    var nm=bgFile||(kind==='pdf'?'PDF 없음':'이미지 없음');
+    if(kind==='pdf'&&bgFile)nm+=' '+(+$('bg-page').value||1)+'쪽';
+    var label=(kind==='color')?'':'<span style="position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);text-align:center;font-size:10px;color:#64748b">'+nm+'</span>';
+    return '<div style="position:absolute;left:'+L+'px;top:'+T+'px;width:'+w+'px;height:'+h+'px;opacity:'+op+';transform:rotate('+rot+'deg);'+body+'z-index:'+($('bg-z').value==='front'?5:0)+';pointer-events:none">'+label+'</div>';
+  }
+
+  // ── 머리말·꼬리말 (아크로뱃식 토큰) ─────────────────────────
+  var hfUnder=false;
+  function hfNum(n){
+    var f=$('hf-numfmt').value;
+    if(f==='01')return (n<10?'0':'')+n;
+    if(f==='a'){var o='';while(n>0){n--;o=String.fromCharCode(97+n%26)+o;n=Math.floor(n/26)}return o}
+    if(f==='i'||f==='I'){
+      var v=[[1000,'m'],[900,'cm'],[500,'d'],[400,'cd'],[100,'c'],[90,'xc'],[50,'l'],[40,'xl'],[10,'x'],[9,'ix'],[5,'v'],[4,'iv'],[1,'i']],o='',q=n;
+      v.forEach(function(x){while(q>=x[0]){o+=x[1];q-=x[0]}});
+      return f==='I'?o.toUpperCase():o;
+    }
+    return String(n);
+  }
+  function hfDate(){
+    var f=$('hf-datefmt').value,d='2026-09-27'.split('-');
+    if(f==='ymd2')return d[0].slice(2)+'-'+d[1]+'-'+d[2];
+    if(f==='kor')return d[0]+'년 '+(+d[1])+'월 '+(+d[2])+'일';
+    if(f==='mdy')return d[1]+'/'+d[2]+'/'+d[0];
+    return d.join('-');
+  }
+  function hfText(t,p,i){
+    if(!t)return '';
+    var fn=(p&&p.file!==undefined&&files[p.file])?files[p.file].name.replace(/\.pdf$/i,''):'';
+    var st=$('hf-start').value===''?1:(+$('hf-start').value||0);
+    return String(t).replace(/<<1>>/g,hfNum(i+st)).replace(/<<n>>/g,hfNum(tokTotal||pages.length))
+      .replace(/<<날짜>>/g,hfDate()).replace(/<<파일명>>/g,fn);
+  }
+  function hfShow(p,i){
+    var f=parseInt($('hf-from').value,10),t=parseInt($('hf-to').value,10);   /* 쪽 범위 (비우면 처음·끝) */
+    if(!isNaN(f)&&i+1<f)return false;
+    if(!isNaN(t)&&i+1>t)return false;
+    var sc=$('hf-scope').value;
+    if(sc==='odd')return (i+1)%2===1;
+    if(sc==='even')return (i+1)%2===0;
+    if(sc==='noblank')return !(p&&p.blank);
+    return true;
+  }
+  function hfHtml(p,i,k){
+    if(!hfShow(p,i))return '';
+    var mt=(parseFloat($('hf-mt').value)||12.7)*k, mb=(parseFloat($('hf-mb').value)||12.7)*k;
+    var ml=(parseFloat($('hf-ml').value)||25.4)*k, mr=(parseFloat($('hf-mr').value)||25.4)*k;
+    var fs=Math.max(2,(+$('hf-size').value||8)*0.3528*k);   /* pt -> mm -> 화면: 실제 인쇄 크기 그대로 */
+    var css="font-size:"+fs+"px;color:"+$('hf-color').value+";font-family:'"+$('hf-font').value+"';white-space:nowrap;z-index:2;"+(hfUnder?'text-decoration:underline;':'');
+    var out='';
+    function put(t,side,align){
+      var v=hfText(t,p,i);if(!v)return;
+      var pos=(side==='top')?('top:'+mt+'px;'):('bottom:'+mb+'px;');
+      if(align==='l')pos+='left:'+ml+'px;';
+      else if(align==='r')pos+='right:'+mr+'px;';
+      else pos+='left:'+ml+'px;right:'+mr+'px;text-align:center;';
+      out+='<div style="position:absolute;'+pos+css+'">'+v+'</div>';
+    }
+    put($('hf-hl').value,'top','l');put($('hf-hc').value,'top','c');put($('hf-hr').value,'top','r');
+    put($('hf-fl').value,'bot','l');put($('hf-fc').value,'bot','c');put($('hf-fr').value,'bot','r');
+    return out;
+  }
+  function hfPreview(){
+    var el=$('hf-prev');if(!el)return;
+    var p=pages[pv]||pages[0];
+    var line=function(a,b,c){
+      var L=hfText($(a).value,p,pv),C=hfText($(b).value,p,pv),R=hfText($(c).value,p,pv);
+      return (L||C||R)?('<b>'+(L||'')+(L&&(C||R)?'&nbsp;&nbsp;&nbsp;':'')+(C||'')+(C&&R?'&nbsp;&nbsp;&nbsp;':'')+(R||'')+'</b>'):'';
+    };
+    var h=line('hf-hl','hf-hc','hf-hr'),f=line('hf-fl','hf-fc','hf-fr');
+    el.innerHTML=(h||f)?('머리말'+(h||'<b style="color:var(--faint)">(비어 있음)</b>')+'<div style="border-top:1px dashed var(--line);margin:6px 0"></div>꼬리말'+(f||'<b style="color:var(--faint)">(비어 있음)</b>')):'머리말·꼬리말이 비어 있습니다';
+  }
+  function paperSize(){                       // 공통 용지 (없으면 null = 원본 그대로)
+    var v=$('pp-preset').value;
+    if(!v)return null;
+    return {w:+$('pp-w').value||210,h:+$('pp-h').value||297};
+  }
+  function baseSize(){
+    if(!$('f-size').checked)return null;
+    return {w:+$('sz-w').value||210,h:+$('sz-h').value||297};
+  }
+  function renderFiles(){
+    var u=$('flist');if(!u)return;
+    var even=$('f-even').checked,base=baseSize(),total=0,padN=0,chg=0;
+    if(!files.length){u.innerHTML='<tr><td colspan="6" style="color:var(--faint);padding:10px">첨부한 파일이 없습니다 — [파일 첨부하기]를 누르세요</td></tr>';}
+    else{
+      u.innerHTML=files.map(function(f,i){
+        var pad=(even&&f.n%2===1)?1:0;total+=f.n+pad;padN+=pad;
+        var diff=base&&(f.w!==base.w||f.h!==base.h);if(diff)chg++;
+        var zs=f.sizes||[[f.w,f.h,f.n]];
+        var port=0,land=0;
+        var mix=zs.map(function(z){
+          var vert=z[1]>=z[0];if(vert)port+=z[2];else land+=z[2];
+          return z[0]+'×'+z[1]+' <span style="color:'+(vert?'var(--muted)':'#92400e')+'">'+(vert?'↕세로':'↔가로')+' '+z[2]+'쪽</span>';
+        }).join(' · ');
+        if(port&&land)mix+=' <span class="chipw">방향 섞임</span>';
+        var ori=$('f-orient').checked,oriTo=$('f-orient-to').value,oriDir=$('f-orient-dir').value;
+        var rot=ori&&((oriTo==='portrait'&&land)||(oriTo==='landscape'&&port));
+        var after=base?('<span class="conv">'+base.w+'×'+base.h+'</span>'):'<span style="color:var(--muted)">그대로</span>';
+        if(rot)after+='<br><span class="conv" style="font-size:11px">'+(oriTo==='portrait'?'가로 '+land:'세로 '+port)+'쪽 '+(oriDir==='cw'?'시계':'반시계')+' 90° 회전</span>';
+        return '<tr><td>'+(i+1)+'</td><td class="nm">'+f.name+'</td><td>'+f.n+'쪽'+(pad?' <span class="conv">+빈1</span>':'')+'</td><td>'+mix+'</td><td>'+after+'</td>'+
+          '<td><u data-i="'+i+'" data-a="up">▲</u><u data-i="'+i+'" data-a="down">▼</u><u data-i="'+i+'" data-a="del">✕</u></td></tr>';
+      }).join('');
+      u.querySelectorAll('u[data-a]').forEach(function(btn){btn.addEventListener('click',function(){
+        var i=+btn.dataset.i,a=btn.dataset.a,t;
+        if(a==='del')files.splice(i,1);
+        else if(a==='up'&&i>0){t=files[i-1];files[i-1]=files[i];files[i]=t;}
+        else if(a==='down'&&i<files.length-1){t=files[i+1];files[i+1]=files[i];files[i]=t;}
+        ops=[];buildPages();renderAll();
+      });});
+    }
+    // 전체 합계: 파일 개수 · 크기별 쪽수 · 방향별 쪽수
+    var byS={},pt=0,ld=0,raw=0;
+    files.forEach(function(f){(f.sizes||[[f.w,f.h,f.n]]).forEach(function(z){
+      var k=z[0]+'×'+z[1];byS[k]=(byS[k]||0)+z[2];raw+=z[2];
+      if(z[1]>=z[0])pt+=z[2];else ld+=z[2];});});
+    var keys=Object.keys(byS).sort(function(a,b){return byS[b]-byS[a]});
+    var ft=$('ftotal');
+    if(ft)ft.innerHTML=files.length?('<tr><td>합계</td><td>파일 '+files.length+'개</td><td>'+raw+'쪽</td>'+
+      '<td class="sz">'+keys.map(function(k){return k+' '+byS[k]+'쪽'}).join(' · ')+
+      '<span class="sz"> &nbsp;|&nbsp; ↕세로 '+pt+'쪽'+(ld?' · ↔가로 '+ld+'쪽':'')+'</span></td>'+
+      '<td colspan="2" class="sz">결합 후 '+total+'쪽</td></tr>'):'';
+    $('file-n').textContent=files.length?'('+files.length+'개 · 결합 후 '+total+'쪽)':'(없음)';
+    var szTxt=base?(' · 크기 '+base.w+'×'+base.h+'로 맞춤'+(chg?' ('+chg+'개 파일 변환)':' (모두 같은 크기)')):'';
+    if($('f-orient').checked)szTxt+=' · 방향 '+($('f-orient-to').value==='portrait'?'세로':'가로')+'로 맞춤('+($('f-orient-dir').value==='cw'?'시계':'반시계')+' 90°)';
+    $('orient-opts').hidden=!$('f-orient').checked;
+    $('f-orient-src').textContent=($('f-orient-to').value==='portrait'?'가로':'세로');
+    $('f-sum').innerHTML=files.length?('결합 결과: <b>'+total+'쪽</b>'+(padN?' · 빈 페이지 '+padN+'장 추가':'')+szTxt):'파일을 첨부하면 결합 결과를 여기에 표시합니다.';
+    $('size-opts').hidden=!$('f-size').checked;
+  }
+  function renderPanelFile(){
+    var el=$('p-file-info');if(!el)return;
+    var bar=$('filebar');
+    if(files.length){el.innerHTML='<b>'+files.map(function(f){return f.name}).join(', ')+'</b> · '+pages.length+'p';bar.classList.add('has');}
+    else{el.innerHTML='Drag &amp; Drop';bar.classList.remove('has');}
+  }
+  function renderAll(){renderFiles();renderGrid();renderPreview();renderOps();hfPreview();renderPanelFile()}
+  function push(label,snapshot){ops.push({label:label,before:snapshot});renderOps()}
+  function snap(){return JSON.stringify(pages)}
+  function undo(i){var o=ops[i];pages=JSON.parse(o.before);ops=ops.slice(0,i);sel=[];toast('되돌렸습니다: '+o.label);renderAll()}
+  function needSel(){if(!sel.length){toast('먼저 왼쪽 목록에서 페이지를 선택하세요');return false}return true}
+  function sorted(){return sel.slice().sort(function(a,b){return a-b})}
+
+  function runOp(op){
+    var s=snap();
+    if(op==='rot90'||op==='rot180'||op==='rot270'){if(!needSel())return;var d=+op.slice(3);sel.forEach(function(i){pages[i].rot=(pages[i].rot+d)%360});push(sorted().map(function(i){return i+1}).join(',')+'쪽 '+d+'° 회전',s)}
+    else if(op==='del'){if(!needSel())return;var n=sel.length;pages=pages.filter(function(p,i){return sel.indexOf(i)<0});push(sorted().map(function(i){return i+1}).join(',')+'쪽 삭제 ('+n+'장)',s);sel=[]}
+    else if(op==='dup'){if(!needSel())return;var out=[];pages.forEach(function(p,i){out.push(p);if(sel.indexOf(i)>=0)out.push(JSON.parse(JSON.stringify(p)))});pages=out;push(sorted().map(function(i){return i+1}).join(',')+'쪽 복사',s);sel=[]}
+    else if(op==='up'||op==='down'){if(!needSel())return;var ss=sorted();if(op==='up'){if(ss[0]===0)return;ss.forEach(function(i){var t=pages[i-1];pages[i-1]=pages[i];pages[i]=t});sel=ss.map(function(i){return i-1})}else{if(ss[ss.length-1]===pages.length-1)return;ss.slice().reverse().forEach(function(i){var t=pages[i+1];pages[i+1]=pages[i];pages[i]=t});sel=ss.map(function(i){return i+1})}push('쪽 순서 이동 ('+(op==='up'?'앞':'뒤')+')',s)}
+    else if(op==='blank'){var n=Math.max(1,+$('bl-n').value||1),pos=$('bl-pos').value,at;if(pos==='start')at=0;else if(pos==='end')at=pages.length;else{if(!needSel())return;var ss2=sorted();at=pos==='after'?ss2[ss2.length-1]+1:ss2[0]}var add=[];for(var q=0;q<n;q++)add.push({src:0,rot:0,blank:true});pages=pages.slice(0,at).concat(add,pages.slice(at));push('빈 페이지 '+n+'장 ('+(at+1)+'쪽 위치, '+$('bl-size').value+')',s);sel=[]}
+    else if(op==='extract'){if(!needSel())return;toast('예시: 선택한 '+sel.length+'쪽을 "행사_리플렛_최종_추출.pdf"로 저장합니다 (실제로는 저장 창)');return}
+    renderAll()}
+  document.querySelectorAll('.pbody [data-op]').forEach(function(b){b.addEventListener('click',function(){runOp(b.dataset.op)})});
+
+  $('b-all').addEventListener('click',function(){sel=pages.map(function(p,i){return i});renderAll()});
+  $('b-odd').addEventListener('click',function(){sel=pages.map(function(p,i){return i}).filter(function(i){return i%2===0});renderAll()});
+  $('b-even').addEventListener('click',function(){sel=pages.map(function(p,i){return i}).filter(function(i){return i%2===1});renderAll()});
+  $('b-none').addEventListener('click',function(){sel=[];renderAll()});
+  $('b-open').addEventListener('click',function(){$('f-add').click();});
+  $('f-add').addEventListener('click',function(){
+    var next=SAMPLE[files.length%SAMPLE.length];
+    files.push({name:next.name,n:next.n,w:next.w,h:next.h,sizes:next.sizes});ops=[];buildPages();renderAll();
+    toast('예시로 "'+next.name+'"('+next.n+'p)을 첨부했습니다 — 실제로는 윈도우 파일 창에서 여러 개 선택');
+  });
+  (function(){
+    var d=$('f-drop');if(!d)return;
+    var stop=function(e){e.preventDefault();e.stopPropagation();};
+    ['dragenter','dragover'].forEach(function(t){d.addEventListener(t,function(e){stop(e);d.classList.add('over');});});
+    ['dragleave','drop'].forEach(function(t){d.addEventListener(t,function(e){stop(e);d.classList.remove('over');});});
+    d.addEventListener('drop',function(e){
+      var n=(e.dataTransfer&&e.dataTransfer.files&&e.dataTransfer.files.length)||1;   // 실제로는 끌어다 놓은 파일 수
+      for(var i=0;i<n;i++){var next=SAMPLE[files.length%SAMPLE.length];files.push({name:next.name,n:next.n,w:next.w,h:next.h,sizes:next.sizes});}
+      ops=[];buildPages();renderAll();
+      toast(n+'개 파일을 끌어다 놓았습니다 (예시 파일로 표시)');
+    });
+    // 창 어디에 떨어뜨려도 받도록
+    ['dragover','drop'].forEach(function(t){document.addEventListener(t,function(e){e.preventDefault();});});
+  })();
+  (function(){
+    var add=$('p-file-add'),clr=$('p-file-clear'),bar=$('filebar');
+    if(!add)return;
+    add.addEventListener('click',function(){$('f-add').click();});
+    clr.addEventListener('click',function(){files=[];ops=[];buildPages();renderAll();});
+    var stop=function(e){e.preventDefault();e.stopPropagation();};
+    ['dragenter','dragover'].forEach(function(t){bar.addEventListener(t,function(e){stop(e);bar.classList.add('over');});});
+    ['dragleave','drop'].forEach(function(t){bar.addEventListener(t,function(e){stop(e);bar.classList.remove('over');});});
+    bar.addEventListener('drop',function(e){
+      var n=(e.dataTransfer&&e.dataTransfer.files&&e.dataTransfer.files.length)||1;
+      for(var i=0;i<n;i++){var next=SAMPLE[files.length%SAMPLE.length];files.push({name:next.name,n:next.n,w:next.w,h:next.h,sizes:next.sizes});}
+      ops=[];buildPages();renderAll();toast(n+'개 파일을 열었습니다 (예시 파일로 표시)');
+    });
+  })();
+  $('f-clear').addEventListener('click',function(){files=[];ops=[];buildPages();renderAll();});
+  ['f-save','nup-save','hf-save','bw-save','ol-save'].forEach(function(id){var b=$(id);if(b)b.addEventListener('click',function(){$('b-save').click();});});
+  $('f-tonup').addEventListener('click',function(){
+    if(!files.length){toast('파일을 먼저 첨부하세요');return}
+    buildPages();
+    var tabs=document.querySelectorAll('.ptabs [role=tab]');
+    tabs.forEach(function(t){t.setAttribute('aria-selected',String(t.dataset.p==='nup'))});
+    ['page','nup','ops','bg','bw','ol','ana'].forEach(function(k){$('pp-'+k).hidden=(k!=='nup')});
+    setView('nup');
+    if(!$('nu-on').checked)setNup('2');else renderAll();
+    toast('결합한 '+files.length+'개 파일('+pages.length+'쪽)을 N-up 으로 넘겼습니다');
+  });
+  $('f-even').addEventListener('change',function(){ops=[];buildPages();renderAll();toast(this.checked?'홀수 쪽 파일 끝에 빈 페이지를 넣습니다':'빈 페이지 보정을 끕니다');});
+  ['f-orient','f-orient-to','f-orient-dir'].forEach(function(id){$(id).addEventListener('change',function(){ops=[];buildPages();renderAll();});});
+  ['f-size','sz-w','sz-h','sz-mode'].forEach(function(id){$(id).addEventListener('change',function(){
+    if(id==='f-size'&&this.checked){var PS=paperSize();if(PS){$('sz-w').value=PS.w;$('sz-h').value=PS.h;$('sz-preset').value=PS.w+','+PS.h;}else if(!$('sz-w').value||!$('sz-h').value){$('sz-w').value=210;$('sz-h').value=297;$('sz-preset').value='210,297';}}
+    ops=[];buildPages();renderAll();});});
+  $('sz-preset').addEventListener('change',function(){var v=this.value;if(v){$('sz-w').value=v.split(',')[0];$('sz-h').value=v.split(',')[1];}ops=[];buildPages();renderAll();});
+  $('b-save').addEventListener('click',function(){toast('실제 프로그램에서는 저장 창 → 작업 '+ops.length+'개 적용 → 검수 → 완료 안내')});
+  $('pv-prev').addEventListener('click',function(){pv--;renderPreview()});$('pv-next').addEventListener('click',function(){pv++;renderPreview()});
+  $('nu-radd').addEventListener('click',function(){
+    var a=parseInt($('nu-ra').value,10),b=parseInt($('nu-rb').value,10),n=pages.length||1;
+    if(isNaN(a))a=1;if(isNaN(b))b=n;
+    if(a>b){var t=a;a=b;b=t}
+    a=Math.max(1,a);b=Math.min(n,b);
+    nupRanges.push({a:a,b:b});$('nu-ra').value='';$('nu-rb').value='';
+    pv=0;nupRangeList();renderAll();toast(a+'–'+b+'쪽 구간 추가');});
+  $('nu-rclr').addEventListener('click',function(){
+    nupRanges=[];pv=0;nupRangeList();renderAll();toast('구간 해제 — 전체 쪽에 조판');});
+  nupRangeList();
+  $('pv-no').addEventListener('change',function(){pv=(+this.value||1)-1;renderPreview()});
+  ['nu-on','nu-c','nu-r','nu-order','nu-dir','nu-cl','nu-cr','nu-ct','nu-cb','nu-w','nu-h','nu-sw','nu-sh','nu-gap','nu-gapy','nu-m','nu-scale','nu-rot','bd-on','bd-w','bd-c','bd-pos','bd-off','mk-on'].forEach(function(id){$(id).addEventListener('change',function(){pv=0;renderAll()});$(id).addEventListener('input',function(){renderAll()})});
+  var nupKind='off';
+  function setNup(kind){
+    var on=$('nu-on');
+    if(kind==='off'){on.checked=false;$('row-nu-cr').hidden=true}
+    else if(kind==='custom'){on.checked=true;$('row-nu-cr').hidden=false}
+    else{on.checked=true;$('row-nu-cr').hidden=true;var v=$('nu-dir').value==='v';$('nu-c').value=v?1:2;$('nu-r').value=v?2:1}
+    document.querySelectorAll('#nu-presets [data-nup]').forEach(function(b){b.style.fontWeight=(b.dataset.nup===kind)?'700':'400';b.style.background=(b.dataset.nup===kind)?'var(--sel)':''});
+    nupKind=kind;pv=0;renderAll();
+  }
+  document.querySelectorAll('#nu-presets [data-nup]').forEach(function(b){b.addEventListener('click',function(){setNup(b.dataset.nup)})});
+  $('nu-dir').addEventListener('change',function(){
+    var v=this.value==='v',c=+$('nu-c').value||1,r=+$('nu-r').value||1;
+    if(nupKind==='2'){$('nu-c').value=v?1:2;$('nu-r').value=v?2:1;}
+    else if((v&&c>r)||(!v&&r>c)){$('nu-c').value=r;$('nu-r').value=c;}   // 직접 지정: 열·행을 맞바꿔 방향을 따른다
+    pv=0;renderAll();
+  });
+  function paperSync(){
+    var v=$('pp-preset').value,cus=(v==='custom');
+    $('pp-w').disabled=$('pp-h').disabled=$('pp-rot').disabled=!v;
+    if(v&&!cus){$('pp-w').value=v.split(',')[0];$('pp-h').value=v.split(',')[1];}
+    pv=0;renderAll();
+  }
+  function bgDrop(name){
+    if(!name)return;
+    bgFile=name;
+    if(/\.pdf$/i.test(name))$('bg-kind').value='pdf';
+    else if(/\.(png|jpe?g|gif|bmp|tiff?)$/i.test(name))$('bg-kind').value='image';
+    $('bg-on').checked=true;$('bg-name').textContent=name;bgSync();
+  }
+  function bgSync(){
+    $('row-bg-color').hidden=($('bg-kind').value!=='color');
+    $('row-bg-file').hidden=($('bg-kind').value==='color');
+    $('row-bg-page').hidden=($('bg-kind').value!=='pdf');
+    $('bg-scale').disabled=$('bg-fit').checked;
+    renderPreview();
+  }
+  var bgBox=$('bg-drop');
+  ['dragenter','dragover'].forEach(function(t){bgBox.addEventListener(t,function(e){e.preventDefault();e.stopPropagation();bgBox.classList.add('over')})});
+  ['dragleave','dragend'].forEach(function(t){bgBox.addEventListener(t,function(){bgBox.classList.remove('over')})});
+  bgBox.addEventListener('drop',function(e){
+    e.preventDefault();e.stopPropagation();bgBox.classList.remove('over');
+    var f=e.dataTransfer&&e.dataTransfer.files&&e.dataTransfer.files[0];
+    bgDrop(f?f.name:'배경양식.pdf');toast('배경 파일: '+bgFile);});
+  ['bg-on','bg-kind','bg-color','bg-op','bg-rot','bg-scale','bg-fit','bg-ax','bg-ay','bg-ox','bg-oy','bg-scope','bg-page','bg-z'].forEach(function(id){
+    var el=$(id);el.addEventListener('input',renderPreview);el.addEventListener('change',bgSync);});
+  $('bg-pick').addEventListener('click',function(){bgDrop($('bg-kind').value==='image'?'로고.png':'배경양식.pdf');renderPreview();toast('미리보기에서는 견본으로 표시합니다')});
+  ['bw-on','bw-mode','bw-th','bw-br','bw-ct','bw-orig','bw-rich','bw-spot'].forEach(function(id){
+    var el=$(id);el.addEventListener('input',renderPreview);
+    el.addEventListener('change',function(){$('row-bw-th').hidden=($('bw-mode').value!=='mono');renderPreview();});});
+  ['ol-on','ol-target','ol-stroke','ol-flat'].forEach(function(id){
+    $(id).addEventListener('change',function(){olList();renderPreview();});});
+  olList();
+  $('bw-radd').addEventListener('click',function(){
+    var n=+($('pv-total').textContent.replace('/','').trim())||pages.length||1;
+    var a=parseInt($('bw-ra').value,10),b=parseInt($('bw-rb').value,10);
+    if(isNaN(a))a=1;if(isNaN(b))b=n;
+    if(a>b){var t=a;a=b;b=t}
+    a=Math.max(1,a);b=Math.max(a,b);
+    bwRanges.push({a:a,b:b});$('bw-ra').value='';$('bw-rb').value='';
+    renderPreview();toast('흑백 적용 구간 '+a+'–'+b+'쪽 추가');});
+  $('bw-rclr').addEventListener('click',function(){bwRanges=[];renderPreview();toast('구간 해제 — 전체 쪽 흑백');});
+  $('bg-radd').addEventListener('click',function(){
+    var n=+($('pv-total').textContent.replace('/','').trim())||pages.length||1;
+    var a=parseInt($('bg-ra').value,10),b=parseInt($('bg-rb').value,10);
+    if(isNaN(a))a=1;if(isNaN(b))b=n;
+    if(a>b){var t=a;a=b;b=t}
+    a=Math.max(1,a);b=Math.max(a,b);
+    bgRanges.push({a:a,b:b});$('bg-ra').value='';$('bg-rb').value='';
+    renderPreview();toast('배경 적용 구간 '+a+'–'+b+'쪽 추가');});
+  $('bg-rclr').addEventListener('click',function(){
+    bgRanges=[];renderPreview();toast('구간 해제 — 전체 쪽에 배경');});
+  $('bg-save').addEventListener('click',function(){toast('배경을 넣어 PDF로 저장합니다 (미리보기)')});
+
+  // 머리말·꼬리말 입력 연결
+  var HFIN=['hf-font','hf-size','hf-color','hf-mt','hf-mb','hf-ml','hf-mr','hf-hl','hf-hc','hf-hr','hf-fl','hf-fc','hf-fr','hf-numfmt','hf-datefmt','hf-start','hf-scope','hf-from','hf-to'];
+  HFIN.forEach(function(id){var el=$(id);el.addEventListener('input',function(){renderPreview();hfPreview()});el.addEventListener('change',function(){renderPreview();hfPreview()})});
+  var hfLast=null;
+  ['hf-hl','hf-hc','hf-hr','hf-fl','hf-fc','hf-fr'].forEach(function(id){$(id).addEventListener('focus',function(){hfLast=this})});
+  $('hf-u').addEventListener('click',function(){hfUnder=!hfUnder;this.style.background=hfUnder?'var(--sel)':'';renderPreview()});
+  $('hf-fmt').addEventListener('click',function(){$('hf-fmtbox').hidden=!$('hf-fmtbox').hidden});
+  document.querySelectorAll('#pp-ops [data-ins]').forEach(function(b){
+    b.addEventListener('mousedown',function(e){e.preventDefault()});
+    b.addEventListener('click',function(){
+      var t=hfLast||$('hf-fc'),v=b.dataset.ins,a=t.selectionStart||0,z=t.selectionEnd||0;
+      t.value=t.value.slice(0,a)+v+t.value.slice(z);
+      t.focus();t.setSelectionRange(a+v.length,a+v.length);
+      renderPreview();hfPreview();});});
+  // 저장된 설정
+  var HFP={};try{HFP=JSON.parse(localStorage.getItem('bprint-hf')||'{}')||{}}catch(e){HFP={}}
+  function hfPresetList(){
+    var sel0=$('hf-preset');sel0.innerHTML='<option value="">[지정된 항목 없음]</option>'+Object.keys(HFP).map(function(n){return '<option>'+n+'</option>'}).join('');
+  }
+  hfPresetList();
+  $('hf-psave').addEventListener('click',function(){
+    var n=($('hf-pname').value||'').trim();if(!n){toast('설정 이름을 적어 주세요');return}
+    var o={u:hfUnder};HFIN.forEach(function(id){o[id]=$(id).value});HFP[n]=o;
+    try{localStorage.setItem('bprint-hf',JSON.stringify(HFP))}catch(e){}
+    hfPresetList();$('hf-preset').value=n;$('hf-pname').value='';toast('설정 "'+n+'" 저장');});
+  $('hf-pdel').addEventListener('click',function(){
+    var n=$('hf-preset').value;if(!n)return;delete HFP[n];
+    try{localStorage.setItem('bprint-hf',JSON.stringify(HFP))}catch(e){}
+    hfPresetList();toast('설정 삭제');});
+  $('hf-preset').addEventListener('change',function(){
+    var o=HFP[this.value];if(!o)return;
+    HFIN.forEach(function(id){if(o[id]!==undefined)$(id).value=o[id]});
+    hfUnder=!!o.u;$('hf-u').style.background=hfUnder?'var(--sel)':'';
+    renderPreview();hfPreview();});
+  $('pp-preset').addEventListener('change',paperSync);
+  ['pp-w','pp-h'].forEach(function(id){$(id).addEventListener('input',function(){if($('pp-preset').value&&$('pp-preset').value!=='custom')$('pp-preset').value='custom';renderAll();});});
+  $('pp-rot').addEventListener('click',function(){var w=$('pp-w').value;$('pp-w').value=$('pp-h').value;$('pp-h').value=w;if($('pp-preset').value&&$('pp-preset').value!=='custom')$('pp-preset').value='custom';renderAll();});
+  function runAna(){
+    var u=$('ana-list');if(!u)return;
+    if(!files.length){u.innerHTML='<li><span style="color:var(--faint)">파일을 먼저 첨부하세요</span></li>';return}
+    var sizes={},rots=0,blanks=0;
+    pages.forEach(function(p){var key=(p.w||210)+'×'+(p.h||297);sizes[key]=(sizes[key]||0)+1;if(p.rot)rots++;if(p.blank)blanks++;});
+    var sizeKeys=Object.keys(sizes);
+    var rows=[
+      ['파일 수', files.length+'개', 'ok'],
+      ['전체 쪽수', pages.length+'쪽'+(blanks?' (빈 페이지 '+blanks+'쪽)':''), 'ok'],
+      ['쪽 크기', sizeKeys.map(function(k){return k+' '+sizes[k]+'쪽'}).join(', '), sizeKeys.length>1?'warn':'ok'],
+      ['회전된 쪽', rots?rots+'쪽':'없음', rots?'warn':'ok'],
+      ['페이지 방향', (function(){var pt=0,ld=0;files.forEach(function(f){(f.sizes||[[f.w,f.h,f.n]]).forEach(function(z){if(z[1]>=z[0])pt+=z[2];else ld+=z[2];});});return '세로 '+pt+'쪽'+(ld?' · 가로 '+ld+'쪽 (섞임)':'')})(), (function(){var ld=0;files.forEach(function(f){(f.sizes||[[f.w,f.h,f.n]]).forEach(function(z){if(z[1]<z[0])ld+=z[2];});});return ld?'warn':'ok'})()],
+      ['서체', '38개 · 임베드 안 됨 2개 (맑은 고딕, 굴림)', 'warn'],
+      ['색상', 'CMYK 위주 · RGB 이미지 6개', 'warn'],
+      ['이미지 해상도', '최저 141 dpi (12쪽) · 권장 300 dpi', 'warn'],
+      ['보안', '암호 없음', 'ok'],
+      ['주석·양식', '없음', 'ok']
+    ];
+    u.innerHTML=rows.map(function(r){
+      var mark=r[2]==='ok'?'<small style="color:#166534">확인</small>':'<small style="color:#92400e">주의</small>';
+      return '<li><span><b style="font-weight:600">'+r[0]+'</b> · '+r[1]+'</span>'+mark+'</li>';
+    }).join('');
+  }
+  $('ana-run').addEventListener('click',runAna);
+  function setView(which){        // 파일결합·분석은 한 화면 (페이지 목록·미리보기 없음)
+    var wide=(which==='page'||which==='ana');
+    document.querySelector('.filebar').hidden=wide;
+    document.querySelector('.pages').hidden=wide;
+    document.querySelector('.stage').hidden=wide;
+    document.querySelector('.main').style.gridTemplateColumns=wide?'1fr':'330px 260px minmax(0,1fr)';
+    document.querySelector('.panel').style.borderRight=wide?'0':'';
+  }
+  // 저장한 용지 — 이름 + 가로×세로
+  var SHEETS=[];
+  try{SHEETS=JSON.parse(localStorage.getItem('bprint-sheets')||'[]')||[];}catch(e){SHEETS=[];}
+  if(!SHEETS.length)SHEETS=[{name:'SRA3',w:320,h:450},{name:'4×6 절반',w:545,h:394}];
+  function saveSheets(){try{localStorage.setItem('bprint-sheets',JSON.stringify(SHEETS));}catch(e){}}
+  function renderSheets(){
+    var sel=$('nu-sheet-sel');if(!sel)return;
+    sel.innerHTML='<option value="">고르기'+(SHEETS.length?' ('+SHEETS.length+')':'')+'</option>'+
+      SHEETS.map(function(x,i){return '<option value="'+i+'">'+x.name+' — '+x.w+'×'+x.h+'</option>';}).join('');
+  }
+  $('nu-sheet-sel').addEventListener('change',function(){
+    var x=SHEETS[+this.value];if(!x)return;
+    $('nu-sw').value=x.w;$('nu-sh').value=x.h;pv=0;renderAll();
+  });
+  $('nu-sheet-save').addEventListener('click',function(){
+    var w=+$('nu-sw').value||0,h=+$('nu-sh').value||0,nm=($('nu-sheet-name').value||'').trim();
+    if(!(w>0&&h>0)){toast('용지 가로·세로를 먼저 입력하세요');return}
+    if(!nm){toast('용지 이름을 적어주세요');$('nu-sheet-name').focus();return}
+    var i=SHEETS.findIndex(function(x){return x.name===nm;});
+    if(i>=0)SHEETS[i]={name:nm,w:w,h:h};else SHEETS.push({name:nm,w:w,h:h});
+    saveSheets();renderSheets();$('nu-sheet-name').value='';toast("'"+nm+" "+w+"×"+h+"' 저장");
+  });
+  $('nu-sheet-del').addEventListener('click',function(){
+    var i=+$('nu-sheet-sel').value;if(isNaN(i)||!SHEETS[i]){toast('지울 용지를 고르세요');return}
+    var nm=SHEETS[i].name;SHEETS.splice(i,1);saveSheets();renderSheets();toast("'"+nm+"' 삭제");
+  });
+  renderSheets();
+  var ptabs=document.querySelectorAll('.ptabs [role=tab]');
+  ptabs.forEach(function(b){b.addEventListener('click',function(){ptabs.forEach(function(x){x.setAttribute('aria-selected',String(x===b))});['page','nup','ops','bg','bw','ol','ana'].forEach(function(k){$('pp-'+k).hidden=k!==b.dataset.p});if(b.dataset.p==='ana')runAna();setView(b.dataset.p);if(b.dataset.p==='nup'&&!$('nu-on').checked)setNup('2')})});
+  var rsT;window.addEventListener('resize',function(){clearTimeout(rsT);rsT=setTimeout(function(){renderPreview()},120)});
+  buildPages();setNup('off');paperSync();setView('page');
+
+  // ---- Bcount 웹 미리보기: 내려받기 버튼·버전 ----
+  var DOWNLOAD_URL="/api/program-releases/bprint/download";
+  (function(){
+    var b=document.getElementById("dl-btn");
+    if(b)b.addEventListener("click",function(){location.href=DOWNLOAD_URL});
+    try{
+      fetch("/api/program-releases",{credentials:"same-origin"}).then(function(r){return r.ok?r.json():null}).then(function(d){
+        var r=d&&d.data&&d.data.filter(function(x){return x.key==="bprint"})[0];
+        if(!r||!r.version)return;
+        var vb=document.querySelector(".bar .v");if(vb)vb.textContent="v"+r.version;
+        if(b)b.textContent="B-PRINT 프로그램 다운로드 (v"+r.version+(r.updated_at?" · "+String(r.updated_at).slice(0,10):"")+")";
+      }).catch(function(){});
+    }catch(e){}
+  })();
+})();
+</script>
