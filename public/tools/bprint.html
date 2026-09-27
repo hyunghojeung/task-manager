@@ -27,7 +27,7 @@ h1{font-size:18px;margin:0 0 4px}
 .winbtn.primary{background:linear-gradient(#3d8be0,#0067c0);color:#fff;border-color:#0058a6;font-weight:700}
 .winbtn.big{padding:8px 14px;font-size:13px}
 .winbtn:disabled{opacity:.5;cursor:default}
-.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));overflow-x:hidden;gap:8px;padding:8px;overflow:auto;max-height:560px}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));overflow-x:hidden;gap:8px;padding:8px;overflow:auto;flex:1 1 auto;min-height:0}
 .pg{position:relative;background:var(--card);border:2px solid var(--line);border-radius:3px;padding:4px;cursor:pointer;user-select:none}
 .pg.sel{border-color:var(--accent);background:var(--sel)}
 .pg .th{aspect-ratio:210/297;background:var(--paper);border:1px solid #cbd5e1;display:flex;align-items:center;justify-content:center;color:#334155;font-weight:700;font-size:16px;position:relative;overflow:hidden}
@@ -37,6 +37,8 @@ h1{font-size:18px;margin:0 0 4px}
 .pg .th.r90{transform:rotate(90deg) scale(.7)}.pg .th.r180{transform:rotate(180deg)}.pg .th.r270{transform:rotate(270deg) scale(.7)}
 .pg .no{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-top:3px}
 .pg .badge{position:absolute;top:6px;right:6px;font-size:10px;background:#fde68a;color:#92400e;padding:0 4px;border-radius:2px;font-weight:700}
+.gutter{background:var(--line);cursor:col-resize}
+.gutter:hover,.gutter.on{background:var(--accent)}
 .stage{background:var(--stage);display:flex;flex-direction:column;min-width:0}
 .pager{display:flex;align-items:center;gap:6px;padding:8px 12px;background:var(--card);border-bottom:1px solid var(--line);font-size:12px}
 .pager input{width:44px;text-align:center;font:inherit;padding:3px}
@@ -369,14 +371,14 @@ body{padding-inline:12px;padding-block:12px 24px}
       </div>
       <div class="pages">
         <div class="tools">
-          <button class="winbtn" id="b-open">파일</button>
-          <button class="winbtn" id="b-all">전체</button>
+                    <button class="winbtn" id="b-all">전체</button>
           <button class="winbtn" id="b-odd">홀수</button>
           <button class="winbtn" id="b-even">짝수</button>
           <button class="winbtn" id="b-none">해제</button>
         </div>
         <div class="grid" id="grid"></div>
       </div>
+      <div class="gutter" id="gutter" title="끌어서 폭 조절"></div>
       <div class="stage">
         <div class="pager">
           <button class="winbtn" id="pv-prev">‹</button>
@@ -800,7 +802,7 @@ body{padding-inline:12px;padding-block:12px 24px}
   $('b-odd').addEventListener('click',function(){sel=pages.map(function(p,i){return i}).filter(function(i){return i%2===0});renderAll()});
   $('b-even').addEventListener('click',function(){sel=pages.map(function(p,i){return i}).filter(function(i){return i%2===1});renderAll()});
   $('b-none').addEventListener('click',function(){sel=[];renderAll()});
-  $('b-open').addEventListener('click',function(){$('f-add').click();});
+  (function(){var b=$('b-open');if(b)b.addEventListener('click',function(){$('f-add').click();});})();
   $('f-add').addEventListener('click',function(){
     var next=SAMPLE[files.length%SAMPLE.length];
     files.push({name:next.name,n:next.n,w:next.w,h:next.h,sizes:next.sizes});ops=[];buildPages();renderAll();
@@ -1000,12 +1002,36 @@ body{padding-inline:12px;padding-block:12px 24px}
     }).join('');
   }
   $('ana-run').addEventListener('click',runAna);
+  var pagesW=260;                 /* 페이지 목록 폭 — 끌어서 조절하고 기억한다 */
+  try{pagesW=Math.max(160,Math.min(900,+(localStorage.getItem('bprint-pagesw')||260)||260))}catch(e){}
+  function applyCols(wide){
+    var m=document.querySelector('.main'),g=document.getElementById('gutter');
+    m.style.gridTemplateColumns=wide?'1fr':('330px '+pagesW+'px 6px minmax(0,1fr)');
+    if(g)g.hidden=wide;
+  }
+  (function(){
+    var g=document.getElementById('gutter');if(!g)return;
+    var drag=false;
+    g.addEventListener('mousedown',function(e){drag=true;g.classList.add('on');e.preventDefault();document.body.style.userSelect='none';});
+    document.addEventListener('mousemove',function(e){
+      if(!drag)return;
+      var left=document.querySelector('.pages').getBoundingClientRect().left;
+      pagesW=Math.max(160,Math.min(900,Math.round(e.clientX-left)));
+      applyCols(false);
+    });
+    document.addEventListener('mouseup',function(){
+      if(!drag)return;
+      drag=false;g.classList.remove('on');document.body.style.userSelect='';
+      try{localStorage.setItem('bprint-pagesw',String(pagesW))}catch(e){}
+      renderPreview();
+    });
+  })();
   function setView(which){        // 파일결합·분석은 한 화면 (페이지 목록·미리보기 없음)
     var wide=(which==='page'||which==='ana');
     document.querySelector('.filebar').hidden=wide;
     document.querySelector('.pages').hidden=wide;
     document.querySelector('.stage').hidden=wide;
-    document.querySelector('.main').style.gridTemplateColumns=wide?'1fr':'330px 260px minmax(0,1fr)';
+    applyCols(wide);
     document.querySelector('.panel').style.borderRight=wide?'0':'';
   }
   // 저장한 용지 — 이름 + 가로×세로
