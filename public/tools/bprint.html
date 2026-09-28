@@ -270,8 +270,14 @@ body{padding-inline:12px;padding-block:12px 24px}
 
           <!-- 분석 탭 -->
           <div id="pp-ana" hidden>
-            <div class="card"><h3>파일 분석</h3>
-              <div class="btns"><button class="winbtn" id="ana-run">분석 시작</button></div>
+            <div class="card"><h3>파일 분석 <span id="ana-n" style="font-weight:400;color:var(--muted);font-size:12px"></span></h3>
+              <div class="fdrop" id="ana-drop">
+                <b>Drag &amp; Drop</b>
+                <span>또는</span>
+                <span class="btns"><button class="winbtn" id="ana-add">파일 첨부하기...</button><button class="winbtn" id="ana-clear">비우기</button></span>
+              </div>
+              <div class="note" id="ana-files"></div>
+              <div class="btns"><button class="winbtn big primary" id="ana-run">분석 시작</button></div>
               <ul class="ops" id="ana-list"></ul>
             </div>
           </div>
@@ -991,18 +997,28 @@ body{padding-inline:12px;padding-block:12px 24px}
   $('pp-preset').addEventListener('change',paperSync);
   ['pp-w','pp-h'].forEach(function(id){$(id).addEventListener('input',function(){if($('pp-preset').value&&$('pp-preset').value!=='custom')$('pp-preset').value='custom';renderAll();});});
   $('pp-rot').addEventListener('click',function(){var w=$('pp-w').value;$('pp-w').value=$('pp-h').value;$('pp-h').value=w;if($('pp-preset').value&&$('pp-preset').value!=='custom')$('pp-preset').value='custom';renderAll();});
+  // ── 분석 — 다른 메뉴와 따로 도는 화면. 여기에 붙인 파일만 본다 ──
+  var anaFiles=[];
+  function anaList(){
+    var el=$('ana-files');if(!el)return;
+    el.innerHTML=anaFiles.length
+      ? anaFiles.map(function(f,i){return '<b>'+f.name+'</b> · '+f.n+'쪽'+(i<anaFiles.length-1?'<br>':'')}).join('')
+      : '첨부한 파일이 없습니다 — <b>이 화면은 다른 메뉴(파일결합·N-up)와 따로 동작합니다.</b>';
+    var n=$('ana-n');if(n)n.textContent=anaFiles.length?'('+anaFiles.length+'개 · '+anaFiles.reduce(function(a,f){return a+f.n},0)+'쪽)':'(없음)';
+  }
   function runAna(){
     var u=$('ana-list');if(!u)return;
-    if(!files.length){u.innerHTML='<li><span style="color:var(--faint)">파일을 먼저 첨부하세요</span></li>';return}
-    var sizes={},rots=0,blanks=0;
-    pages.forEach(function(p){var key=(p.w||210)+'×'+(p.h||297);sizes[key]=(sizes[key]||0)+1;if(p.rot)rots++;if(p.blank)blanks++;});
+    if(!anaFiles.length){u.innerHTML='<li><span class="v" style="color:var(--faint)">분석할 파일을 첨부하세요</span></li>';return}
+    var sizes={},rots=0,blanks=0,total=0;
+    anaFiles.forEach(function(f){(f.sizes||[[f.w,f.h,f.n]]).forEach(function(z){
+      var key=z[0]+'×'+z[1];sizes[key]=(sizes[key]||0)+z[2];total+=z[2];});});
     var sizeKeys=Object.keys(sizes);
     var rows=[
-      ['파일 수', files.length+'개', 'ok'],
-      ['전체 쪽수', pages.length+'쪽'+(blanks?' (빈 페이지 '+blanks+'쪽)':''), 'ok'],
+      ['파일 수', anaFiles.length+'개', 'ok'],
+      ['전체 쪽수', total+'쪽'+(blanks?' (빈 페이지 '+blanks+'쪽)':''), 'ok'],
       ['쪽 크기', sizeKeys.map(function(k){return k+' '+sizes[k]+'쪽'}).join(', '), sizeKeys.length>1?'warn':'ok'],
       ['회전된 쪽', rots?rots+'쪽':'없음', rots?'warn':'ok'],
-      ['페이지 방향', (function(){var pt=0,ld=0;files.forEach(function(f){(f.sizes||[[f.w,f.h,f.n]]).forEach(function(z){if(z[1]>=z[0])pt+=z[2];else ld+=z[2];});});return '세로 '+pt+'쪽'+(ld?' · 가로 '+ld+'쪽 (섞임)':'')})(), (function(){var ld=0;files.forEach(function(f){(f.sizes||[[f.w,f.h,f.n]]).forEach(function(z){if(z[1]<z[0])ld+=z[2];});});return ld?'warn':'ok'})()],
+      ['페이지 방향', (function(){var pt=0,ld=0;anaFiles.forEach(function(f){(f.sizes||[[f.w,f.h,f.n]]).forEach(function(z){if(z[1]>=z[0])pt+=z[2];else ld+=z[2];});});return '세로 '+pt+'쪽'+(ld?' · 가로 '+ld+'쪽 (섞임)':'')})(), (function(){var ld=0;anaFiles.forEach(function(f){(f.sizes||[[f.w,f.h,f.n]]).forEach(function(z){if(z[1]<z[0])ld+=z[2];});});return ld?'warn':'ok'})()],
       ['서체', '38개 · 임베드 안 됨 2개 (맑은 고딕, 굴림)', 'warn'],
       ['색상', 'CMYK 위주 · RGB 이미지 6개', 'warn'],
       ['이미지 해상도', '최저 141 dpi (12쪽) · 권장 300 dpi', 'warn'],
@@ -1015,6 +1031,20 @@ body{padding-inline:12px;padding-block:12px 24px}
     }).join('');
   }
   $('ana-run').addEventListener('click',runAna);
+  (function(){                       /* 분석 전용 파일 붙이기 — 다른 메뉴 목록은 건드리지 않는다 */
+    var add=$('ana-add'),clr=$('ana-clear'),drop=$('ana-drop');
+    if(!add)return;
+    function push(n){for(var i=0;i<n;i++){var x=SAMPLE[anaFiles.length%SAMPLE.length];
+      anaFiles.push({name:x.name,n:x.n,w:x.w,h:x.h,sizes:x.sizes});}
+      anaList();$('ana-list').innerHTML='';}
+    add.addEventListener('click',function(){push(1);toast('예시 파일을 분석 목록에 붙였습니다 — 실제로는 윈도우 파일 창')});
+    clr.addEventListener('click',function(){anaFiles=[];anaList();$('ana-list').innerHTML='';});
+    var stop=function(e){e.preventDefault();e.stopPropagation()};
+    ['dragenter','dragover'].forEach(function(t){drop.addEventListener(t,function(e){stop(e);drop.classList.add('over')})});
+    ['dragleave','drop'].forEach(function(t){drop.addEventListener(t,function(e){stop(e);drop.classList.remove('over')})});
+    drop.addEventListener('drop',function(e){push((e.dataTransfer&&e.dataTransfer.files&&e.dataTransfer.files.length)||1)});
+    anaList();
+  })();
   var pagesW=260;                 /* 페이지 목록 폭 — 끌어서 조절하고 기억한다 */
   try{pagesW=Math.max(160,Math.min(900,+(localStorage.getItem('bprint-pagesw')||260)||260))}catch(e){}
   function applyCols(wide){
