@@ -390,9 +390,9 @@ body{padding-inline:12px;padding-block:12px 24px}
                 <label class="chk"><input type="checkbox" id="ol-stroke" checked> 획(선)도 면으로 변환</label>
                 <label class="chk"><input type="checkbox" id="ol-flat"> 투명도·중첩 평면화</label>
               </div>
-              <label class="chk" style="margin-top:10px"><input type="radio" name="olway" id="ol-way-img"> <b>이미지로 굳히기</b> — 쪽을 그림으로 (서체가 없어도 됨)</label>
+              <label class="chk" style="margin-top:10px"><input type="radio" name="olway" id="ol-way-img"> <b>이미지로 저장</b> — 쪽을 그림으로</label>
               <div id="ol-img" style="padding-left:20px" hidden>
-                <div class="row"><label>해상도</label><span class="tight"><b style="color:var(--ink);font-size:13px">600 dpi</b> <span style="color:var(--muted)">고정 — 인쇄 품질을 지키기 위해 낮추지 않습니다</span><input type="hidden" id="ol-dpi" value="600"></span></div>
+                <div class="row"><label>해상도</label><span class="tight"><b style="color:var(--ink);font-size:13px">600 dpi</b><input type="hidden" id="ol-dpi" value="600"></span></div>
                 <div class="row"><label>색</label><select id="ol-color"><option value="keep">원본 그대로</option><option value="gray">회색</option><option value="mono">먹 1도 (흑백)</option></select></div>
                 <div class="note" style="margin-top:6px">화면 미리보기에 <b>보이는 그대로</b> 굳힙니다 · 글자 검색은 안 됩니다 · 되돌릴 수 없습니다 · 파일이 커집니다</div>
               </div>
@@ -402,7 +402,7 @@ body{padding-inline:12px;padding-block:12px 24px}
               <ul class="ops" id="ol-fonts"></ul>
             </div>
             <div class="warn" id="ol-warn" hidden></div>
-            <div class="btns" style="margin-bottom:8px;gap:8px"><button class="winbtn big" id="ol-apply">서체 없애기 적용</button><button class="winbtn big primary" id="ol-save">PDF 저장</button></div><div class="prog" id="ol-prog" hidden><span class="step">준비 중</span><span class="track"><span class="fill"></span></span><span class="pct">0%</span></div>
+            <div class="btns" style="margin-bottom:8px;gap:8px"><button class="winbtn big" id="ol-apply">아웃라인 적용</button><button class="winbtn big primary" id="ol-save">PDF 저장</button></div><div class="prog" id="ol-prog" hidden><span class="step">준비 중</span><span class="track"><span class="fill"></span></span><span class="pct">0%</span></div>
           </div>
         </div>
       </div>
@@ -574,7 +574,7 @@ body{padding-inline:12px;padding-block:12px 24px}
     el.innerHTML=ne.length
       ? '<b style="color:#92400e">임베드 안 된 서체 '+ne.length+'종: '+ne.map(function(f){return f.n}).join(', ')+'</b><br>'+
         'PDF 안에 글자 모양이 없어 <b>아웃라인으로는 없앨 수 없습니다.</b> PC에 같은 서체가 설치돼 있으면 그것으로 아웃라인하고, '+
-        '없으면 <b>이미지로 굳히기</b>를 쓰세요 — 화면에 보이는 그대로 굳어집니다.'
+        '없으면 <b>이미지로 저장</b>을 쓰세요 — 화면에 보이는 그대로 굳어집니다.'
       : '<b style="color:#166534">모든 서체가 임베드돼 있습니다 ('+OLFONTS.length+'종)</b><br>아웃라인으로 선명하게 없앨 수 있습니다.';
   }
   function olNote(){
@@ -910,10 +910,10 @@ body{padding-inline:12px;padding-block:12px 24px}
       var pid=id.replace('-apply','-prog');
       if(id==='ol-apply'){
         var ne=OLFONTS.filter(function(f){return !f.e});
-        if(olWay()==='vec'&&ne.length){toast('임베드 안 된 서체가 있어 아웃라인으로는 못 없앱니다 — [이미지로 굳히기]를 고르세요');return}
-        progFake(pid,olWay()==='img'?'굳히는 중':'아웃라인',function(){
+        if(olWay()==='vec'&&ne.length){toast('임베드 안 된 서체가 있어 아웃라인으로는 못 없앱니다 — [이미지로 저장]을 고르세요');return}
+        progFake(pid,olWay()==='img'?'이미지로 저장 중':'아웃라인',function(){
           toast(olWay()==='img'
-            ?'이미지로 굳혔습니다 ('+$('ol-dpi').value+'dpi) — 서체 0종. 이어서 조판·쪽번호를 할 수 있습니다'
+            ?'이미지로 저장했습니다 ('+$('ol-dpi').value+'dpi) — 서체 0종. 이어서 조판·쪽번호를 할 수 있습니다'
             :'아웃라인했습니다 — 서체 0종. 이어서 조판·쪽번호를 할 수 있습니다');});
         return;
       }
@@ -1011,7 +1011,7 @@ body{padding-inline:12px;padding-block:12px 24px}
   ['ol-way-vec','ol-way-img'].forEach(function(id){$(id).addEventListener('change',function(){
     $('ol-vec').hidden=olWay()!=='vec';$('ol-img').hidden=olWay()!=='img';
     olList();olVerdict();renderPreview();
-    toast(olWay()==='img'?'이미지로 굳히기 — 서체가 없어도 됩니다':'아웃라인 — 임베드된 서체만 됩니다');});});
+    toast(olWay()==='img'?'이미지로 저장 — 서체가 없어도 됩니다':'아웃라인 — 임베드된 서체만 됩니다');});});
   olList();olVerdict();
   $('bw-radd').addEventListener('click',function(){
     var n=+($('pv-total').textContent.replace('/','').trim())||pages.length||1;
