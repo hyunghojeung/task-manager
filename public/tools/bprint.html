@@ -1077,6 +1077,13 @@ body{padding-inline:12px;padding-block:12px 24px}
       return '<li><b class="k">'+r[0]+'</b><span class="v">'+r[1]+'</span>'+mark+'</li>';
     }).join('');
   }
+  function anaReady(){                 /* 탭에 들어오면 준비만 — 검사는 [분석 시작] 을 눌러야 한다 */
+    anaList();
+    var u=$('ana-list');if(!u)return;
+    if(!u.children.length||u.dataset.stale==='1')
+      u.innerHTML='<li><span class="v" style="color:var(--muted)">[분석 시작]을 누르면 검사합니다</span></li>';
+    u.dataset.stale='';
+  }
   $('ana-run').addEventListener('click',runAna);
   anaList();
   var pagesW=260;                 /* 페이지 목록 폭 — 끌어서 조절하고 기억한다 */
@@ -1144,7 +1151,7 @@ body{padding-inline:12px;padding-block:12px 24px}
     var k=b.dataset.p;curT=k;
     ['page','nup','ops','bg','bw','ol','ana'].forEach(function(t){$('pp-'+t).hidden=t!==k});
     setView(k);if(k==='nup'&&!$('nu-on').checked)setNup('2');
-    buildPages();renderAll();if(k==='ana')runAna();
+    buildPages();renderAll();if(k==='ana')anaReady();
   })});
   var rsT;window.addEventListener('resize',function(){clearTimeout(rsT);rsT=setTimeout(function(){renderPreview()},120)});
   (function(){
