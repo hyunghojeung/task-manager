@@ -126,6 +126,13 @@ h1{font-size:18px;margin:0 0 4px}
 .ctx div{padding:6px 14px;cursor:pointer;display:flex;justify-content:space-between;gap:10px}.ctx div:hover{background:var(--soft)}
 .ctx div small{color:var(--faint)}.ctx hr{border:0;border-top:1px solid var(--line);margin:4px 0}
 .ctx .sub{padding-left:22px;color:var(--muted)}
+.docbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 12px;background:var(--soft);border-bottom:1px solid var(--line)}
+.docbar .dname{flex:1;min-width:180px;font-size:13px;line-height:1.45}
+.docbar .dname b{font-weight:700}
+.docbar .dname small{display:block;color:var(--muted);font-size:11.5px}
+.docbar .dname .none{color:var(--muted)}
+.docbar .winbtn{min-height:32px;padding:6px 14px;font-size:13px}
+.docbar.over{background:var(--sel);outline:2px dashed var(--accent);outline-offset:-4px}
 .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#111;color:#fff;padding:8px 14px;border-radius:4px;font-size:12px;opacity:0;transition:opacity .2s;pointer-events:none}
 .toast.on{opacity:.92}
 
@@ -176,13 +183,13 @@ body{padding-inline:12px;padding-block:12px 24px}
           <button role="tab" aria-selected="false" data-p="nup">N-up</button>
           <button role="tab" aria-selected="false" data-p="ops">쪽번호</button><button role="tab" aria-selected="false" data-p="bg">배경</button><button role="tab" aria-selected="false" data-p="bw">흑백 변환</button><button role="tab" aria-selected="false" data-p="ol">아웃라인</button><button role="tab" aria-selected="false" data-p="ana">분석</button>
         </div>
+        <div class="docbar" id="docbar">
+          <button class="winbtn" id="doc-open">PDF 열기...</button>
+          <span class="dname" id="doc-name"></span>
+          <button class="winbtn" id="doc-clear">비우기</button>
+        </div>
     <div class="main">
       <div class="panel">
-        <div class="filebar" id="filebar">
-          <button class="winbtn" id="p-file-add">PDF 열기...</button>
-          <span id="p-file-info">Drag &amp; Drop</span>
-          <button class="winbtn" id="p-file-clear">비우기</button>
-        </div>
         <div class="paperbar" hidden>
           <label>용지</label>
           <select id="pp-preset">
@@ -419,11 +426,20 @@ body{padding-inline:12px;padding-block:12px 24px}
   var files=[{name:'행사_리플렛_최종.pdf',n:12,w:210,h:297,sizes:[[210,297,12]]},{name:'신청서_양식.pdf',n:3,w:148,h:210,sizes:[[148,210,3]]}];
   var SAMPLE=[{name:'추가_부록.pdf',n:5,w:210,h:297,sizes:[[210,297,4],[297,420,1]]},{name:'안내문_2026.pdf',n:2,w:297,h:420,sizes:[[297,420,2]]},{name:'참가자_명단.pdf',n:8,w:210,h:297,sizes:[[210,297,6],[297,210,2]]},{name:'표지_최종.pdf',n:1,w:182,h:257,sizes:[[182,257,1]]}];
   var pages=[];
+  /* ── 문서 — 여는 길은 둘: 위 [PDF 열기] 또는 파일결합의 [결합 후 N-up 조판] ── */
+  var doc=null,curT='page';
+  function srcFiles(){return curT==='page'?files:(doc?[doc]:[])}
+  function docLine(){
+    var el=$('doc-name');if(!el)return;
+    el.innerHTML=doc
+      ? '<b>'+doc.name+'</b> · '+doc.n+'쪽 · '+doc.w+'×'+doc.h+'mm<small>'+doc.src+' · N-up·쪽번호·배경·흑백 변환·아웃라인·분석이 모두 이 문서를 씁니다</small>'
+      : '<span class="none">문서 없음 — [PDF 열기]로 열거나, <b>파일결합</b>에서 [결합 후 N-up 조판]을 누르세요</span>';
+  }
   function buildPages(){
     pages=[];var even=document.getElementById('f-even').checked;
     var base=baseSize();
     var ori=$('f-orient').checked,oriTo=$('f-orient-to').value,oriDir=$('f-orient-dir').value;
-    files.forEach(function(f,fi){
+    srcFiles().forEach(function(f,fi){
       var w=base?base.w:f.w,h=base?base.h:f.h,conv=base&&(f.w!==base.w||f.h!==base.h);
       var land=(w>h);                                                   /* 이 파일의 방향 */
       var turn=ori&&((oriTo==='portrait'&&land)||(oriTo==='landscape'&&!land));
@@ -453,7 +469,7 @@ body{padding-inline:12px;padding-block:12px 24px}
     var g=$('grid');g.innerHTML='';
     pages.forEach(function(p,i){
       var d=document.createElement('div');d.className='pg'+(sel.indexOf(i)>=0?' sel':'');
-      var fn=(p.file!==undefined&&files[p.file])?files[p.file].name.replace(/\.pdf$/i,''):'';
+      var fn=(p.file!==undefined&&srcFiles()[p.file])?srcFiles()[p.file].name.replace(/\.pdf$/i,''):'';
       var tw=(p.rot===90||p.rot===270)?(p.h||297):(p.w||210),   /* 돌린 쪽은 보이는 모양으로 */
           thh=(p.rot===90||p.rot===270)?(p.w||210):(p.h||297);
       var ar=' style="aspect-ratio:'+tw+'/'+thh+'"';             /* 쪽 모양대로 — 아래에 빈 자리가 남지 않게 */
@@ -840,31 +856,23 @@ body{padding-inline:12px;padding-block:12px 24px}
     // 창 어디에 떨어뜨려도 받도록
     ['dragover','drop'].forEach(function(t){document.addEventListener(t,function(e){e.preventDefault();});});
   })();
-  (function(){
-    var add=$('p-file-add'),clr=$('p-file-clear'),bar=$('filebar');
-    if(!add)return;
-    add.addEventListener('click',function(){$('f-add').click();});
-    clr.addEventListener('click',function(){files=[];ops=[];buildPages();renderAll();});
-    var stop=function(e){e.preventDefault();e.stopPropagation();};
-    ['dragenter','dragover'].forEach(function(t){bar.addEventListener(t,function(e){stop(e);bar.classList.add('over');});});
-    ['dragleave','drop'].forEach(function(t){bar.addEventListener(t,function(e){stop(e);bar.classList.remove('over');});});
-    bar.addEventListener('drop',function(e){
-      var n=(e.dataTransfer&&e.dataTransfer.files&&e.dataTransfer.files.length)||1;
-      for(var i=0;i<n;i++){var next=SAMPLE[files.length%SAMPLE.length];files.push({name:next.name,n:next.n,w:next.w,h:next.h,sizes:next.sizes});}
-      ops=[];buildPages();renderAll();toast(n+'개 파일을 열었습니다 (예시 파일로 표시)');
-    });
-  })();
   $('f-clear').addEventListener('click',function(){files=[];ops=[];buildPages();renderAll();});
   ['f-save','nup-save','hf-save','bw-save','ol-save'].forEach(function(id){var b=$(id);if(b)b.addEventListener('click',function(){$('b-save').click();});});
   $('f-tonup').addEventListener('click',function(){
     if(!files.length){toast('파일을 먼저 첨부하세요');return}
-    buildPages();
+    var base=baseSize(),tot=0;
+    files.forEach(function(f){tot+=f.n+(($('f-even').checked&&f.n%2)?1:0)});
+    doc={name:'결합_'+files[0].name.replace(/\.pdf$/i,'')+(files.length>1?'_외'+(files.length-1)+'개':'')+'.pdf',
+         n:tot,w:base?base.w:files[0].w,h:base?base.h:files[0].h,
+         sizes:[[base?base.w:files[0].w,base?base.h:files[0].h,tot]],
+         src:'파일결합 결과'+($('f-even').checked?' · 짝수 맞춤':'')+(base?' · '+base.w+'×'+base.h+'mm로 맞춤':'')};
+    curT='nup';docLine();buildPages();
     var tabs=document.querySelectorAll('.ptabs [role=tab]');
     tabs.forEach(function(t){t.setAttribute('aria-selected',String(t.dataset.p==='nup'))});
     ['page','nup','ops','bg','bw','ol','ana'].forEach(function(k){$('pp-'+k).hidden=(k!=='nup')});
     setView('nup');
     if(!$('nu-on').checked)setNup('2');else renderAll();
-    toast('결합한 '+files.length+'개 파일('+pages.length+'쪽)을 N-up 으로 넘겼습니다');
+    toast('결합 결과 '+doc.n+'쪽이 문서가 되었습니다 — 여섯 메뉴가 함께 씁니다');
   });
   $('f-even').addEventListener('change',function(){ops=[];buildPages();renderAll();toast(this.checked?'홀수 쪽 파일 끝에 빈 페이지를 넣습니다':'빈 페이지 보정을 끕니다');});
   ['f-orient','f-orient-to','f-orient-dir'].forEach(function(id){$(id).addEventListener('change',function(){ops=[];buildPages();renderAll();});});
@@ -1057,7 +1065,7 @@ body{padding-inline:12px;padding-block:12px 24px}
   })();
   function setView(which){        // 파일결합·분석은 한 화면 (페이지 목록·미리보기 없음)
     var wide=(which==='page'||which==='ana');
-    document.querySelector('.filebar').hidden=wide;
+    var fb=document.querySelector('.filebar');if(fb)fb.hidden=true;   /* 메뉴별 파일 띠는 없앴다 */
     document.querySelector('.pages').hidden=wide;
     document.querySelector('.stage').hidden=wide;
     applyCols(wide);
@@ -1091,10 +1099,34 @@ body{padding-inline:12px;padding-block:12px 24px}
   });
   renderSheets();
   var ptabs=document.querySelectorAll('.ptabs [role=tab]');
-  ptabs.forEach(function(b){b.addEventListener('click',function(){ptabs.forEach(function(x){x.setAttribute('aria-selected',String(x===b))});['page','nup','ops','bg','bw','ol','ana'].forEach(function(k){$('pp-'+k).hidden=k!==b.dataset.p});if(b.dataset.p==='ana')runAna();setView(b.dataset.p);if(b.dataset.p==='nup'&&!$('nu-on').checked)setNup('2')})});
+  ptabs.forEach(function(b){b.addEventListener('click',function(){
+    ptabs.forEach(function(x){x.setAttribute('aria-selected',String(x===b))});
+    var k=b.dataset.p;curT=k;
+    ['page','nup','ops','bg','bw','ol','ana'].forEach(function(t){$('pp-'+t).hidden=t!==k});
+    setView(k);if(k==='nup'&&!$('nu-on').checked)setNup('2');
+    buildPages();renderAll();if(k==='ana')runAna();
+  })});
   var rsT;window.addEventListener('resize',function(){clearTimeout(rsT);rsT=setTimeout(function(){renderPreview()},120)});
+  (function(){
+    var i=0;
+    $('doc-open').addEventListener('click',function(){
+      var x=SAMPLE[i++%SAMPLE.length],had=!!doc;
+      doc={name:x.name,n:x.n,w:x.w,h:x.h,sizes:x.sizes,src:'직접 연 파일'};
+      docLine();buildPages();renderAll();
+      toast(had?'문서를 "'+x.name+'"으로 바꿨습니다 — 모든 메뉴에 함께 적용됩니다'
+               :'"'+x.name+'"을 열었습니다 — 모든 메뉴가 이 문서를 씁니다 (예시)');
+    });
+    $('doc-clear').addEventListener('click',function(){
+      doc=null;files=[];docLine();buildPages();renderAll();
+      toast('문서를 비웠습니다 — 모든 메뉴가 빈 상태입니다');
+    });
+    var bar=$('docbar'),stop=function(e){e.preventDefault();e.stopPropagation()};
+    ['dragenter','dragover'].forEach(function(t){bar.addEventListener(t,function(e){stop(e);bar.classList.add('over')})});
+    ['dragleave','drop'].forEach(function(t){bar.addEventListener(t,function(e){stop(e);bar.classList.remove('over')})});
+    bar.addEventListener('drop',function(){$('doc-open').click()});
+  })();
   buildPages();setNup('off');paperSync();setView('page');
-  (function(){var t=document.querySelector('.ptabs [data-p="nup"]');if(t)t.click();})();   /* 첫 화면: N-up */
+  (function(){var t=document.querySelector('.ptabs [data-p="nup"]');if(t)t.click();})();   /* 첫 화면: N-up */docLine();
 
   // ---- Bcount 웹 미리보기: 내려받기 버튼·버전 ----
   var DOWNLOAD_URL="/api/program-releases/bprint/download";
