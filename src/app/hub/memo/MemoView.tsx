@@ -98,6 +98,37 @@ export default function MemoView() {
   const [noneCount, setNoneCount] = useState(0);
   const [totalCount, setTotalCount] = useState(0);
   const [filter, setFilter] = useState<string>("all"); // all | none | 카테고리 id
+  // PC 두 칸 보기 — 왼쪽에서 고른 메모를 오른쪽에서 읽는다 (폰은 지금처럼 카드 + 전체화면)
+  const [sel, setSel] = useState<string | null>(null);
+  const [listW, setListW] = useState(340);
+  const dragging = useRef(false);
+  useEffect(() => {
+    try {
+      const w = Number(localStorage.getItem("hub-memo-listw"));
+      if (w >= 220 && w <= 680) setListW(w);
+      const id = localStorage.getItem("hub-memo-sel");
+      if (id) setSel(id);
+    } catch {
+      /* 저장값이 없으면 기본값으로 */
+    }
+  }, []);
+  function putListW(w: number) {
+    const v = Math.max(220, Math.min(680, Math.round(w)));
+    setListW(v);
+    try {
+      localStorage.setItem("hub-memo-listw", String(v));
+    } catch {
+      /* 못 적어도 이번 화면에는 적용된다 */
+    }
+  }
+  function choose(id: string) {
+    setSel(id);
+    try {
+      localStorage.setItem("hub-memo-sel", id);
+    } catch {
+      /* 기억만 못 할 뿐 */
+    }
+  }
   const fileRef = useRef<HTMLInputElement>(null);
   const cameraRef = useRef<HTMLInputElement>(null);
   const previewCache = useRef<Map<string, LinkPreview | null>>(new Map());
@@ -287,6 +318,16 @@ export default function MemoView() {
 
   useBackToClose(draft !== null, close);
 
+  // 목록이 바뀌면(검색·분류) 고른 메모가 아직 있는지 확인하고, 없으면 첫 메모를 고른다
+  useEffect(() => {
+    if (memos.length === 0) {
+      if (sel !== null) setSel(null);
+      return;
+    }
+    if (!sel || !memos.some((m) => m.id === sel)) choose(memos[0].id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [memos]);
+
   useEffect(() => {
     if (!openId.current) return;
     const m = memos.find((x) => x.id === openId.current);
@@ -453,6 +494,125 @@ export default function MemoView() {
   }
 
   const draftTags = draft ? parseTags(draft.tagText) : [];
+  const chosen = memos.find((m) => m.id === sel) || null;
+  const catName = (id?: string | null) => (id ? cats.find((c) => c.id === id)?.name || "" : "");
+
+  /** 목록 한 줄 (PC) */
+  function row(m: Memo) {
+    const on = m.id === sel;
+    return (
+      <button
+        key={m.id}
+        type="button"
+        onClick={() => choose(m.id)}
+        onDoubleClick={() => openMemo(m)}
+        aria-current={on ? "true" : undefined}
+        className={`text-left w-full min-w-0 px-3.5 py-3 border-b border-gray-200 flex flex-col gap-1 ${
+          on ? "bg-[#FFFBE6] shadow-[inset_3px_0_0_#F4D400]" : "bg-transparent hover:bg-white"
+        }`}
+      >
+        <span className="text-[14.5px] font-bold text-gray-900 flex items-center gap-1.5 break-words">
+          {m.pinned && <span className="text-xs">📌</span>}
+          {m.title || "제목 없음"}
+        </span>
+        {textOnly(m.content) && (
+          <span className="text-[12.5px] text-gray-500 truncate">{textOnly(m.content)}</span>
+        )}
+        <span className="flex flex-wrap items-center gap-2 text-[11.5px] text-gray-400">
+          {catName(m.category_id) && (
+            <span className="text-gray-600 bg-gray-100 rounded px-1.5 font-bold">{catName(m.category_id)}</span>
+          )}
+          <span>{when(m.updated_at)}</span>
+          {m.tags.length > 0 && <span className="text-[#8a6d00] font-bold">#{m.tags.join(" #")}</span>}
+          {m.photos.length > 0 && <span>🖼 {m.photos.length}</span>}
+          {m.share_token && <span className="text-[#8a6d00] font-bold">🔗 공유 중</span>}
+        </span>
+      </button>
+    );
+  }
+
+  /** 오른쪽 읽기 칸 (PC) */
+  function read(m: Memo | null) {
+    if (!m)
+      return (
+        <div className="grid place-items-center text-center text-[13.5px] text-gray-400 p-16">
+          왼쪽에서 메모를 고르세요
+        </div>
+      );
+    const body = textOnly(m.content);
+    return (
+      <div className="p-6 flex flex-col gap-3 min-w-0">
+        <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2 break-words">
+          {m.pinned && <span className="text-base">📌</span>}
+          {m.title || "제목 없음"}
+        </h3>
+        <div className="flex flex-wrap items-center gap-2.5 text-[12.5px] text-gray-400">
+          {catName(m.category_id) && (
+            <span className="text-gray-600 bg-gray-100 rounded px-1.5 font-bold">{catName(m.category_id)}</span>
+          )}
+          <span>{when(m.updated_at)}</span>
+          {m.photos.length > 0 && <span>사진 {m.photos.length}장</span>}
+          {m.share_token && <span className="text-[#8a6d00] font-bold">🔗 공유 중</span>}
+        </div>
+        {m.tags.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            {m.tags.map((t) => (
+              <em key={t} className="not-italic text-[12px] font-bold text-[#8a6d00]">
+                #{t}
+              </em>
+            ))}
+          </div>
+        )}
+        {body && <div className="text-[14.5px] text-gray-800 whitespace-pre-line break-words">{body}</div>}
+        {(m.link_previews || []).map((p) => (
+          <LinkCard key={p.url} preview={p} />
+        ))}
+        {m.photos.length > 0 && (
+          <div className="grid grid-cols-3 gap-2">
+            {m.photos.map((p) => (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img key={p.id} src={p.url} alt={p.file_name || ""} className="w-full aspect-square object-cover rounded" />
+            ))}
+          </div>
+        )}
+        <div className="flex flex-wrap gap-2 pt-1">
+          <button
+            onClick={() => openMemo(m)}
+            className="px-4 py-2 rounded text-[13px] font-bold bg-[#FEE500] text-[#191919] hover:bg-[#f2da00]"
+          >
+            수정
+          </button>
+          <button
+            onClick={async () => {
+              const ok = await copyText([m.title, textOnly(m.content)].filter(Boolean).join("\n\n"));
+              alert(ok ? "내용을 복사했습니다" : "복사하지 못했습니다");
+            }}
+            className="px-4 py-2 rounded text-[13px] border border-gray-300 hover:bg-gray-50"
+          >
+            복사
+          </button>
+          {m.share_token && (
+            <button
+              onClick={async () => {
+                const url = `${window.location.origin}/s/${m.share_token}`;
+                const ok = await copyText(url);
+                alert(ok ? "링크를 복사했습니다" : url);
+              }}
+              className="px-4 py-2 rounded text-[13px] border border-gray-300 hover:bg-gray-50"
+            >
+              공유 링크 복사
+            </button>
+          )}
+          <button
+            onClick={() => removeMemo(m.id)}
+            className="px-4 py-2 rounded text-[13px] border border-gray-300 text-red-600 hover:bg-red-50"
+          >
+            삭제
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full flex flex-col gap-3 pb-28 md:pb-6">
@@ -512,41 +672,75 @@ export default function MemoView() {
           {q ? `'${q}' 로 찾은 메모가 없습니다` : "메모가 없습니다\n여기를 누르거나 + 를 눌러 적어보세요"}
         </button>
       ) : (
-        <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-3">
-          {memos.map((m) => (
-            <button
-              key={m.id}
-              onClick={() => openMemo(m)}
-              className="text-left w-full min-w-0 overflow-hidden border border-gray-200 bg-white rounded-lg p-3.5 flex flex-col gap-1.5 hover:border-gray-400"
-            >
-              <span className="text-[15px] font-bold text-gray-900 flex items-center gap-1.5 break-words">
-                {m.pinned && <span className="text-xs">📌</span>}
-                {m.title || "제목 없음"}
-              </span>
-              {textOnly(m.content) && (
-                <span className="text-[13px] text-gray-500 line-clamp-2 whitespace-pre-line break-words">{textOnly(m.content)}</span>
-              )}
-              {(m.link_previews || []).length > 0 && <LinkCard preview={m.link_previews![0]} compact />}
-              {m.tags.length > 0 && (
-                <span className="flex flex-wrap gap-1.5">
-                  {m.tags.map((t) => (
-                    <em key={t} className="not-italic text-[11px] font-bold text-[#8a6d00]">
-                      #{t}
-                    </em>
-                  ))}
+        <>
+          {/* 폰 — 지금 그대로 카드 목록 */}
+          <div className="grid gap-2 md:hidden">
+            {memos.map((m) => (
+              <button
+                key={m.id}
+                onClick={() => openMemo(m)}
+                className="text-left w-full min-w-0 overflow-hidden border border-gray-200 bg-white rounded-lg p-3.5 flex flex-col gap-1.5 hover:border-gray-400"
+              >
+                <span className="text-[15px] font-bold text-gray-900 flex items-center gap-1.5 break-words">
+                  {m.pinned && <span className="text-xs">📌</span>}
+                  {m.title || "제목 없음"}
                 </span>
-              )}
-              <span className="flex flex-wrap gap-2.5 text-[11px] text-gray-400">
-                {m.category_id && cats.find((c) => c.id === m.category_id) && (
-                  <span className="text-gray-600 bg-gray-100 rounded px-1.5">{cats.find((c) => c.id === m.category_id)!.name}</span>
+                {textOnly(m.content) && (
+                  <span className="text-[13px] text-gray-500 line-clamp-2 whitespace-pre-line break-words">{textOnly(m.content)}</span>
                 )}
-                <span>{when(m.updated_at)}</span>
-                {m.photos.length > 0 && <span>🖼 {m.photos.length}</span>}
-                {m.share_token && <span className="text-[#8a6d00] font-bold">🔗 공유 중</span>}
-              </span>
-            </button>
-          ))}
-        </div>
+                {(m.link_previews || []).length > 0 && <LinkCard preview={m.link_previews![0]} compact />}
+                {m.tags.length > 0 && (
+                  <span className="flex flex-wrap gap-1.5">
+                    {m.tags.map((t) => (
+                      <em key={t} className="not-italic text-[11px] font-bold text-[#8a6d00]">
+                        #{t}
+                      </em>
+                    ))}
+                  </span>
+                )}
+                <span className="flex flex-wrap gap-2.5 text-[11px] text-gray-400">
+                  {catName(m.category_id) && (
+                    <span className="text-gray-600 bg-gray-100 rounded px-1.5">{catName(m.category_id)}</span>
+                  )}
+                  <span>{when(m.updated_at)}</span>
+                  {m.photos.length > 0 && <span>🖼 {m.photos.length}</span>}
+                  {m.share_token && <span className="text-[#8a6d00] font-bold">🔗 공유 중</span>}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {/* PC — 왼쪽 목록 · 오른쪽 내용. 가운데를 끌면 폭이 바뀐다 (두 번 누르면 기본값) */}
+          <div
+            className="hidden md:grid border border-gray-200 rounded-lg overflow-hidden bg-white select-none"
+            style={{ gridTemplateColumns: `${listW}px 6px minmax(0,1fr)` }}
+            onPointerMove={(e) => {
+              if (!dragging.current) return;
+              putListW(e.clientX - e.currentTarget.getBoundingClientRect().left);
+            }}
+            onPointerUp={() => {
+              dragging.current = false;
+            }}
+          >
+            <div className="bg-gray-50 overflow-y-auto max-h-[calc(100vh-17rem)] min-h-[24rem]">
+              {memos.map((m) => row(m))}
+            </div>
+            <div
+              role="separator"
+              aria-orientation="vertical"
+              title="끌어서 목록 폭 조절 (두 번 누르면 기본값)"
+              onPointerDown={(e) => {
+                dragging.current = true;
+                e.currentTarget.setPointerCapture(e.pointerId);
+              }}
+              onDoubleClick={() => putListW(340)}
+              className="cursor-col-resize bg-gray-200 hover:bg-[#F4D400]"
+            />
+            <div className="overflow-y-auto max-h-[calc(100vh-17rem)] min-h-[24rem]">
+              {read(chosen)}
+            </div>
+          </div>
+        </>
       )}
 
       {/* 새 메모 (폰) */}
