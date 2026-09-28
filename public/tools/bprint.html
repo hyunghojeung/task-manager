@@ -453,7 +453,11 @@ body{padding-inline:12px;padding-block:12px 24px}
     var g=$('grid');g.innerHTML='';
     pages.forEach(function(p,i){
       var d=document.createElement('div');d.className='pg'+(sel.indexOf(i)>=0?' sel':'');
-      var fn=(p.file!==undefined&&files[p.file])?files[p.file].name.replace(/\.pdf$/i,''):'';d.innerHTML='<div class="th'+(p.blank?' blank':'')+(p.rot?' r'+p.rot:'')+'">'+(p.blank?(p.pad?'짝수 맞춤':'빈 페이지'):'<div class="art"></div><div class="txt"></div>'+p.src)+'</div>'+(p.rot?'<span class="badge">'+p.rot+'°</span>':'')+(p.conv?'<span class="badge" style="background:#bfdbfe;color:#1e40af;top:auto;bottom:22px">크기 변환</span>':'')+'<div class="no"><span>'+(i+1)+'</span><span style="max-width:72%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(p.blank&&p.pad?'빈':fn)+'</span></div>';
+      var fn=(p.file!==undefined&&files[p.file])?files[p.file].name.replace(/\.pdf$/i,''):'';
+      var tw=(p.rot===90||p.rot===270)?(p.h||297):(p.w||210),   /* 돌린 쪽은 보이는 모양으로 */
+          thh=(p.rot===90||p.rot===270)?(p.w||210):(p.h||297);
+      var ar=' style="aspect-ratio:'+tw+'/'+thh+'"';             /* 쪽 모양대로 — 아래에 빈 자리가 남지 않게 */
+      d.innerHTML='<div class="th'+(p.blank?' blank':'')+(p.rot?' r'+p.rot:'')+'"'+ar+'>'+(p.blank?(p.pad?'짝수 맞춤':'빈 페이지'):'<div class="art"></div><div class="txt"></div>'+p.src)+'</div>'+(p.rot?'<span class="badge">'+p.rot+'°</span>':'')+(p.conv?'<span class="badge" style="background:#bfdbfe;color:#1e40af;top:auto;bottom:22px">크기 변환</span>':'')+'<div class="no"><span>'+(i+1)+'</span><span style="max-width:72%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(p.blank&&p.pad?'빈':fn)+'</span></div>';
       d.addEventListener('click',function(e){
         if(e.shiftKey&&lastClick>=0){var a=Math.min(lastClick,i),z=Math.max(lastClick,i);for(var q=a;q<=z;q++)if(sel.indexOf(q)<0)sel.push(q)}
         else{var k=sel.indexOf(i);if(k>=0)sel.splice(k,1);else sel.push(i)}
