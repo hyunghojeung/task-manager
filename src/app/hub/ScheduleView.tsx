@@ -753,7 +753,7 @@ export default function ScheduleView() {
               <div className="md:hidden flex flex-col gap-3">{sideBody}</div>
               {/* PC — 왼쪽 목록 · 오른쪽 내용. 가운데를 끌면 폭이 바뀐다 (두 번 누르면 기본값) */}
               <div
-                className="hidden md:grid border border-gray-200 rounded-lg overflow-hidden bg-white select-none"
+                className="hidden md:grid border border-gray-200 border-t-[3px] border-t-[#FEE500] rounded-lg overflow-hidden bg-white select-none"
                 style={{ gridTemplateColumns: `${listW}px 6px minmax(0,1fr)` }}
                 onPointerMove={(e) => {
                   if (!dragging.current) return;
@@ -764,6 +764,11 @@ export default function ScheduleView() {
                 }}
               >
                 <div className="bg-gray-50 overflow-y-auto max-h-[calc(100vh-15rem)] min-h-[26rem]">
+                  {/* 지금 보고 있는 것이 일정이라는 표시 — 스크롤해도 남는다 */}
+                  <div className="sticky top-0 z-10 flex items-center justify-between gap-2 px-3.5 py-2.5 bg-[#FFFBE6] border-b border-gray-200 text-[13px] font-bold text-[#8a6d00]">
+                    <span>📅 일정 · {listMode === "open" ? "미완료" : labelOf(sel).replace(/ .요일$/, "")}</span>
+                    <span className="text-[12px] font-semibold text-[#8a6d00]">{listItems.length}건</span>
+                  </div>
                   {listItems.length === 0 ? (
                     <p className="text-center text-xs text-gray-400 py-10">보여 줄 일정이 없습니다</p>
                   ) : (

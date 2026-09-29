@@ -67,7 +67,7 @@ export default function CategoryChips({
 
   const chip = (active: boolean) =>
     `shrink-0 px-3 py-1.5 rounded-full text-xs whitespace-nowrap select-none ${
-      active ? "bg-[#FEE500] text-[#191919] font-bold" : "bg-white text-gray-600 border border-gray-300"
+      active ? "bg-[#2F855A] text-white font-bold" : "bg-white text-gray-600 border border-gray-300"
     }`;
 
   return (

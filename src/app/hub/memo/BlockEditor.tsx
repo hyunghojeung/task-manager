@@ -158,7 +158,7 @@ export default function BlockEditor({
 
   return (
     <div
-      className={`flex flex-col gap-1.5 rounded-lg transition-colors ${dragging ? "bg-[#FEE500]/20 ring-2 ring-[#FEE500]" : ""}`}
+      className={`flex flex-col gap-1.5 rounded-lg transition-colors ${dragging ? "bg-[#38A169]/15 ring-2 ring-[#38A169]" : ""}`}
       onDragOver={(e) => {
         if (!onFiles) return;
         e.preventDefault();

@@ -508,7 +508,7 @@ export default function MemoView() {
         onDoubleClick={() => openMemo(m)}
         aria-current={on ? "true" : undefined}
         className={`text-left w-full min-w-0 px-3.5 py-3 border-b border-gray-200 flex flex-col gap-1 ${
-          on ? "bg-[#FFFBE6] shadow-[inset_3px_0_0_#F4D400]" : "bg-transparent hover:bg-white"
+          on ? "bg-[#F0F8F3] shadow-[inset_3px_0_0_#38A169]" : "bg-transparent hover:bg-white"
         }`}
       >
         <span className="text-[14.5px] font-bold text-gray-900 flex items-center gap-1.5 break-words">
@@ -523,9 +523,9 @@ export default function MemoView() {
             <span className="text-gray-600 bg-gray-100 rounded px-1.5 font-bold">{catName(m.category_id)}</span>
           )}
           <span>{when(m.updated_at)}</span>
-          {m.tags.length > 0 && <span className="text-[#8a6d00] font-bold">#{m.tags.join(" #")}</span>}
+          {m.tags.length > 0 && <span className="text-[#276749] font-bold">#{m.tags.join(" #")}</span>}
           {m.photos.length > 0 && <span>🖼 {m.photos.length}</span>}
-          {m.share_token && <span className="text-[#8a6d00] font-bold">🔗 공유 중</span>}
+          {m.share_token && <span className="text-[#276749] font-bold">🔗 공유 중</span>}
         </span>
       </button>
     );
@@ -552,12 +552,12 @@ export default function MemoView() {
           )}
           <span>{when(m.updated_at)}</span>
           {m.photos.length > 0 && <span>사진 {m.photos.length}장</span>}
-          {m.share_token && <span className="text-[#8a6d00] font-bold">🔗 공유 중</span>}
+          {m.share_token && <span className="text-[#276749] font-bold">🔗 공유 중</span>}
         </div>
         {m.tags.length > 0 && (
           <div className="flex flex-wrap gap-2">
             {m.tags.map((t) => (
-              <em key={t} className="not-italic text-[12px] font-bold text-[#8a6d00]">
+              <em key={t} className="not-italic text-[12px] font-bold text-[#276749]">
                 #{t}
               </em>
             ))}
@@ -578,7 +578,7 @@ export default function MemoView() {
         <div className="flex flex-wrap gap-2 pt-1">
           <button
             onClick={() => openMemo(m)}
-            className="px-4 py-2 rounded text-[13px] font-bold bg-[#FEE500] text-[#191919] hover:bg-[#f2da00]"
+            className="px-4 py-2 rounded text-[13px] font-bold bg-[#2F855A] text-white hover:bg-[#276749]"
           >
             수정
           </button>
@@ -638,7 +638,7 @@ export default function MemoView() {
         </div>
         <button
           onClick={newMemo}
-          className="hidden md:inline-flex px-3.5 py-2.5 rounded text-xs font-bold bg-[#FEE500] text-[#191919] hover:bg-[#f2da00] whitespace-nowrap"
+          className="hidden md:inline-flex px-3.5 py-2.5 rounded text-xs font-bold bg-[#2F855A] text-white hover:bg-[#276749] whitespace-nowrap"
         >
           + 새 메모
         </button>
@@ -693,7 +693,7 @@ export default function MemoView() {
                 {m.tags.length > 0 && (
                   <span className="flex flex-wrap gap-1.5">
                     {m.tags.map((t) => (
-                      <em key={t} className="not-italic text-[11px] font-bold text-[#8a6d00]">
+                      <em key={t} className="not-italic text-[11px] font-bold text-[#276749]">
                         #{t}
                       </em>
                     ))}
@@ -705,7 +705,7 @@ export default function MemoView() {
                   )}
                   <span>{when(m.updated_at)}</span>
                   {m.photos.length > 0 && <span>🖼 {m.photos.length}</span>}
-                  {m.share_token && <span className="text-[#8a6d00] font-bold">🔗 공유 중</span>}
+                  {m.share_token && <span className="text-[#276749] font-bold">🔗 공유 중</span>}
                 </span>
               </button>
             ))}
@@ -713,7 +713,7 @@ export default function MemoView() {
 
           {/* PC — 왼쪽 목록 · 오른쪽 내용. 가운데를 끌면 폭이 바뀐다 (두 번 누르면 기본값) */}
           <div
-            className="hidden md:grid border border-gray-200 rounded-lg overflow-hidden bg-white select-none"
+            className="hidden md:grid border border-gray-200 border-t-[3px] border-t-[#38A169] rounded-lg overflow-hidden bg-white select-none"
             style={{ gridTemplateColumns: `${listW}px 6px minmax(0,1fr)` }}
             onPointerMove={(e) => {
               if (!dragging.current) return;
@@ -724,6 +724,11 @@ export default function MemoView() {
             }}
           >
             <div className="bg-gray-50 overflow-y-auto max-h-[calc(100vh-17rem)] min-h-[24rem]">
+              {/* 지금 보고 있는 것이 메모라는 표시 — 스크롤해도 남는다 */}
+              <div className="sticky top-0 z-10 flex items-center justify-between gap-2 px-3.5 py-2.5 bg-[#F0F8F3] border-b border-gray-200 text-[13px] font-bold text-[#276749]">
+                <span>📝 메모</span>
+                <span className="text-[12px] font-semibold text-[#276749]">{memos.length}개</span>
+              </div>
               {memos.map((m) => row(m))}
             </div>
             <div
@@ -735,7 +740,7 @@ export default function MemoView() {
                 e.currentTarget.setPointerCapture(e.pointerId);
               }}
               onDoubleClick={() => putListW(340)}
-              className="cursor-col-resize bg-gray-200 hover:bg-[#F4D400]"
+              className="cursor-col-resize bg-gray-200 hover:bg-[#38A169]"
             />
             <div className="overflow-y-auto max-h-[calc(100vh-17rem)] min-h-[24rem]">
               {read(chosen)}
@@ -749,7 +754,7 @@ export default function MemoView() {
         onClick={newMemo}
         aria-label="새 메모"
         style={{ bottom: "calc(5.25rem + env(safe-area-inset-bottom))" }}
-        className="md:hidden fixed right-5 w-14 h-14 rounded-full bg-[#FEE500] text-[#191919] text-3xl font-bold shadow-lg grid place-items-center leading-none"
+        className="md:hidden fixed right-5 w-14 h-14 rounded-full bg-[#2F855A] text-white text-3xl font-bold shadow-lg grid place-items-center leading-none"
       >
         +
       </button>
@@ -767,7 +772,7 @@ export default function MemoView() {
                   aria-pressed={draft.pinned}
                   aria-label={draft.pinned ? "고정 해제" : "고정"}
                   title={draft.pinned ? "고정 해제" : "고정"}
-                  className={`w-9 h-9 grid place-items-center rounded-full text-base ${draft.pinned ? "bg-[#FEE500]/40" : "hover:bg-gray-100"}`}
+                  className={`w-9 h-9 grid place-items-center rounded-full text-base ${draft.pinned ? "bg-[#38A169]/20" : "hover:bg-gray-100"}`}
                 >
                   {draft.pinned ? "📌" : "📍"}
                 </button>
@@ -849,7 +854,7 @@ export default function MemoView() {
             <input ref={fileRef} type="file" accept="image/*" multiple hidden onChange={(e) => attach(e.target.files)} />
 
             {/* 태그 입력 */}
-            <div className="flex flex-col gap-1.5 bg-[#FEE500]/25 rounded-lg px-3 py-2.5">
+            <div className="flex flex-col gap-1.5 bg-[#38A169]/10 rounded-lg px-3 py-2.5">
               <div className="flex items-center gap-2">
                 <span className="text-[11px] font-bold text-gray-900 shrink-0">태그</span>
                 <input
@@ -882,7 +887,7 @@ export default function MemoView() {
               <div className="flex items-center gap-1 shrink-0">
                 {draft.share_token ? (
                   <>
-                    <button onClick={copyShareLink} className="px-2.5 py-2 rounded bg-[#FEE500] text-[#191919] text-xs font-bold whitespace-nowrap">
+                    <button onClick={copyShareLink} className="px-2.5 py-2 rounded bg-[#2F855A] text-white text-xs font-bold whitespace-nowrap">
                       🔗 복사
                     </button>
                     <button onClick={stopShare} className="px-1.5 py-2 text-xs text-gray-500 underline underline-offset-2 whitespace-nowrap">
@@ -910,7 +915,7 @@ export default function MemoView() {
                 <button
                   onClick={save}
                   disabled={saving}
-                  className="px-4 py-2 rounded bg-[#FEE500] text-[#191919] text-sm font-bold disabled:opacity-50 whitespace-nowrap"
+                  className="px-4 py-2 rounded bg-[#2F855A] text-white text-sm font-bold disabled:opacity-50 whitespace-nowrap"
                 >
                   {saving ? "저장 중…" : draft.id ? "저장" : "등록"}
                 </button>
