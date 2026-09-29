@@ -615,12 +615,13 @@ export default function ScheduleView() {
   return (
     <div className="w-full flex flex-col gap-4 pb-28 md:pb-6">
       {/* 머리말 — PC 는 개인메모·갤러리와 같은 자리에 통합검색창 */}
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex items-center gap-3">
         {/* 검색창은 너무 넓으면 보기 불편해 폭을 묶어 둔다 */}
         <div className="hidden md:block w-full max-w-[380px] min-w-0">
           <SearchEntry />
         </div>
-        <div className="flex items-center gap-2 ml-auto">
+        {/* 단추는 검색창 바로 오른쪽에 (폰은 검색창이 없으니 오른쪽 끝) */}
+        <div className="flex items-center gap-2 ml-auto md:ml-0">
           <button onClick={goToday} className="px-3 py-1.5 border border-gray-300 rounded text-xs bg-white hover:bg-gray-50">
             오늘
           </button>
