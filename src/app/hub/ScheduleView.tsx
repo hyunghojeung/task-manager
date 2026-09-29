@@ -92,6 +92,38 @@ export default function ScheduleView() {
   const [openItems, setOpenItems] = useState<Item[]>([]);
   const [openHolidays, setOpenHolidays] = useState<Record<string, string>>({});
 
+  // 보는 방법 — "cal" 달력 + 옆 목록 (지금까지의 화면) / "list" 왼쪽 목록 · 오른쪽 내용 (PC 만)
+  const [pane, setPane] = useState<"cal" | "list">("cal");
+  const [pick, setPick] = useState<string | null>(null);
+  const [listW, setListW] = useState(360);
+  const dragging = useRef(false);
+  useEffect(() => {
+    try {
+      if (localStorage.getItem("hub-sched-pane") === "list") setPane("list");
+      const w = Number(localStorage.getItem("hub-sched-listw"));
+      if (w >= 240 && w <= 680) setListW(w);
+    } catch {
+      /* 저장값이 없으면 기본값으로 */
+    }
+  }, []);
+  function putPane(v: "cal" | "list") {
+    setPane(v);
+    try {
+      localStorage.setItem("hub-sched-pane", v);
+    } catch {
+      /* 기억만 못 할 뿐 */
+    }
+  }
+  function putListW(w: number) {
+    const v = Math.max(240, Math.min(680, Math.round(w)));
+    setListW(v);
+    try {
+      localStorage.setItem("hub-sched-listw", String(v));
+    } catch {
+      /* 이번 화면에는 적용된다 */
+    }
+  }
+
   const loadOpen = useCallback(async () => {
     const r = await fetch(`/api/hub/schedules?open=1&_=${Date.now()}`);
     if (!r.ok) return;
@@ -144,7 +176,7 @@ export default function ScheduleView() {
     return m;
   }, [items]);
 
-  const selItems = byDate[sel] || [];
+  const selItems = useMemo(() => byDate[sel] || [], [byDate, sel]);
   const todayKey = ymd(today.y, today.m, today.d);
   // 미완료 전체를 날짜별로 묶는다 (이미 날짜순 정렬되어 옴)
   const openGroups = useMemo(() => {
@@ -157,6 +189,18 @@ export default function ScheduleView() {
     });
     return out;
   }, [openItems]);
+  // 리스트 보기에 나오는 일정 — 고른 칩(미완료 전체 / 그 날)을 그대로 따른다
+  const listItems = useMemo(() => (listMode === "open" ? openItems : selItems), [listMode, openItems, selItems]);
+  const picked = listItems.find((x) => x.id === pick) || null;
+  useEffect(() => {
+    if (listItems.length === 0) {
+      if (pick !== null) setPick(null);
+      return;
+    }
+    if (!pick || !listItems.some((x) => x.id === pick)) setPick(listItems[0].id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [listItems]);
+
   // ----- 내용에 적은 주소의 미리보기를 읽어온다 (개인메모와 같은 방식) -----
   const formContent = form?.content ?? "";
   const formOpen = form !== null;
@@ -338,6 +382,198 @@ export default function ScheduleView() {
   useBackToClose(detail !== null, closeDetail);
   useBackToClose(form !== null, closeForm);
 
+  /** 리스트 보기 왼쪽 한 줄 */
+  function listRow(it: Item) {
+    const key = it.on_date.slice(0, 10);
+    const past = key < todayKey;
+    const on = it.id === pick;
+    return (
+      <div
+        key={it.id}
+        className={`flex items-start gap-2 border-b border-gray-200 pr-2.5 ${
+          on ? "bg-[#FFFBE6] shadow-[inset_3px_0_0_#E5B800]" : "hover:bg-white"
+        }`}
+      >
+        <button
+          type="button"
+          onClick={() => setPick(it.id)}
+          aria-current={on}
+          className="flex-1 min-w-0 text-left px-3.5 py-2.5 flex flex-col gap-1"
+        >
+          <span className="flex items-center gap-1.5">
+            <i className={`w-[3px] h-3 rounded-sm shrink-0 ${bar(it.color)}`} />
+            <span className={`text-[11.5px] font-bold tabular-nums ${past ? "text-[#D93A33]" : "text-gray-500"}`}>
+              {labelOf(key).replace(/요일$/, "")}
+              {key === todayKey ? " · 오늘" : past ? " · 지남" : ""}
+            </span>
+          </span>
+          <span
+            className={`text-[14.5px] leading-snug break-words ${it.bold ? "font-extrabold" : "font-bold"} ${
+              it.done ? "line-through text-gray-400" : "text-gray-900"
+            }`}
+          >
+            {it.title}
+          </span>
+          {textOnly(it.content || "") && (
+            <span className="text-[12.5px] text-gray-500 truncate">
+              {textOnly(it.content || "").replace(/\s+/g, " ")}
+            </span>
+          )}
+        </button>
+        <button
+          onClick={() => toggleDone(it)}
+          disabled={busy}
+          aria-pressed={it.done}
+          aria-label="완료 표시"
+          className={`w-5 h-5 mt-3 rounded-full border shrink-0 grid place-items-center text-[11px] ${
+            it.done ? "bg-[#FEE500] border-[#FEE500] text-[#191919]" : "border-gray-300 text-transparent"
+          }`}
+        >
+          ✓
+        </button>
+      </div>
+    );
+  }
+
+  /** 리스트 보기 오른쪽 — 고른 일정의 내용 */
+  function listRead(it: Item | null) {
+    if (!it)
+      return (
+        <div className="grid place-items-center h-full text-[13.5px] text-gray-400 p-16">왼쪽에서 일정을 고르세요</div>
+      );
+    const key = it.on_date.slice(0, 10);
+    const hol = holidays[key] || openHolidays[key];
+    return (
+      <div className="p-6 flex flex-col gap-3 min-w-0">
+        <div className="flex items-center gap-2 text-sm text-gray-500 font-medium">
+          <i className={`w-3.5 h-3.5 rounded ${bar(it.color)}`} />
+          <span>
+            {labelOf(key)}
+            {hol ? ` · ${hol}` : ""}
+          </span>
+        </div>
+        <h3
+          className={`text-2xl ${it.bold ? "font-extrabold" : "font-bold"} ${
+            it.done ? "line-through text-gray-400" : "text-gray-900"
+          } break-words`}
+        >
+          {it.title}
+        </h3>
+        {it.content ? (
+          <ContentBody content={it.content} previews={it.link_previews || []} />
+        ) : (
+          <p className="text-gray-400 text-sm">적어둔 내용이 없습니다</p>
+        )}
+        <div className="flex flex-wrap gap-2 pt-4 mt-1 border-t border-gray-100">
+          <button
+            onClick={() => toggleDone(it)}
+            disabled={busy}
+            className="px-4 py-2 rounded text-[13px] border border-gray-300 hover:bg-gray-50 disabled:opacity-50"
+          >
+            {it.done ? "완료 해제" : "완료"}
+          </button>
+          <button
+            onClick={() =>
+              setForm({
+                id: it.id,
+                title: it.title,
+                content: it.content || "",
+                color: it.color,
+                bold: !!it.bold,
+                previews: it.link_previews || [],
+              })
+            }
+            className="px-4 py-2 rounded text-[13px] font-bold bg-[#FEE500] text-[#191919] hover:bg-[#f2da00]"
+          >
+            수정
+          </button>
+          <button
+            onClick={() => remove(it)}
+            disabled={busy}
+            className="px-4 py-2 rounded text-[13px] border border-gray-300 text-red-600 hover:bg-red-50 disabled:opacity-50"
+          >
+            삭제
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  /** 칩(미완료 전체 / 그 날)에 따른 목록 — 달력 보기와 폰에서 그대로 쓴다 */
+  const sideBody = (
+    <>
+          {listMode === "open" ? (
+            openItems.length === 0 ? (
+              // 빈 안내 상자를 눌러도 (고른 날짜에) 일정 추가창이 열린다
+              <button
+                type="button"
+                onClick={() => setForm({ title: "", content: "", color: "yellow", bold: false, previews: [] })}
+                className="w-full text-center text-xs text-gray-400 py-8 border border-dashed border-gray-300 rounded-lg whitespace-pre-line hover:bg-gray-50 hover:text-gray-600"
+              >
+                {"완료하지 않은 일정이 없습니다\n여기를 누르거나 + 를 눌러 추가하세요"}
+              </button>
+            ) : (
+              <div className="flex flex-col gap-4">
+                {openGroups.map(([key, list]) => {
+                  const past = key < todayKey;
+                  const isToday = key === todayKey;
+                  return (
+                    <section key={key} className="flex flex-col gap-2">
+                      <button
+                        onClick={() => pickDay(key)}
+                        className="flex items-baseline justify-between gap-2 text-left"
+                      >
+                        <span className={`text-[15px] font-bold ${past ? "text-[#D93A33]" : "text-gray-900"}`}>
+                          {labelOf(key)}
+                          {isToday && <em className="not-italic text-xs text-gray-500 ml-1.5">오늘</em>}
+                          {past && <em className="not-italic text-xs ml-1.5">지남</em>}
+                          {openHolidays[key] && <em className="not-italic text-xs text-[#D93A33] ml-1.5">{openHolidays[key]}</em>}
+                        </span>
+                        <span className="text-xs text-gray-400 shrink-0">{list.length}건</span>
+                      </button>
+                      {list.map((it) => (
+                        <ItemRow key={it.id} it={it} onOpen={() => setDetail(it)} onToggle={() => toggleDone(it)} busy={busy} />
+                      ))}
+                    </section>
+                  );
+                })}
+              </div>
+            )
+          ) : (
+            <>
+              <button onClick={() => setDayOpen(true)} className="w-full flex items-baseline justify-between gap-2 text-left group">
+                <span className="text-lg font-bold text-gray-900">
+                  {labelOf(sel)}
+                  {holidays[sel] && <em className="not-italic text-sm text-[#D93A33] ml-2">{holidays[sel]}</em>}
+                </span>
+                <span className="text-xs text-gray-400 shrink-0">
+                  {selItems.length > 0 ? `${selItems.length}건` : ""} <span className="text-base align-middle">›</span>
+                </span>
+              </button>
+
+              {loading ? (
+                <div className="text-center text-xs text-gray-400 py-8">불러오는 중…</div>
+              ) : selItems.length === 0 ? (
+                // 빈 안내 상자를 눌러도 그 날짜에 일정 추가창이 열린다
+                <button
+                  type="button"
+                  onClick={() => setForm({ title: "", content: "", color: "yellow", bold: false, previews: [] })}
+                  className="w-full text-center text-xs text-gray-400 py-8 border border-dashed border-gray-300 rounded-lg whitespace-pre-line hover:bg-gray-50 hover:text-gray-600"
+                >
+                  {"적어둔 것이 없습니다\n여기를 누르거나 + 를 눌러 추가하세요"}
+                </button>
+              ) : (
+                <div className="flex flex-col gap-2">
+                  {selItems.map((it) => (
+                    <ItemRow key={it.id} it={it} onOpen={() => setDetail(it)} onToggle={() => toggleDone(it)} busy={busy} />
+                  ))}
+                </div>
+              )}
+            </>
+          )}
+    </>
+  );
+
   return (
     <div className="w-full flex flex-col gap-4 pb-28 md:pb-6">
       {/* 머리말 — PC 는 개인메모·갤러리와 같은 자리에 통합검색창 */}
@@ -358,9 +594,13 @@ export default function ScheduleView() {
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_320px] xl:grid-cols-[minmax(0,1fr)_360px] items-start">
-        {/* ===== 달력 ===== */}
-        <div>
+      <div
+        className={`grid gap-4 items-start ${
+          pane === "list" ? "md:grid-cols-1" : "md:grid-cols-[minmax(0,1fr)_320px] xl:grid-cols-[minmax(0,1fr)_360px]"
+        }`}
+      >
+        {/* ===== 달력 — 리스트 보기에서는 PC 에서만 접는다 ===== */}
+        <div className={pane === "list" ? "md:hidden" : undefined}>
           <div className="flex items-center justify-between px-1 pb-2">
             <button onClick={() => moveMonth(-1)} aria-label="이전 달" className="px-3 py-1 text-gray-600 hover:text-gray-900 text-lg">
               ‹
@@ -462,7 +702,20 @@ export default function ScheduleView() {
         {/* ===== 아래 목록: 미완료 전체 / 고른 날 ===== */}
         <aside className="flex flex-col gap-3">
           {/* 모드 전환 칩 */}
-          <div className="flex items-center gap-1.5 text-[13px]">
+          <div className="flex items-center gap-1.5 text-[13px] flex-wrap">
+            <button
+              onClick={() => putPane(pane === "list" ? "cal" : "list")}
+              aria-pressed={pane === "list"}
+              title={pane === "list" ? "달력과 함께 보기" : "달력을 접고 목록·내용을 나란히 보기"}
+              className={`hidden md:inline-flex items-center gap-1.5 px-3 py-1 rounded-full border font-semibold ${
+                pane === "list"
+                  ? "bg-[#191919] border-[#191919] text-white"
+                  : "border-dashed border-gray-400 text-gray-700 hover:bg-gray-50"
+              }`}
+            >
+              <span aria-hidden>{pane === "list" ? "▦" : "☰"}</span>
+              {pane === "list" ? "달력으로 보기" : "리스트로 보기"}
+            </button>
             <button
               onClick={() => setListMode("open")}
               className={`px-3 py-1 rounded-full border font-semibold ${
@@ -481,74 +734,45 @@ export default function ScheduleView() {
             </button>
           </div>
 
-          {listMode === "open" ? (
-            openItems.length === 0 ? (
-              // 빈 안내 상자를 눌러도 (고른 날짜에) 일정 추가창이 열린다
-              <button
-                type="button"
-                onClick={() => setForm({ title: "", content: "", color: "yellow", bold: false, previews: [] })}
-                className="w-full text-center text-xs text-gray-400 py-8 border border-dashed border-gray-300 rounded-lg whitespace-pre-line hover:bg-gray-50 hover:text-gray-600"
-              >
-                {"완료하지 않은 일정이 없습니다\n여기를 누르거나 + 를 눌러 추가하세요"}
-              </button>
-            ) : (
-              <div className="flex flex-col gap-4">
-                {openGroups.map(([key, list]) => {
-                  const past = key < todayKey;
-                  const isToday = key === todayKey;
-                  return (
-                    <section key={key} className="flex flex-col gap-2">
-                      <button
-                        onClick={() => pickDay(key)}
-                        className="flex items-baseline justify-between gap-2 text-left"
-                      >
-                        <span className={`text-[15px] font-bold ${past ? "text-[#D93A33]" : "text-gray-900"}`}>
-                          {labelOf(key)}
-                          {isToday && <em className="not-italic text-xs text-gray-500 ml-1.5">오늘</em>}
-                          {past && <em className="not-italic text-xs ml-1.5">지남</em>}
-                          {openHolidays[key] && <em className="not-italic text-xs text-[#D93A33] ml-1.5">{openHolidays[key]}</em>}
-                        </span>
-                        <span className="text-xs text-gray-400 shrink-0">{list.length}건</span>
-                      </button>
-                      {list.map((it) => (
-                        <ItemRow key={it.id} it={it} onOpen={() => setDetail(it)} onToggle={() => toggleDone(it)} busy={busy} />
-                      ))}
-                    </section>
-                  );
-                })}
-              </div>
-            )
-          ) : (
+          {pane === "list" ? (
             <>
-              <button onClick={() => setDayOpen(true)} className="w-full flex items-baseline justify-between gap-2 text-left group">
-                <span className="text-lg font-bold text-gray-900">
-                  {labelOf(sel)}
-                  {holidays[sel] && <em className="not-italic text-sm text-[#D93A33] ml-2">{holidays[sel]}</em>}
-                </span>
-                <span className="text-xs text-gray-400 shrink-0">
-                  {selItems.length > 0 ? `${selItems.length}건` : ""} <span className="text-base align-middle">›</span>
-                </span>
-              </button>
-
-              {loading ? (
-                <div className="text-center text-xs text-gray-400 py-8">불러오는 중…</div>
-              ) : selItems.length === 0 ? (
-                // 빈 안내 상자를 눌러도 그 날짜에 일정 추가창이 열린다
-                <button
-                  type="button"
-                  onClick={() => setForm({ title: "", content: "", color: "yellow", bold: false, previews: [] })}
-                  className="w-full text-center text-xs text-gray-400 py-8 border border-dashed border-gray-300 rounded-lg whitespace-pre-line hover:bg-gray-50 hover:text-gray-600"
-                >
-                  {"적어둔 것이 없습니다\n여기를 누르거나 + 를 눌러 추가하세요"}
-                </button>
-              ) : (
-                <div className="flex flex-col gap-2">
-                  {selItems.map((it) => (
-                    <ItemRow key={it.id} it={it} onOpen={() => setDetail(it)} onToggle={() => toggleDone(it)} busy={busy} />
-                  ))}
+              {/* 폰 — 지금 쓰던 목록 그대로 */}
+              <div className="md:hidden flex flex-col gap-3">{sideBody}</div>
+              {/* PC — 왼쪽 목록 · 오른쪽 내용. 가운데를 끌면 폭이 바뀐다 (두 번 누르면 기본값) */}
+              <div
+                className="hidden md:grid border border-gray-200 rounded-lg overflow-hidden bg-white select-none"
+                style={{ gridTemplateColumns: `${listW}px 6px minmax(0,1fr)` }}
+                onPointerMove={(e) => {
+                  if (!dragging.current) return;
+                  putListW(e.clientX - e.currentTarget.getBoundingClientRect().left);
+                }}
+                onPointerUp={() => {
+                  dragging.current = false;
+                }}
+              >
+                <div className="bg-gray-50 overflow-y-auto max-h-[calc(100vh-15rem)] min-h-[26rem]">
+                  {listItems.length === 0 ? (
+                    <p className="text-center text-xs text-gray-400 py-10">보여 줄 일정이 없습니다</p>
+                  ) : (
+                    listItems.map((it) => listRow(it))
+                  )}
                 </div>
-              )}
+                <div
+                  role="separator"
+                  aria-orientation="vertical"
+                  title="끌어서 목록 폭 조절 (두 번 누르면 기본값)"
+                  onPointerDown={(e) => {
+                    dragging.current = true;
+                    e.currentTarget.setPointerCapture(e.pointerId);
+                  }}
+                  onDoubleClick={() => putListW(360)}
+                  className="cursor-col-resize bg-gray-200 hover:bg-[#E5B800]"
+                />
+                <div className="overflow-y-auto max-h-[calc(100vh-15rem)] min-h-[26rem]">{listRead(picked)}</div>
+              </div>
             </>
+          ) : (
+            sideBody
           )}
         </aside>
       </div>
