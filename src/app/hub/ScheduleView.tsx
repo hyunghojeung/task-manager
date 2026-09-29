@@ -499,6 +499,44 @@ export default function ScheduleView() {
     );
   }
 
+  /** 보기 방법(달력/리스트)과 무엇을 볼지(미완료 전체/그 날) 고르는 칩 줄 */
+  const chips = (
+    <>
+        {/* 모드 전환 칩 */}
+        <div className="flex items-center gap-1.5 text-[13px] flex-wrap">
+          <button
+            onClick={() => putPane(pane === "list" ? "cal" : "list")}
+            aria-pressed={pane === "list"}
+            title={pane === "list" ? "달력과 함께 보기" : "달력을 접고 목록·내용을 나란히 보기"}
+            className={`hidden md:inline-flex items-center gap-1.5 px-3 py-1 rounded-full border font-semibold ${
+              pane === "list"
+                ? "bg-[#191919] border-[#191919] text-white"
+                : "border-dashed border-gray-400 text-gray-700 hover:bg-gray-50"
+            }`}
+          >
+            <span aria-hidden>{pane === "list" ? "▦" : "☰"}</span>
+            {pane === "list" ? "달력으로 보기" : "리스트로 보기"}
+          </button>
+          <button
+            onClick={() => setListMode("open")}
+            className={`px-3 py-1 rounded-full border font-semibold ${
+              listMode === "open" ? "bg-[#FEE500] border-[#FEE500] text-[#191919]" : "border-gray-300 text-gray-500"
+            }`}
+          >
+            미완료 전체 {openItems.length > 0 && <span className="font-normal">{openItems.length}</span>}
+          </button>
+          <button
+            onClick={() => setListMode("day")}
+            className={`px-3 py-1 rounded-full border font-semibold ${
+              listMode === "day" ? "bg-[#FEE500] border-[#FEE500] text-[#191919]" : "border-gray-300 text-gray-500"
+            }`}
+          >
+            {labelOf(sel).replace(/ .요일$/, "")}
+          </button>
+        </div>
+    </>
+  );
+
   /** 칩(미완료 전체 / 그 날)에 따른 목록 — 달력 보기와 폰에서 그대로 쓴다 */
   const sideBody = (
     <>
@@ -578,7 +616,8 @@ export default function ScheduleView() {
     <div className="w-full flex flex-col gap-4 pb-28 md:pb-6">
       {/* 머리말 — PC 는 개인메모·갤러리와 같은 자리에 통합검색창 */}
       <div className="flex items-center justify-between gap-3">
-        <div className="hidden md:block flex-1 min-w-0">
+        {/* 검색창은 너무 넓으면 보기 불편해 폭을 묶어 둔다 */}
+        <div className="hidden md:block w-full max-w-[380px] min-w-0">
           <SearchEntry />
         </div>
         <div className="flex items-center gap-2 ml-auto">
@@ -593,6 +632,9 @@ export default function ScheduleView() {
           </button>
         </div>
       </div>
+
+      {/* PC — 칩 줄은 검색창 바로 아래 왼쪽에 (달력·리스트 어느 쪽이든 같은 자리) */}
+      <div className="hidden md:flex -mt-1">{chips}</div>
 
       <div
         className={`grid gap-4 items-start ${
@@ -701,38 +743,8 @@ export default function ScheduleView() {
 
         {/* ===== 아래 목록: 미완료 전체 / 고른 날 ===== */}
         <aside className="flex flex-col gap-3">
-          {/* 모드 전환 칩 */}
-          <div className="flex items-center gap-1.5 text-[13px] flex-wrap">
-            <button
-              onClick={() => putPane(pane === "list" ? "cal" : "list")}
-              aria-pressed={pane === "list"}
-              title={pane === "list" ? "달력과 함께 보기" : "달력을 접고 목록·내용을 나란히 보기"}
-              className={`hidden md:inline-flex items-center gap-1.5 px-3 py-1 rounded-full border font-semibold ${
-                pane === "list"
-                  ? "bg-[#191919] border-[#191919] text-white"
-                  : "border-dashed border-gray-400 text-gray-700 hover:bg-gray-50"
-              }`}
-            >
-              <span aria-hidden>{pane === "list" ? "▦" : "☰"}</span>
-              {pane === "list" ? "달력으로 보기" : "리스트로 보기"}
-            </button>
-            <button
-              onClick={() => setListMode("open")}
-              className={`px-3 py-1 rounded-full border font-semibold ${
-                listMode === "open" ? "bg-[#FEE500] border-[#FEE500] text-[#191919]" : "border-gray-300 text-gray-500"
-              }`}
-            >
-              미완료 전체 {openItems.length > 0 && <span className="font-normal">{openItems.length}</span>}
-            </button>
-            <button
-              onClick={() => setListMode("day")}
-              className={`px-3 py-1 rounded-full border font-semibold ${
-                listMode === "day" ? "bg-[#FEE500] border-[#FEE500] text-[#191919]" : "border-gray-300 text-gray-500"
-              }`}
-            >
-              {labelOf(sel).replace(/ .요일$/, "")}
-            </button>
-          </div>
+          {/* 폰 — 칩은 목록 바로 위에 (PC 는 검색창 아래 줄로 옮겼다) */}
+          <div className="md:hidden">{chips}</div>
 
           {pane === "list" ? (
             <>
