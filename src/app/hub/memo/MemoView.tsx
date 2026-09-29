@@ -618,7 +618,8 @@ export default function MemoView() {
     <div className="w-full flex flex-col gap-3 pb-28 md:pb-6">
       {/* 검색 */}
       <div className="flex items-center gap-2">
-        <div className="flex-1 flex items-center gap-2 border border-gray-300 bg-white rounded-full px-4 py-2.5">
+        {/* PC 는 검색창 폭을 묶어 [+ 새 메모] 가 바로 옆에 붙게 한다 (폰은 가로 전체) */}
+        <div className="flex-1 md:flex-none md:w-[380px] md:max-w-full min-w-0 flex items-center gap-2 border border-gray-300 bg-white rounded-full px-4 py-2.5">
           <svg viewBox="0 0 24 24" aria-hidden="true" className="w-5 h-5 shrink-0 text-gray-500" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round">
             <circle cx="11" cy="11" r="7" />
             <path d="m20 20-3.5-3.5" />
