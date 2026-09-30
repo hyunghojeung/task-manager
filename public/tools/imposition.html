@@ -174,7 +174,7 @@ input:disabled,select:disabled{color:var(--g500);font-weight:400}
 
 
 <div class="app">
-  <div class="bar"><b>B-imposition</b><span class="v">v1.0.0</span><button class="winbtn" id="dl-btn" type="button" style="margin-left:18px;font-weight:700;padding:5px 16px">B-imposition 프로그램 다운로드</button><button class="winbtn" id="app-reset" type="button" style="margin-left:8px" title="처음 켠 상태로 되돌립니다.&#10;· 연 파일과 모든 설정을 비웁니다&#10;(저장한 종이 크기·프리셋은 그대로 둡니다)">Reset</button><span class="st"><i></i>PC에서 실행 중 · 파일은 외부로 나가지 않습니다 · <u>새 버전 확인</u></span></div>
+  <div class="bar"><b>B-imposition</b><span class="v">v1.0.0</span><button class="winbtn" id="dl-btn" type="button" style="margin-left:18px;font-weight:700;padding:5px 16px">B-imposition 프로그램 다운로드</button><button class="winbtn" id="app-reset" type="button" style="margin-left:8px" title="모든 설정을 처음값으로 되돌립니다.&#10;연 PDF 와 저장한 종이 크기·프리셋은 그대로 둡니다.">Reset</button><span class="st"><i></i>PC에서 실행 중 · 파일은 외부로 나가지 않습니다 · <u>새 버전 확인</u></span></div>
   <div class="main">
     <!-- ===== 왼쪽: 설정 ===== -->
     <div class="side">
@@ -432,7 +432,20 @@ function applyOneTouch(){var g=geom(),on=$("onetouch").checked,left=Math.floor(g
 $("onetouch").addEventListener("change",function(){if(this.checked){var g=geom();if(!(g.cols===2&&g.rows===1)){alert("원터치 재단은 배치가 2열 × 1행일 때만 쓸 수 있습니다.");this.checked=false;return}}document.body.classList.toggle("onetouch",this.checked);applyOneTouch()});
 /* 옵션 초기 상태 — 시작 직후 한 번 기록해 두고, 조판 종류를 바꿀 때 되돌린다 */
 var INIT=null;
-function captureInit(){INIT=[];[].forEach.call(document.querySelectorAll(".side input,.side select"),function(e){INIT.push([e,e.type==="checkbox"?e.checked:e.value])})}
+var INIT_TYPE=null;
+function captureInit(){INIT=[];[].forEach.call(document.querySelectorAll(".side input,.side select"),function(e){INIT.push([e,e.type==="checkbox"?e.checked:e.value])});INIT_TYPE=S.type}
+/* [Reset] — 설정만 처음값으로. 연 파일은 그대로 둔다 */
+function resetSettings(){
+  if(INIT)INIT.forEach(function(x){if(x[0].type==="checkbox")x[0].checked=x[1];else x[0].value=x[1]});
+  S.slotRot={f:{},b:{}};S.sheet=0;
+  if(INIT_TYPE&&INIT_TYPE!==S.type){
+    var b=document.querySelector('#types [data-t="'+INIT_TYPE+'"]');
+    if(b){S.type=INIT_TYPE;[].forEach.call($("types").children,function(x){x.classList.toggle("on",x===b)})}
+  }
+  if(S.file){var ts=trimSize();$("pw").value=ts.w;$("ph").value=ts.h}
+  $("sheet-sel").value="";$("p-sel").value="";
+  render();
+}
 function resetOptions(){
   if(INIT)INIT.forEach(function(x){if(x[0].type==="checkbox")x[0].checked=x[1];else x[0].value=x[1]});
   S.slotRot={f:{},b:{}};S.sheet=0;
@@ -468,9 +481,9 @@ $("sheet-del").addEventListener("click",function(){var all=loadSizes(),i=+$("she
   var a=mySizes()||[];a.splice(i-BASE_SIZES.length,1);saveSizes(a);renderSizes();$("sheet-sel").value=""});
 renderSizes();
 $("app-reset").addEventListener("click",function(){
-  if(!confirm("처음 켠 상태로 돌아갑니다.\n\n· 연 파일과 모든 설정을 비웁니다\n· 저장한 종이 크기와 프리셋은 그대로 둡니다\n\n계속할까요?"))return;
-  if(LOCAL&&LOCAL.post)try{LOCAL.post("/api/reset",{})}catch(e){}
-  location.reload();
+  if(!confirm("모든 설정을 처음값으로 되돌립니다.\n\n· 종이·재단 크기, 칸 수, 여백·간격, 재단선, 양면, 배율 등\n· 연 PDF 는 그대로 둡니다 (치우려면 파일 옆 ✕)\n· 저장한 종이 크기와 프리셋도 그대로 둡니다\n\n계속할까요?"))return;
+  resetSettings();
+  toast("설정을 처음값으로 되돌렸습니다");
 });
 $("rot").addEventListener("click",function(){var a=$("sw").value;$("sw").value=$("sh").value;$("sh").value=a;render()});
 $("autofit").addEventListener("click",function(){var g=geom();var pw=num("pw",S.srcW)+2*num("bleed"),ph=num("ph",S.srcH)+2*num("bleed");if(g.rotPage){var t0=pw;pw=ph;ph=t0}var c=Math.max(1,Math.floor((g.W-2*g.m+g.gap)/(pw+g.gap))),r=Math.max(1,Math.floor((g.H-2*g.m+g.gapy)/(ph+g.gapy)));$("cols").value=c;$("rows").value=r;render()});
