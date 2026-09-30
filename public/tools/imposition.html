@@ -167,6 +167,7 @@ input[type=number]:focus,input[type=text]:focus,select:focus{outline:1px solid #
 input[type=text],input[type=number],select,textarea{color:var(--ink);font-weight:600}
 input::placeholder,textarea::placeholder{color:var(--g400);font-weight:400}
 input:disabled,select:disabled{color:var(--g500);font-weight:400}
+.drop.over,.file.over{outline:2px dashed var(--blue);outline-offset:-3px;background:#eff6ff}
 </style>
 </head>
 <body>
@@ -387,6 +388,25 @@ var HELP={booklet:"접어서 가운데를 철하는 책자. 페이지 수를 4�
 
 /* ---- 파일 ---- */
 $("drop").addEventListener("click",function(){if(LOCAL){LOCAL.pick("front");return}if(webOpenNotice())return;openFile("2026_졸업작품_도록_최종.pdf",96,210,297,486)});
+/* 끌어다 놓기 — 위 열기 자리에 PDF 를 놓으면 그대로 연다 */
+function dropZone(el,kind){
+  if(!el)return;
+  var stop=function(e){e.preventDefault();e.stopPropagation()};
+  ["dragenter","dragover"].forEach(function(t){el.addEventListener(t,function(e){stop(e);el.classList.add("over")})});
+  ["dragleave","dragend"].forEach(function(t){el.addEventListener(t,function(e){stop(e);el.classList.remove("over")})});
+  el.addEventListener("drop",function(e){
+    stop(e);el.classList.remove("over");
+    var f=e.dataTransfer&&e.dataTransfer.files&&e.dataTransfer.files[0];
+    if(!f)return;
+    if(LOCAL){LOCAL.drop(kind,f);return}
+    if(webOpenNotice())return;
+    toast("미리보기에서는 예시 파일로 엽니다");
+    if(kind==="back")openBack("졸업작품_도록_뒷면공통.pdf",1,210,297,3);
+    else openFile("2026_졸업작품_도록_최종.pdf",96,210,297,486);
+  });
+}
+dropZone($("drop"),"front");dropZone($("bk-drop"),"back");
+dropZone($("f-info"),"front");dropZone($("bk-info"),"back");   /* 이미 연 자리에 놓으면 바꾼다 */
 $("f-change").addEventListener("click",function(){if(LOCAL){LOCAL.pick("front");return}if(webOpenNotice())return;openFile("행사_리플렛_최종.pdf",12,210,297,38)});
 document.querySelectorAll(".tpick").forEach(function(b){b.addEventListener("click",function(){if(LOCAL){LOCAL.pick("front");return}if(webOpenNotice())return;openFile(S.file?"행사_리플렛_최종.pdf":"2026_졸업작품_도록_최종.pdf",S.file?12:96,210,297,S.file?38:486)})});
 function syncFileLabels(){document.querySelectorAll(".tfile").forEach(function(e){e.textContent=S.file?S.file+" · "+S.pages+"p":""})}
