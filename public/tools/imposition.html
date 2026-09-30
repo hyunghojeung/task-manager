@@ -163,13 +163,17 @@ input[type=number]:focus,input[type=text]:focus,select:focus{outline:1px solid #
 #card-save .info{font-size:11px;color:#444}
 .presets .preset{background:#fff}
 ::-webkit-scrollbar{width:14px;height:14px}::-webkit-scrollbar-track{background:#f0f0f0}::-webkit-scrollbar-thumb{background:#cdcdcd;border:3px solid #f0f0f0}::-webkit-scrollbar-thumb:hover{background:#a6a6a6}
+/* 직접 적어 넣은 값은 진하게 — 옵션 이름(회색)과 또렷이 구분되게 */
+input[type=text],input[type=number],select,textarea{color:var(--ink);font-weight:600}
+input::placeholder,textarea::placeholder{color:var(--g400);font-weight:400}
+input:disabled,select:disabled{color:var(--g500);font-weight:400}
 </style>
 </head>
 <body>
 
 
 <div class="app">
-  <div class="bar"><b>B-imposition</b><span class="v">v1.0.0</span><button class="winbtn" id="dl-btn" type="button" style="margin-left:18px;font-weight:700;padding:5px 16px">B-imposition 프로그램 다운로드</button><span class="st"><i></i>PC에서 실행 중 · 파일은 외부로 나가지 않습니다 · <u>새 버전 확인</u></span></div>
+  <div class="bar"><b>B-imposition</b><span class="v">v1.0.0</span><button class="winbtn" id="dl-btn" type="button" style="margin-left:18px;font-weight:700;padding:5px 16px">B-imposition 프로그램 다운로드</button><button class="winbtn" id="app-reset" type="button" style="margin-left:8px" title="처음 켠 상태로 되돌립니다.&#10;· 연 파일과 모든 설정을 비웁니다&#10;(저장한 종이 크기·프리셋은 그대로 둡니다)">Reset</button><span class="st"><i></i>PC에서 실행 중 · 파일은 외부로 나가지 않습니다 · <u>새 버전 확인</u></span></div>
   <div class="main">
     <!-- ===== 왼쪽: 설정 ===== -->
     <div class="side">
@@ -423,13 +427,31 @@ function trimSize(){var tr=bkTrim(false);return tr?{w:tr.w,h:tr.h}:{w:S.srcW,h:S
 $("types").addEventListener("click",function(e){var b=e.target.closest("button");if(!b)return;var t=b.getAttribute("data-t");if(t===S.type)return;S.type=t;[].forEach.call($("types").children,function(x){x.classList.toggle("on",x===b)});resetOptions();if(S.type==="booklet"){$("cols").value=2;$("rows").value=1}render()});
 
 /* ---- 판 ---- */
-function loadSizes(){if(LOCAL)return LOCAL.sizes;try{return JSON.parse(localStorage.getItem("impo-sizes")||"[]")}catch(e){return []}}
+/* 규격 종이 — 늘 목록에 있다 (지울 수 없다) */
+var BASE_SIZES=[{name:"A2",w:420,h:594},{name:"A3",w:297,h:420},{name:"A4",w:210,h:297},
+  {name:"A5",w:148,h:210},{name:"A6",w:105,h:148},
+  {name:"B3",w:364,h:515},{name:"B4",w:257,h:364},{name:"B5",w:182,h:257},{name:"B6",w:128,h:182},
+  {name:"SRA3",w:320,h:450},{name:"4×6 절반",w:545,h:394}];
+function mySizes(){if(LOCAL)return LOCAL.sizes;try{return JSON.parse(localStorage.getItem("impo-sizes")||"[]")}catch(e){return []}}
+function loadSizes(){return BASE_SIZES.concat(mySizes()||[])}
 function saveSizes(a){if(LOCAL){LOCAL.sizes=a;LOCAL.post("/api/sizes",a);return}try{localStorage.setItem("impo-sizes",JSON.stringify(a))}catch(e){}}
-function renderSizes(){var a=loadSizes(),sel=$("sheet-sel");sel.innerHTML='<option value="">저장한 크기에서 선택'+(a.length?" ("+a.length+")":"")+'</option>'+a.map(function(x,i){return '<option value="'+i+'">'+x.name+" — "+x.w+"×"+x.h+"</option>"}).join("")}
+function renderSizes(){var a=loadSizes(),sel=$("sheet-sel");sel.innerHTML='<option value="">크기 고르기 ('+a.length+')</option>'+a.map(function(x,i){return '<option value="'+i+'">'+x.name+" — "+x.w+"×"+x.h+"</option>"}).join("")}
 $("sheet-sel").addEventListener("change",function(){var x=loadSizes()[+this.value];if(x){$("sw").value=x.w;$("sh").value=x.h;render()}});
-$("sheet-save").addEventListener("click",function(){var name=$("sheet-name").value.trim();if(!name){alert("종이 크기 이름을 적어주세요.");$("sheet-name").focus();return}var a=loadSizes();var i=a.findIndex(function(x){return x.name===name});var it={name:name,w:$("sw").value,h:$("sh").value};if(i>=0)a[i]=it;else a.push(it);saveSizes(a);renderSizes();$("sheet-sel").value=String(i>=0?i:a.length-1);$("sheet-name").value="";toast("'"+name+" "+it.w+"×"+it.h+"' 저장")});
-$("sheet-del").addEventListener("click",function(){var a=loadSizes(),i=+$("sheet-sel").value;if(!$("sheet-sel").value||!a[i])return;if(!confirm("'"+a[i].name+"' 크기를 지울까요?"))return;a.splice(i,1);saveSizes(a);renderSizes()});
+$("sheet-save").addEventListener("click",function(){var name=$("sheet-name").value.trim();if(!name){alert("종이 크기 이름을 적어주세요.");$("sheet-name").focus();return}
+  if(BASE_SIZES.some(function(x){return x.name===name})){alert("'"+name+"' 은 규격 이름입니다. 다른 이름을 적어주세요.");return}
+  var a=mySizes()||[];var i=a.findIndex(function(x){return x.name===name});var it={name:name,w:$("sw").value,h:$("sh").value};if(i>=0)a[i]=it;else a.push(it);
+  saveSizes(a);renderSizes();$("sheet-sel").value=String(BASE_SIZES.length+(i>=0?i:a.length-1));$("sheet-name").value="";toast("'"+name+" "+it.w+"×"+it.h+"' 저장")});
+$("sheet-del").addEventListener("click",function(){var all=loadSizes(),i=+$("sheet-sel").value;
+  if(!$("sheet-sel").value||!all[i])return;
+  if(i<BASE_SIZES.length){alert("'"+all[i].name+"' 은 규격 종이라 지울 수 없습니다.");return}
+  if(!confirm("'"+all[i].name+"' 크기를 지울까요?"))return;
+  var a=mySizes()||[];a.splice(i-BASE_SIZES.length,1);saveSizes(a);renderSizes();$("sheet-sel").value=""});
 renderSizes();
+$("app-reset").addEventListener("click",function(){
+  if(!confirm("처음 켠 상태로 돌아갑니다.\n\n· 연 파일과 모든 설정을 비웁니다\n· 저장한 종이 크기와 프리셋은 그대로 둡니다\n\n계속할까요?"))return;
+  if(LOCAL&&LOCAL.post)try{LOCAL.post("/api/reset",{})}catch(e){}
+  location.reload();
+});
 $("rot").addEventListener("click",function(){var a=$("sw").value;$("sw").value=$("sh").value;$("sh").value=a;render()});
 $("autofit").addEventListener("click",function(){var g=geom();var pw=num("pw",S.srcW)+2*num("bleed"),ph=num("ph",S.srcH)+2*num("bleed");if(g.rotPage){var t0=pw;pw=ph;ph=t0}var c=Math.max(1,Math.floor((g.W-2*g.m+g.gap)/(pw+g.gap))),r=Math.max(1,Math.floor((g.H-2*g.m+g.gapy)/(ph+g.gapy)));$("cols").value=c;$("rows").value=r;render()});
 ["sw","sh","cols","rows","pw","ph","trim-preview","order","crop-l","crop-r","crop-t","crop-b","margin","gap","gapy","offx","offy","offx2","offy2","off-same","bleed","marks","center","duplex","scale","scale-pct","align","nup-mode","sides","bk-dup","bk-pad","pad-pos","creep","fill-1p"].forEach(function(id){$(id).addEventListener("input",function(){if(id==="sw"||id==="sh")$("sheet-sel").value="";scheduleRender()});/* 보고 있던 판은 유지 — 판 수가 줄면 pager() 가 마지막 판으로 맞춘다 */$(id).addEventListener("change",render)});
