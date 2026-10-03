@@ -4,7 +4,7 @@ import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 
 interface OrderItemRow { sort_order: number; data: Record<string, string> }
-interface OrderData { id: string; order_no: string; client_name: string; title: string; total_amount: number; total_supply: number; total_vat: number; discount: number; template_name?: string; trade_type?: string; order_date: string; created_at: string; order_items?: OrderItemRow[] }
+interface OrderData { id: string; order_no: string; client_name: string; email?: string; title: string; total_amount: number; total_supply: number; total_vat: number; discount: number; template_name?: string; trade_type?: string; order_date: string; created_at: string; order_items?: OrderItemRow[] }
 interface CompanyData {
   company_name: string; business_number: string; representative: string; address: string; business_type: string; business_category: string; phone: string; email: string; seal_image?: string;
   bank_name?: string; bank_account?: string; bank_holder?: string;
@@ -42,7 +42,11 @@ function StatementContent() {
 
   useEffect(() => {
     if (!orderId) return;
-    fetch(`/api/orders/${orderId}?_=${Date.now()}`).then(r => r.json()).then(d => setOrder(d));
+    fetch(`/api/orders/${orderId}?_=${Date.now()}`).then(r => r.json()).then(d => {
+      setOrder(d);
+      // 작업등록에 적어 둔 이메일을 받는 사람 칸에 미리 넣는다 (그 자리에서 고칠 수 있다)
+      if (d?.email) setEmailTo(String(d.email).trim());
+    });
     fetch(`/api/company?_=${Date.now()}`).then(r => r.json()).then(d => {
       setCompany(d);
       if (d?.default_bank) setBankIdx(parseInt(d.default_bank) || 1);
